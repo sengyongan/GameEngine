@@ -13,6 +13,7 @@ public:
 	}
 };
 //define
+//创建应用程序实例
 Hazel::Application* Hazel::CreatApplication()
 {
 	return new Sandbox();

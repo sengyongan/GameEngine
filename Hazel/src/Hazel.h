@@ -1,5 +1,6 @@
 #pragma once
-//引用的库
-#include<stdio.h>
+//被客户端引用的库
 #include"Hazel/Application.h"
+#include"Hazel/Log.h"
+//--------------------------------------------------
 #include"Hazel/EntryPoint.h"
