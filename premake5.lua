@@ -7,9 +7,15 @@ configurations
 	"Dist"
 }	
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+
+--包含目录（解决方案目录）相对的目录
+IncludeDir={}
+IncludeDir["GLFW"]="Hazel/vendor/GLFW/include"--IncludeDir变量
+include"Hazel/vendor/GLFW"
+
 project "Hazel"
 	location"Hazel"
-	kind"SharedLib"
+	kind"SharedLib"--静态库
 	language"C++"
 	targetdir("bin/"..outputdir.."/%{prj.name}")
 	objdir("bin-int/"..outputdir.."/%{prj.name}")
@@ -21,10 +27,16 @@ project "Hazel"
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp"
 	}
-	includedirs
+	includedirs--包含目录
 	{
 		"%{prj.name}/vendor/spdlog/include",
-		"%{prj.name}/src"
+		"%{prj.name}/src",
+		"{IncludeDir.GLFW}"
+	}
+	links
+	{
+		"GLFW",
+		"opengl32.lib"
 	}
 
 	filter"system:windows"

@@ -7,6 +7,12 @@
     <Filter Include="Hazel\Events">
       <UniqueIdentifier>{5DEF92FE-4952-22A3-F2D7-5A59DE19EE25}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hazel\Platform">
+      <UniqueIdentifier>{d5f3db43-2ad5-4576-a75c-572ae4830bc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hazel\Platform\Windows">
+      <UniqueIdentifier>{3106dd70-d05c-4080-b0c2-e451bcd1dc1e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Hazel.h" />
@@ -35,6 +41,10 @@
       <Filter>Hazel</Filter>
     </ClInclude>
     <ClInclude Include="src\hzpch.h" />
+    <ClInclude Include="src\Hazel\Window.h" />
+    <ClInclude Include="WindowsWindow.h">
+      <Filter>Hazel\Platform\Windows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Hazel\Application.cpp">
@@ -44,5 +54,8 @@
       <Filter>Hazel</Filter>
     </ClCompile>
     <ClCompile Include="src\hzpch.cpp" />
+    <ClCompile Include="WindowsWindow.cpp">
+      <Filter>Hazel\Platform\Windows</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

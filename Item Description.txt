@@ -102,4 +102,5 @@ project "Sandbox"
 	defines "HZ_DIST"
 	optimize"On"
 //------------------------------------------------------------------------------
-GenerateProjects.bat执行文件---执行目录PAUSE不会关闭窗口
+GenerateProjects.bat执行文件---执行目录PAUSE不会关闭窗口（双击执行预编译）
+
