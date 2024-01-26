@@ -10,3 +10,5 @@
 #else//r如果在其他平台
 #error Hazel only support Windows!
 #endif
+
+#define BIT(x) (1 <<x)//有1bit

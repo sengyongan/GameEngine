@@ -1,8 +1,3 @@
-.gitmodules日志库的根目录
-vendor通用第三方
-bin（柜）输出目录bin-int(中间目录）
-premake5.lua为premake配置：预制配置项（配置项目）
-//------------------------------------------------------------------------------
 workspace"Hazel"
 architecture"x64"
 configurations
@@ -11,43 +6,40 @@ configurations
 	"Release",
 	"Dist"
 }	
-//Debug-windows-x86_64
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-//项目
 project "Hazel"
-	location"Hazel"//路径
-	kind"SharedLib"//类型---静态库
-	language"C++"//语言
-	targetdir("bin/"..outputdir.."/%{prj.name}")//build
-	objdir("bin-int/"..outputdir.."/%{prj.name}")//中间build
-//**递归寻找子文件
+	location"Hazel"
+	kind"SharedLib"
+	language"C++"
+	targetdir("bin/"..outputdir.."/%{prj.name}")
+	objdir("bin-int/"..outputdir.."/%{prj.name}")
+
+	pchheader "hzpch.h"
+	pchsource "Hazel/src/hzpch.cpp"
 	files
 	{
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp"
 	}
-//第三方库
 	includedirs
 	{
-		"%{prj.name}/vendor/spdlog/include"
+		"%{prj.name}/vendor/spdlog/include",
+		"%{prj.name}/src"
 	}
 
 	filter"system:windows"
 	cppdialect"C++17"
 	staticruntime"On"
-	systemversion"latest"//属性Windows SDK Version中查看
-//宏
+	systemversion"latest"
 	defines
 	{
 		"HZ_PLATFROM_WINDOWS",
 		"HZ_BUILD_DLL",
 	}
-//dll复制
 	postbuildcommands
 	{
 		("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
 	}
-//预定义宏
 	filter"configurations:Debug"
 	defines "HZ_DEBUG"
 	symbols"On"
@@ -59,7 +51,7 @@ project "Hazel"
 	filter"configurations:Dist"
 	defines "HZ_DIST"
 	optimize"On"
-//项目
+
 project "Sandbox"
 	location"Sandbox"
 	kind"ConsoleApp"
@@ -85,7 +77,6 @@ project "Sandbox"
 	{
 		"HZ_PLATFROM_WINDOWS"
 	}
-//链接项目
 	links
 	{
 		"Hazel"
@@ -101,5 +92,3 @@ project "Sandbox"
 	filter"configurations:Dist"
 	defines "HZ_DIST"
 	optimize"On"
-//------------------------------------------------------------------------------
-GenerateProjects.bat执行文件---执行目录PAUSE不会关闭窗口

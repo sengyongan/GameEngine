@@ -1,7 +1,5 @@
 #pragma once
 //日志库更改接口
-#include<memory>//使用头指针
-
 #include "core.h"
 #include"spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"
