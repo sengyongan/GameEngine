@@ -7,11 +7,11 @@
     <Filter Include="Hazel\Events">
       <UniqueIdentifier>{5DEF92FE-4952-22A3-F2D7-5A59DE19EE25}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Hazel\Platform">
-      <UniqueIdentifier>{d5f3db43-2ad5-4576-a75c-572ae4830bc1}</UniqueIdentifier>
+    <Filter Include="Platfrom">
+      <UniqueIdentifier>{8AD388B4-76A0-E3BF-9FB9-D1678BE5184E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Hazel\Platform\Windows">
-      <UniqueIdentifier>{3106dd70-d05c-4080-b0c2-e451bcd1dc1e}</UniqueIdentifier>
+    <Filter Include="Platfrom\Windows">
+      <UniqueIdentifier>{C467CE9E-B060-EDF0-D992-D275C5EACCFC}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -34,28 +34,42 @@
     <ClInclude Include="src\Hazel\Events\MouseEvent.h">
       <Filter>Hazel\Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\Hazel\Layer.h">
+      <Filter>Hazel</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hazel\LayerStack.h">
+      <Filter>Hazel</Filter>
+    </ClInclude>
     <ClInclude Include="src\Hazel\Log.h">
+      <Filter>Hazel</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hazel\Window.h">
       <Filter>Hazel</Filter>
     </ClInclude>
     <ClInclude Include="src\Hazel\core.h">
       <Filter>Hazel</Filter>
     </ClInclude>
-    <ClInclude Include="src\hzpch.h" />
-    <ClInclude Include="src\Hazel\Window.h" />
-    <ClInclude Include="WindowsWindow.h">
-      <Filter>Hazel\Platform\Windows</Filter>
+    <ClInclude Include="src\Platfrom\Windows\WindowsWindow.h">
+      <Filter>Platfrom\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="src\hzpch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Hazel\Application.cpp">
       <Filter>Hazel</Filter>
     </ClCompile>
+    <ClCompile Include="src\Hazel\Layer.cpp">
+      <Filter>Hazel</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hazel\LayerStack.cpp">
+      <Filter>Hazel</Filter>
+    </ClCompile>
     <ClCompile Include="src\Hazel\Log.cpp">
       <Filter>Hazel</Filter>
     </ClCompile>
-    <ClCompile Include="src\hzpch.cpp" />
-    <ClCompile Include="WindowsWindow.cpp">
-      <Filter>Hazel\Platform\Windows</Filter>
+    <ClCompile Include="src\Platfrom\Windows\WindowsWindow.cpp">
+      <Filter>Platfrom\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="src\hzpch.cpp" />
   </ItemGroup>
 </Project>

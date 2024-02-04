@@ -1,7 +1,7 @@
 #pragma once
 #pragma once
 #include"Hazel/core.h"
-
+#include"hzpch.h"
 //中心模块
 namespace Hazel {
 
@@ -47,7 +47,7 @@ namespace Hazel {
 		virtual const char* GetName() const = 0;//获取名字
 		virtual int GetCategoryFlags() const = 0;//获取分类标志
 		//虚函数派生类可以更改
-		virtual std::string ToString() const { return GetName(); }
+        virtual std::string ToString() const { return GetName(); }
 
 		bool IsInCategory(EventCategory category)//是否在类别中
 		{
@@ -57,8 +57,10 @@ namespace Hazel {
 		bool m_Handled = false;//事件是否被处理过
 	};
 //基类
-	class EventDispatcher//事件分发器
+	class EventDispatcher//事件分发器——判断回调
 	{
+        template<typename T>
+        using EventFn = std::function<bool(T&)>;
 	public:
 		//m_Event初始化为Event对象
 		EventDispatcher(Event& event)
@@ -67,9 +69,9 @@ namespace Hazel {
 		}
 
 		// F will be deduced by the compiler
-		template<typename T, typename F>
-		bool Dispatch(const F& func)//调度
-		{//Event对象 与模板比较
+		template<typename T>
+		bool Dispatch(EventFn<T>  func)//调度
+		{//Event对象 与模板（传入事件类的GetStaticType方法）比较
 			if (m_Event.GetEventType() == T::GetStaticType())
 			{
 				m_Event.Handled |= func(static_cast<T&>(m_Event));
@@ -81,9 +83,10 @@ namespace Hazel {
 		Event& m_Event;
 	};
 
-	inline std::ostream& operator<<(std::ostream& os, const Event& e)
-	{
-		return os << e.ToString();
-	}
+    inline std::ostream& operator<<(std::ostream& os, const Event& e)
+    {
+        return os << e.ToString();
+    }
+
 
 }

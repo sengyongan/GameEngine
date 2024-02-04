@@ -1,6 +1,6 @@
 workspace"Hazel"
 architecture"x64"
-configurations
+configurations--配置调试
 {
 	"Debug",
 	"Release",
@@ -9,9 +9,9 @@ configurations
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 --包含目录（解决方案目录）相对的目录
-IncludeDir={}
-IncludeDir["GLFW"]="Hazel/vendor/GLFW/include"--IncludeDir变量
-include"Hazel/vendor/GLFW"
+IncludeDir = {}
+IncludeDir["GLFW"] = "Hazel/vendor/GLFW/include"--IncludeDir变量
+include "Hazel/vendor/GLFW"
 
 project "Hazel"
 	location"Hazel"
@@ -19,7 +19,7 @@ project "Hazel"
 	language"C++"
 	targetdir("bin/"..outputdir.."/%{prj.name}")
 	objdir("bin-int/"..outputdir.."/%{prj.name}")
-
+    --在每个文件自动包含pchheader，指明源文件
 	pchheader "hzpch.h"
 	pchsource "Hazel/src/hzpch.cpp"
 	files
@@ -31,7 +31,7 @@ project "Hazel"
 	{
 		"%{prj.name}/vendor/spdlog/include",
 		"%{prj.name}/src",
-		"{IncludeDir.GLFW}"
+		"%{IncludeDir.GLFW}"
 	}
 	links
 	{
@@ -47,6 +47,7 @@ project "Hazel"
 	{
 		"HZ_PLATFROM_WINDOWS",
 		"HZ_BUILD_DLL",
+        "HZ_ENABLE_ASSERTS"
 	}
 	postbuildcommands
 	{
@@ -54,14 +55,17 @@ project "Hazel"
 	}
 	filter"configurations:Debug"
 	defines "HZ_DEBUG"
+    buildoptions "/MDd"--多线程调试dll
 	symbols"On"
 
 	filter"configurations:Release"
 	defines "HZ_RELEASE"
+    buildoptions "/MD"
 	optimize"On"
 
 	filter"configurations:Dist"
 	defines "HZ_DIST"
+    buildoptions "/MD"
 	optimize"On"
 
 project "Sandbox"
@@ -95,12 +99,15 @@ project "Sandbox"
 	}
 	filter"configurations:Debug"
 	defines "HZ_DEBUG"
+        buildoptions "/MDd"
 	symbols"On"
 
 	filter"configurations:Release"
 	defines "HZ_RELEASE"
+        buildoptions "/MD"
 	optimize"On"
 
 	filter"configurations:Dist"
 	defines "HZ_DIST"
+        buildoptions "/MD"
 	optimize"On"
