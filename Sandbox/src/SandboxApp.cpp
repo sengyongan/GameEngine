@@ -7,12 +7,20 @@ public:
     ExampleLayer() :Layer("Example")
     {}
     void OnUpdate() override
-    {
-        HZ_CLIENT_INFO("ExampleLayer: :Update");
+    {   //如果按下，就输出日志
+        if (Hazel::Input::IsKeyPressed(HZ_KEY_TAB)) {//不想依赖GLFW_KEY_TAB
+            HZ_CLIENT_TRACE("Tab key is pressed(poll)!");//轮询
+        }
     }
     void OnEvent(Hazel::Event& event)override
     {
-        HZ_CLIENT_TRACE("{0}", event);
+        if (event.GetEventType() == Hazel::EventType::KeyPressed) {
+            Hazel::KeyPressedEvent& e = (Hazel::KeyPressedEvent&)event;
+            if (e.GetKeyCode()==HZ_KEY_TAB) {//不想依赖GLFW_KEY_TAB
+                HZ_CLIENT_TRACE("Tab key is pressed(event)!");//事件
+            }
+            HZ_CLIENT_TRACE("{0}", (char)e.GetKeyCode());
+        }
     }
 };
 
@@ -23,6 +31,7 @@ public:
 	Sandbox()
 	{
         pushlayer(new ExampleLayer());//创建示例层
+        pushOverlayer(new Hazel::imGuiLayer());//imGuiLayer层
 	}
 	~Sandbox()
 	{

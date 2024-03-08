@@ -7,11 +7,17 @@
     <Filter Include="Hazel\Events">
       <UniqueIdentifier>{5DEF92FE-4952-22A3-F2D7-5A59DE19EE25}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Platfrom">
-      <UniqueIdentifier>{8AD388B4-76A0-E3BF-9FB9-D1678BE5184E}</UniqueIdentifier>
+    <Filter Include="Hazel\Platfrom">
+      <UniqueIdentifier>{6D4E2A0B-591C-1E11-42B0-8E372E1DFA75}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Platfrom\Windows">
-      <UniqueIdentifier>{C467CE9E-B060-EDF0-D992-D275C5EACCFC}</UniqueIdentifier>
+    <Filter Include="Hazel\Platfrom\Opengl">
+      <UniqueIdentifier>{41DF2A21-AD4B-E61B-763F-7E79E26A0884}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hazel\Platfrom\Windows">
+      <UniqueIdentifier>{A715A29E-930F-CBF0-7C7C-61016815315D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hazel\imGui">
+      <UniqueIdentifier>{A3BDA19D-0F73-1A93-9867-146A041C1197}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -43,16 +49,23 @@
     <ClInclude Include="src\Hazel\Log.h">
       <Filter>Hazel</Filter>
     </ClInclude>
+    <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsWindow.h">
+      <Filter>Hazel\Platfrom\Windows</Filter>
+    </ClInclude>
     <ClInclude Include="src\Hazel\Window.h">
       <Filter>Hazel</Filter>
     </ClInclude>
     <ClInclude Include="src\Hazel\core.h">
       <Filter>Hazel</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platfrom\Windows\WindowsWindow.h">
-      <Filter>Platfrom\Windows</Filter>
+    <ClInclude Include="src\Hazel\imGui\imGuiLayer.h">
+      <Filter>Hazel\imGui</Filter>
     </ClInclude>
     <ClInclude Include="src\hzpch.h" />
+    <ClInclude Include="src\Hazel\Platfrom\Opengl\imguiOpenGLRender.h" />
+    <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsInput.h" />
+    <ClInclude Include="src\Hazel\KeyCodes.h" />
+    <ClInclude Include="src\Hazel\MouseButtonCodes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Hazel\Application.cpp">
@@ -67,9 +80,15 @@
     <ClCompile Include="src\Hazel\Log.cpp">
       <Filter>Hazel</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platfrom\Windows\WindowsWindow.cpp">
-      <Filter>Platfrom\Windows</Filter>
+    <ClCompile Include="src\Hazel\Platfrom\Windows\WindowsWindow.cpp">
+      <Filter>Hazel\Platfrom\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hazel\imGui\imGuiLayer.cpp">
+      <Filter>Hazel\imGui</Filter>
     </ClCompile>
     <ClCompile Include="src\hzpch.cpp" />
+    <ClCompile Include="src\Hazel\Platfrom\Opengl\imguiOpenGLRender.cpp" />
+    <ClCompile Include="src\Hazel\Input.h" />
+    <ClCompile Include="src\Hazel\Platfrom\Windows\WindowsInput.cpp" />
   </ItemGroup>
 </Project>

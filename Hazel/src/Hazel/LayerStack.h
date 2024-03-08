@@ -13,7 +13,7 @@ namespace Hazel {
         ~LayerStack();
 
         void PushLayer(Layer* layer);//添加
-        void PushOverlay(Layer* overlay);
+        void PushOverlay(Layer* overlay);//推式叠加
         void PopLayer(Layer* layer);//弹出
         void PopOverlay(Layer* overlay);
 

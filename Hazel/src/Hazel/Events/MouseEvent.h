@@ -5,7 +5,7 @@
 
 namespace Hazel {
 
-	class MouseMovedEvent : public Event
+	class MouseMovedEvent : public Event//鼠标移动事件
 	{
 	public:
 		MouseMovedEvent(const float x, const float y)
@@ -27,7 +27,7 @@ namespace Hazel {
 		float m_MouseX, m_MouseY;
 	};
 
-	class MouseScrolledEvent : public Event
+	class MouseScrolledEvent : public Event//鼠标滚动事件
 	{
 	public:
 		MouseScrolledEvent(const float xOffset, const float yOffset)
@@ -49,7 +49,7 @@ namespace Hazel {
 		float m_XOffset, m_YOffset;
 	};
 
-	class MouseButtonEvent : public Event
+	class MouseButtonEvent : public Event//鼠标按下事件
 	{
 	public:
 		int GetMouseButton() const { return m_Button; }
@@ -57,16 +57,16 @@ namespace Hazel {
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput | EventCategoryMouseButton)
 	protected:
 		MouseButtonEvent(const int button)
-			: m_Button(button) {}
+			: m_Button(button) {}//初始化m_Button
 
-		int m_Button;
+		int m_Button;//记录当前按钮
 	};
 
-	class MouseButtonPressedEvent : public MouseButtonEvent
+	class MouseButtonPressedEvent : public MouseButtonEvent//鼠标按键按下事件
 	{
 	public:
 		MouseButtonPressedEvent(const int button)
-			: MouseButtonEvent(button) {}
+			: MouseButtonEvent(button) {}//传入到MouseButtonEvent类中的m_Button
 
 		std::string ToString() const override
 		{
@@ -78,7 +78,7 @@ namespace Hazel {
 		EVENT_CLASS_TYPE(MouseButtonPressed)
 	};
 
-	class MouseButtonReleasedEvent : public MouseButtonEvent
+	class MouseButtonReleasedEvent : public MouseButtonEvent//鼠标按键重复按下事件
 	{
 	public:
 		MouseButtonReleasedEvent(const int button)

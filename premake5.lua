@@ -11,7 +11,12 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 --包含目录（解决方案目录）相对的目录
 IncludeDir = {}
 IncludeDir["GLFW"] = "Hazel/vendor/GLFW/include"--IncludeDir变量
+IncludeDir["Glad"] = "Hazel/vendor/Glad/include"
+IncludeDir["ImGui"] = "Hazel/vendor/imgui"
+
 include "Hazel/vendor/GLFW"
+include "Hazel/vendor/Glad"
+include "Hazel/vendor/imgui"
 
 project "Hazel"
 	location"Hazel"
@@ -31,11 +36,15 @@ project "Hazel"
 	{
 		"%{prj.name}/vendor/spdlog/include",
 		"%{prj.name}/src",
-		"%{IncludeDir.GLFW}"
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.Glad}",
+		"%{IncludeDir.ImGui}"
 	}
 	links
 	{
 		"GLFW",
+		"Glad",
+	"ImGui",
 		"opengl32.lib"
 	}
 
@@ -47,7 +56,9 @@ project "Hazel"
 	{
 		"HZ_PLATFROM_WINDOWS",
 		"HZ_BUILD_DLL",
-        "HZ_ENABLE_ASSERTS"
+       -- "HZ_ENABLE_ASSERTS"
+       "GLFW_INCLUDE_NONE",
+       "HZ_BIND_EVENT_FN"
 	}
 	postbuildcommands
 	{

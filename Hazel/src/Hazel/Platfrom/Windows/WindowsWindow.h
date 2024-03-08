@@ -20,7 +20,7 @@ namespace Hazel {
         //override�塋週慟己湘鰭�窃嶄議痕方頁顕固児窃嶄議倡痕方
 		bool IsVSync() const override;
         //資函云仇完笥
-		virtual void* GetNativeWindow() const { return m_Window; }
+		inline virtual void* GetNativeWindow() const { return m_Window; }
 
 //！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 	private:

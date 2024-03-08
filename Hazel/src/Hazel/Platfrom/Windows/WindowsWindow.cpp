@@ -5,7 +5,7 @@
 #include"Hazel/Events/KeyEvent.h"
 #include"Hazel/Events/MouseEvent.h"
 
-
+#include<glad/glad.h>
 namespace Hazel {
     //bool是否初始化
 	static bool s_GLFWInitiallized = false;
@@ -55,6 +55,8 @@ namespace Hazel {
         //变量=实际窗口
         m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
         glfwMakeContextCurrent(m_Window);//当前上下文
+        int stauts = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);//获取程序地址
+        HZ_CORE_ASSERT(stauts, "Failed to initialize glad");
         //GLFW中的函数
         glfwSetWindowUserPointer(m_Window, &m_Data);//将用户自定义的数据与窗口关联起来
         SetVSync(true);
@@ -104,6 +106,13 @@ namespace Hazel {
                         }
                
                 }
+            });
+        glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int keycode)//输入字符串
+            {
+                WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+                KeyTypedEvent event(keycode);
+                data.EventCallback(event);
+
             });
         glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
             {

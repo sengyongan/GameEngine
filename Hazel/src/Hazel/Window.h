@@ -31,7 +31,7 @@ namespace Hazel {
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;//参数
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
-
+        //公开窗口：非public——友元
 		virtual void* GetNativeWindow() const = 0;
         //静态：接受窗口数据，创建窗口
 		static Window* Create(const WindowProps& props = WindowProps());
