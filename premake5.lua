@@ -13,10 +13,12 @@ IncludeDir = {}
 IncludeDir["GLFW"] = "Hazel/vendor/GLFW/include"--IncludeDir变量
 IncludeDir["Glad"] = "Hazel/vendor/Glad/include"
 IncludeDir["ImGui"] = "Hazel/vendor/imgui"
+IncludeDir["glm"] = "Hazel/vendor/glm"
 
 include "Hazel/vendor/GLFW"
 include "Hazel/vendor/Glad"
 include "Hazel/vendor/imgui"
+--include "Hazel/vendor/glm"
 
 project "Hazel"
 	location"Hazel"
@@ -27,10 +29,12 @@ project "Hazel"
     --在每个文件自动包含pchheader，指明源文件
 	pchheader "hzpch.h"
 	pchsource "Hazel/src/hzpch.cpp"
-	files
+	files--添加包含文件（添加到项目）
 	{
 		"%{prj.name}/src/**.h",
-		"%{prj.name}/src/**.cpp"
+		"%{prj.name}/src/**.cpp",
+        "%{prj.name}/vendor/glm/glm/**.hpp",
+        "%{prj.name}/vendor/glm/glm/**.inl"
 	}
 	includedirs--包含目录
 	{
@@ -38,7 +42,8 @@ project "Hazel"
 		"%{prj.name}/src",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
-		"%{IncludeDir.ImGui}"
+		"%{IncludeDir.ImGui}",
+		"%{IncludeDir.glm}"
 	}
 	links
 	{
@@ -89,11 +94,13 @@ project "Sandbox"
 	{
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp"
+		
 	}
 	includedirs
 	{
 		"Hazel/vendor/spdlog/include",
-		"Hazel/src"
+		"Hazel/src",
+        "%{IncludeDir.glm}"
 	}
 
 	filter"system:windows"
