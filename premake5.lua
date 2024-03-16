@@ -1,5 +1,6 @@
 workspace"Hazel"
 architecture"x64"
+startproject "Sandbox"
 configurations--配置调试
 {
 	"Debug",
@@ -22,8 +23,12 @@ include "Hazel/vendor/imgui"
 
 project "Hazel"
 	location"Hazel"
-	kind"SharedLib"--静态库
+	kind"StaticLib"--静态库
 	language"C++"
+	cppdialect"C++17"
+    staticruntime"on"
+
+
 	targetdir("bin/"..outputdir.."/%{prj.name}")
 	objdir("bin-int/"..outputdir.."/%{prj.name}")
     --在每个文件自动包含pchheader，指明源文件
@@ -36,6 +41,9 @@ project "Hazel"
         "%{prj.name}/vendor/glm/glm/**.hpp",
         "%{prj.name}/vendor/glm/glm/**.inl"
 	}
+    defines{
+        "_CRT_SECURE_NO_WARNINGS"
+    }
 	includedirs--包含目录
 	{
 		"%{prj.name}/vendor/spdlog/include",
@@ -49,13 +57,11 @@ project "Hazel"
 	{
 		"GLFW",
 		"Glad",
-	"ImGui",
+	   "ImGui",
 		"opengl32.lib"
 	}
 
 	filter"system:windows"
-	cppdialect"C++17"
-	staticruntime"On"
 	systemversion"latest"
 	defines
 	{
@@ -65,29 +71,30 @@ project "Hazel"
        "GLFW_INCLUDE_NONE",
        "HZ_BIND_EVENT_FN"
 	}
-	postbuildcommands
-	{
-		("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
-	}
 	filter"configurations:Debug"
-	defines "HZ_DEBUG"
-    buildoptions "/MDd"--多线程调试dll
-	symbols"On"
+	defines "HZ_DEBUG"--调试版本
+    --buildoptions "/MDd"--多线程调试dll
+    runtime "Debug"
+	symbols"on"
 
 	filter"configurations:Release"
-	defines "HZ_RELEASE"
-    buildoptions "/MD"
-	optimize"On"
+	defines "HZ_RELEASE"--发布版本
+    runtime "Release"
+	optimize"on"
 
 	filter"configurations:Dist"
 	defines "HZ_DIST"
-    buildoptions "/MD"
-	optimize"On"
+    runtime "Release"
+	optimize"on"
 
 project "Sandbox"
 	location"Sandbox"
 	kind"ConsoleApp"
 	language"C++"
+	cppdialect"C++17"
+    staticruntime"on"
+
+
 	targetdir("bin/"..outputdir.."/%{prj.name}")
 	objdir("bin-int/"..outputdir.."/%{prj.name}")
 	files
@@ -100,12 +107,11 @@ project "Sandbox"
 	{
 		"Hazel/vendor/spdlog/include",
 		"Hazel/src",
+		"Hazel/vendor",
         "%{IncludeDir.glm}"
 	}
 
 	filter"system:windows"
-	cppdialect"C++17"
-	staticruntime"On"
 	systemversion"latest"
 	defines
 	{
@@ -117,15 +123,15 @@ project "Sandbox"
 	}
 	filter"configurations:Debug"
 	defines "HZ_DEBUG"
-        buildoptions "/MDd"
-	symbols"On"
+    runtime "Debug"
+	symbols"on"
 
 	filter"configurations:Release"
 	defines "HZ_RELEASE"
-        buildoptions "/MD"
-	optimize"On"
+    runtime "Release"
+	optimize"on"
 
 	filter"configurations:Dist"
 	defines "HZ_DIST"
-        buildoptions "/MD"
-	optimize"On"
+    runtime "Release"
+	optimize"on"

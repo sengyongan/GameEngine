@@ -4,7 +4,7 @@
 #include"Hazel/Events/ApplicationEvent.h"
 #include"Hazel/Events/KeyEvent.h"
 #include"Hazel/Events/MouseEvent.h"
-
+#include "Hazel/Platfrom/Opengl/OpenGLContext.h"
 #include<glad/glad.h>
 namespace Hazel {
     //bool是否初始化
@@ -41,6 +41,7 @@ namespace Hazel {
         m_Data.Height = props.Height;
         //日志中的宏
         HZ_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+        //
         //判断是否初始化
         if (s_GLFWInitiallized == false)
         {
@@ -54,9 +55,9 @@ namespace Hazel {
         }
         //变量=实际窗口
         m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-        glfwMakeContextCurrent(m_Window);//当前上下文
-        int stauts = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);//获取程序地址
-        HZ_CORE_ASSERT(stauts, "Failed to initialize glad");
+        m_Context = new OpenGLContext(m_Window);//创建上下文
+        m_Context->Init();
+        
         //GLFW中的函数
         glfwSetWindowUserPointer(m_Window, &m_Data);//将用户自定义的数据与窗口关联起来
         SetVSync(true);
@@ -162,7 +163,7 @@ namespace Hazel {
 	{
 
 		glfwPollEvents();
-        glfwSwapBuffers(m_Window);//交换缓冲区
+        m_Context->SwapBuffers();//用于交换OpenGL的前缓冲区和后缓冲区
 	}
     //帧率
 	void WindowsWindow::SetVSync(bool enabled)

@@ -1,7 +1,9 @@
 #pragma once
 #include "Hazel/Window.h"//继承
+#include "Hazel/Renderer/GraphicsContext.h"
+
 #include <GLFW/glfw3.h>
-//windows实现
+//windows操作系统的窗口
 namespace Hazel {
 
 	class WindowsWindow : public Window
@@ -27,7 +29,9 @@ namespace Hazel {
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();//关闭
 	private:
-		GLFWwindow* m_Window;//GLFW库
+		GLFWwindow* m_Window;//GLFW的函数
+        //
+        GraphicsContext* m_Context;//当前上下文
 		//Scope<GraphicsContext> m_Context;
 //——————————————————————————————————————————————————————————————————————————————————
         //窗口实际数据会传递给GLFW，由库创建窗口

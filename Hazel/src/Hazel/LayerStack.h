@@ -1,5 +1,5 @@
 #pragma once
-//层的数组形式
+//层的栈形式
 #include "Hazel/Layer.h"
 
 #include <vector>
@@ -22,7 +22,7 @@ namespace Hazel {
 
     private:
         std::vector<Layer*> m_Layers;
-        std::vector<Layer*> ::iterator m_layerInsert;;//对于层的迭代 器
+        unsigned int  m_LayerInsertIndex = 0;;//对于层的迭代器——总层数
     };
 
 }

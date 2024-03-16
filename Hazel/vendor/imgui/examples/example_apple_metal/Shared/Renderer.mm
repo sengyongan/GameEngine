@@ -1,4 +1,3 @@
-
 #import "Renderer.h"
 #import <Metal/Metal.h>
 
@@ -16,7 +15,7 @@
 
 @implementation Renderer
 
--(nonnull instancetype)initWithView:(nonnull MTKView *)view;
+-(nonnull instancetype)initWithView:(nonnull MTKView*)view;
 {
     self = [super init];
     if(self)
@@ -24,19 +23,41 @@
         _device = view.device;
         _commandQueue = [_device newCommandQueue];
 
+        // Setup Dear ImGui context
+        // FIXME: This example doesn't have proper cleanup...
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        (void)ImGui::GetIO();
-        
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+        //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+        // Setup Dear ImGui style
+        ImGui::StyleColorsDark();
+        //ImGui::StyleColorsClassic();
+
+        // Setup Renderer backend
         ImGui_ImplMetal_Init(_device);
 
-        ImGui::StyleColorsDark();
+        // Load Fonts
+        // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
+        // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
+        // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+        // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
+        // - Read 'docs/FONTS.txt' for more instructions and details.
+        // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
+        //io.Fonts->AddFontDefault();
+        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
+        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
+        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
+        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
+        //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+        //IM_ASSERT(font != NULL);
     }
 
     return self;
 }
 
-- (void)drawInMTKView:(MTKView *)view
+- (void)drawInMTKView:(MTKView*)view
 {
     ImGuiIO &io = ImGui::GetIO();
     io.DisplaySize.x = view.bounds.size.width;
@@ -52,12 +73,13 @@
     io.DeltaTime = 1 / float(view.preferredFramesPerSecond ?: 60);
 
     id<MTLCommandBuffer> commandBuffer = [self.commandQueue commandBuffer];
-    
+
+    // Our state (make them static = more or less global) as a convenience to keep the example terse.
     static bool show_demo_window = true;
     static bool show_another_window = false;
     static float clear_color[4] = { 0.28f, 0.36f, 0.5f, 1.0f };
 
-    MTLRenderPassDescriptor *renderPassDescriptor = view.currentRenderPassDescriptor;
+    MTLRenderPassDescriptor* renderPassDescriptor = view.currentRenderPassDescriptor;
     if (renderPassDescriptor != nil)
     {
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
@@ -89,7 +111,7 @@
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
             ImGui::Checkbox("Another Window", &show_another_window);
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
@@ -113,19 +135,19 @@
 
         // Rendering
         ImGui::Render();
-        ImDrawData *drawData = ImGui::GetDrawData();
+        ImDrawData* drawData = ImGui::GetDrawData();
         ImGui_ImplMetal_RenderDrawData(drawData, commandBuffer, renderEncoder);
-        
+
         [renderEncoder popDebugGroup];
         [renderEncoder endEncoding];
 
         [commandBuffer presentDrawable:view.currentDrawable];
     }
-    
+
     [commandBuffer commit];
 }
 
-- (void)mtkView:(MTKView *)view drawableSizeWillChange:(CGSize)size
+- (void)mtkView:(MTKView*)view drawableSizeWillChange:(CGSize)size
 {
 }
 

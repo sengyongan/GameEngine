@@ -3,12 +3,16 @@
 #include"Hazel/Events/Event.h"
 #include"Window.h"
 #include "Events/ApplicationEvent.h"
-
 #include"Hazel/LayerStack.h"
+#include"Hazel/imGui/imGuiLayer.h"
+
+#include"Hazel/Renderer/Shader.h"
+#include"Hazel/Renderer/Buffer.h"
+#include"Hazel/Renderer/VertexArray.h"
 
 //主要入口点——程序运行起始处
 namespace Hazel {
-	class HAZEL_API Application
+	class HAZEL_API Application//HAZEL_API默认空
 	{
 	public:
 		Application();
@@ -28,14 +32,17 @@ namespace Hazel {
         bool OnWindowClose(WindowCloseEvent& e);
 
         std::unique_ptr<Window> m_Window;//Windowl类型的指针m_Window//实际窗口
-
+        imGuiLayer* m_ImGuiLayer;//imgui层
         bool m_Running = true;//是否运行
-
-        LayerStack    m_Layerstack;//层
+        LayerStack m_Layerstack;//层
+        //
+        std::shared_ptr<Shader>m_Shader;//着色器类——指针
+        std::shared_ptr<VertexArray>m_VertexArray;//顶点数组类
+        //背景
+        std::shared_ptr<Shader>m_BlueShader;//着色器类
+        std::shared_ptr<VertexArray>m_SquareVA;//顶点数组类
     private:
         static Application* s_Instance;//成员变量——实例
-
-
 	};
 	//to be define in client
 	Application* CreatApplication();//创建应用程序实例

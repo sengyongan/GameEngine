@@ -5,7 +5,7 @@
 //中心模块
 namespace Hazel {
 
-//事件类型：所有事件————枚举
+//事件类型：所有事件，窗口（glfw和imgui），键盘，鼠标
 	enum class EventType
 	{
 		None = 0,//index=0

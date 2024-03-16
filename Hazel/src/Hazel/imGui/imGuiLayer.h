@@ -7,26 +7,18 @@
 
 namespace Hazel {
     class HAZEL_API imGuiLayer : public Layer
-    {
-    private:
-        float m_Time = 0.0f;//
-
+    { 
     public:
         imGuiLayer();
         ~imGuiLayer();
-        virtual void OnAttach();//附上
-        virtual void OnDetach();//取下
+         void OnAttach() override;//附上
+         void OnDetach() override;//取下
+         void OnImGuiRender() override;
 
-        virtual void OnUpdate() ;
-        virtual void OnEvent(Event& event);
+        void Begin();//开始渲染
+        void End();
     private:
-           bool  OnMouseButtonPressedEvent  (MouseButtonPressedEvent& e);
-           bool  OnMouseButtonReleasedEvent  (MouseButtonReleasedEvent& e);
-           bool  OnMouseMovedEvent  (MouseMovedEvent& e);
-           bool  OnMouseScrolledEvent  (MouseScrolledEvent& e);
-           bool  OnKeyPressedEvent  (KeyPressedEvent& e);
-           bool  OnKeyReleasedEvent  (KeyReleasedEvent& e);
-           bool  OnKeyTypedEvent  (KeyTypedEvent& e);
-           bool  OnWindowResizeEvent  (WindowResizeEvent& e);
+        float m_Time = 0.0f;
+
 };
 }

@@ -23,7 +23,7 @@ namespace Hazel {
 	{
 	public:
 		KeyPressedEvent(const int keycode, bool isRepeat = false)
-			: KeyEvent(keycode), m_IsRepeat(isRepeat) {}
+			: KeyEvent(keycode), m_IsRepeat(isRepeat) {}//继承keyevent类，传入keycode，m_KeyCode=参数，GetKeyCode返回参数
 
 		bool IsRepeat() const { return m_IsRepeat; }
 
@@ -34,7 +34,7 @@ namespace Hazel {
 			return ss.str();
 		}
 
-		EVENT_CLASS_TYPE(KeyPressed)
+		EVENT_CLASS_TYPE(KeyPressed)//定义GetEventType函数
 	private:
 		bool m_IsRepeat;
 	};
