@@ -18,6 +18,6 @@ namespace Hazel {
         
         
     private:
-        static Input* s_Instance;//类对象静态（唯一输入）
+        static Input* s_Instance;//初始为WindowsInput类
     };
 }

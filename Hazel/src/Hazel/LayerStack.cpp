@@ -8,7 +8,7 @@ namespace Hazel {
     }
     LayerStack::~LayerStack()
     {
-        for (Layer* layer : m_Layers)//É¾³ıËùÓĞ²ã
+        for (Layer* layer : m_Layers)
         {
             delete layer;
         }

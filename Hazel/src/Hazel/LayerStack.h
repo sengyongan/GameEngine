@@ -1,5 +1,5 @@
 #pragma once
-//层的栈形式
+//vector<layer>
 #include "Hazel/Layer.h"
 
 #include <vector>
@@ -10,7 +10,7 @@ namespace Hazel {
     {
     public:
         LayerStack();
-        ~LayerStack();
+        ~LayerStack();//删除所有层
 
         void PushLayer(Layer* layer);//添加
         void PushOverlay(Layer* overlay);//推式叠加
@@ -21,8 +21,8 @@ namespace Hazel {
         std::vector<Layer*>::iterator end() { return m_Layers.end(); }
 
     private:
-        std::vector<Layer*> m_Layers;
-        unsigned int  m_LayerInsertIndex = 0;;//对于层的迭代器——总层数
+        std::vector<Layer*> m_Layers;//数组结构
+        unsigned int  m_LayerInsertIndex = 0;;//总层数
     };
 
 }

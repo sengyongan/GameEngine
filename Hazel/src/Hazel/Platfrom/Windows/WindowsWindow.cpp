@@ -1,30 +1,30 @@
 #include "hzpch.h"
 #include "WindowsWindow.h"
 #include"Hazel/core.h"
+
 #include"Hazel/Events/ApplicationEvent.h"
 #include"Hazel/Events/KeyEvent.h"
 #include"Hazel/Events/MouseEvent.h"
 #include "Hazel/Platfrom/Opengl/OpenGLContext.h"
+
 #include<glad/glad.h>
+
 namespace Hazel {
-    //bool是否初始化
+    
 	static bool s_GLFWInitiallized = false;
-    //
+    
     static void GLFWErrorCallback(int error, const char* description)
     {
         HZ_CORE_ERROR("GLFW  Error  ({0}) : {1}", error, description);
     }
 
-    //接受实际数据
-    //window中静态函数实现
-// 核心调用——类对象——初始函数（接受数据）——传给GLFW的实际数据——创建窗口
 	Window* Window::Create(const WindowProps& props)
 	{
-		return new WindowsWindow(props);//返回类对象：包含WindowsWindow所有函数
+		return new WindowsWindow(props);//创建新的窗口，并传入props数据
 	}
+
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
-
 		Init(props);
 	}
 
@@ -32,38 +32,33 @@ namespace Hazel {
 	{
         Shutdown();
 	}
-    //接受实际数据
+    
     void WindowsWindow::Init(const WindowProps& props)
     {
-        //为实际数据赋值=可被更改数据
         m_Data.Title = props.Title;
         m_Data.Width = props.Width;
         m_Data.Height = props.Height;
-        //日志中的宏
         HZ_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
-        //
+
         //判断是否初始化
         if (s_GLFWInitiallized == false)
         {
-            int success = glfwInit();//当glfw在启动时
-            //如果success没有成功————关闭系统了
-
-            HZ_CORE_ASSERT(success, "Could not initialize GLFW!");//将输出无法初始化 GLFW！
+            int success = glfwInit();
+            HZ_CORE_ASSERT(success, "Could not initialize GLFW!");
             glfwSetErrorCallback(GLFWErrorCallback);
             s_GLFWInitiallized = true;
 
         }
-        //变量=实际窗口
+        //实际窗口创建，并赋予WindowProps中所有数据
         m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-        m_Context = new OpenGLContext(m_Window);//创建上下文
+        m_Context = new OpenGLContext(m_Window);//opengl的上下文
         m_Context->Init();
-        
-        //GLFW中的函数
-        glfwSetWindowUserPointer(m_Window, &m_Data);//将用户自定义的数据与窗口关联起来
+        //将用户自定义的数据与窗口关联起来
+        glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVSync(true);
 
-        // GLFW callback
-        //设置窗口大小回调函数
+//回调Callback/////////////////////////////////////////////////////////////////////////////////
+        //重载glfw中函数
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int  height)
             {
                 WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -72,8 +67,7 @@ namespace Hazel {
                 data.Height = height;
                 data.EventCallback(event);
 
-            });//【】后是参数和函数体
-        //
+            });
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
             {
                 WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -86,14 +80,14 @@ namespace Hazel {
                 WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
                 switch (action)
                 {
-                         case GLFW_PRESS://新闻
+                         case GLFW_PRESS://按下
                         {  
                             KeyPressedEvent event(key, 0);
                             data.EventCallback(event);
                         
                             break;
                         }
-                        case GLFW_RELEASE://发布
+                        case GLFW_RELEASE:
                         {
                             KeyReleasedEvent event(key);
                             data.EventCallback(event);
@@ -159,13 +153,13 @@ namespace Hazel {
 		glfwDestroyWindow(m_Window);
 	}
 
-	void WindowsWindow::OnUpdate()//更新
+	void WindowsWindow::OnUpdate()
 	{
 
 		glfwPollEvents();
         m_Context->SwapBuffers();//用于交换OpenGL的前缓冲区和后缓冲区
 	}
-    //帧率
+    
 	void WindowsWindow::SetVSync(bool enabled)
 	{
 

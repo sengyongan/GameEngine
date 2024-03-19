@@ -14,16 +14,16 @@ namespace Hazel {
 	protected:
 		//构造
 		KeyEvent(const int keycode)
-			: m_KeyCode(keycode) {}//将参数的值赋值给变量
+			: m_KeyCode(keycode) {}//被派生类初始
 
 		int m_KeyCode;
 	};
-//按键事件
+    //按键事件
 	class KeyPressedEvent : public KeyEvent
 	{
 	public:
 		KeyPressedEvent(const int keycode, bool isRepeat = false)
-			: KeyEvent(keycode), m_IsRepeat(isRepeat) {}//继承keyevent类，传入keycode，m_KeyCode=参数，GetKeyCode返回参数
+			: KeyEvent(keycode), m_IsRepeat(isRepeat) {}
 
 		bool IsRepeat() const { return m_IsRepeat; }
 
@@ -34,11 +34,11 @@ namespace Hazel {
 			return ss.str();
 		}
 
-		EVENT_CLASS_TYPE(KeyPressed)//定义GetEventType函数
+		EVENT_CLASS_TYPE(KeyPressed)//定义event中的函数
 	private:
 		bool m_IsRepeat;
 	};
-//按键释放事件
+    //按键释放事件
 	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
@@ -54,7 +54,7 @@ namespace Hazel {
 
 		EVENT_CLASS_TYPE(KeyReleased)
 	};
-// 按键式事件
+    // 按键式事件
 	class KeyTypedEvent : public KeyEvent
 	{
 	public:

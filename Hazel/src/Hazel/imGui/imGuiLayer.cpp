@@ -1,4 +1,3 @@
-
 #include "hzpch.h"
 #include"imGuiLayer.h"
 #include"imgui.h"
@@ -23,19 +22,15 @@ namespace Hazel {
     {
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
-        ImGui::CreateContext();//调用创建上下文
+        ImGui::CreateContext();
+
         ImGuiIO& io = ImGui::GetIO(); (void)io;                     //启用
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-        //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking停靠
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-        //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoTaskBarIcons;
-        //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
-//————————————————————————————————————————————————————————————————————————————————
-        // ImGui 风格
+
         ImGui::StyleColorsDark();
-        //ImGui::StyleColorsClassic();
-        // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+
         ImGuiStyle& style = ImGui::GetStyle();
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
@@ -47,15 +42,15 @@ namespace Hazel {
         GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
         // Setup Platform/Renderer bindings
-        ImGui_ImplGlfw_InitForOpenGL(window, true);//初始化
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init("#version 410");
     }
 
     void imGuiLayer::OnDetach()
     {
-        ImGui_ImplOpenGL3_Shutdown();//关闭
+        ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();//调用销毁上下文
+        ImGui::DestroyContext();
     }
     void imGuiLayer::OnImGuiRender()
     {
@@ -65,9 +60,9 @@ namespace Hazel {
     void imGuiLayer::Begin() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();//新缓冲
+        ImGui::NewFrame();
     }
-    void imGuiLayer::End() {//结束渲染
+    void imGuiLayer::End() {
         ImGuiIO& io = ImGui::GetIO();
         Application& app = Application::Get();
         io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());

@@ -1,12 +1,24 @@
 #pragma once
-//被客户端引用的文件
-#include"Hazel/Application.h"//入口点
-#include"Hazel/Log.h"//日志
-#include"Hazel/Layer.h"//层
-#include"Hazel/imGui/imGuiLayer.h"//imGuiLayer层
+//后端——静态库的头文件
+#include"Hazel/Application.h"
+#include"Hazel/Log.h"
 
-#include"Hazel/Input.h"//输入
+#include"Hazel/Layer.h"
+#include"Hazel/imGui/imGuiLayer.h"
+
+#include"Hazel/Core/Timestep.h"
+
+#include"Hazel/Input.h"
 #include"Hazel/KeyCodes.h"
 #include"Hazel/MouseButtonCodes.h"
-//--------------------------------------------------
+//----renderer-------------------------
+#include"Hazel/Renderer/Renderer.h"
+#include"Hazel/Renderer/RendererCommand.h"
+
+#include"Hazel/Renderer/Buffer.h"
+#include"Hazel/Renderer/Shader.h"
+#include"Hazel/Renderer/VertexArray.h"
+
+#include"Hazel/Renderer/OrthgraphicCamera.h"
+//-----EntryPoint-----------------------
 #include"Hazel/EntryPoint.h"//其他

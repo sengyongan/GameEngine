@@ -3,12 +3,14 @@
 #include"Hazel/Application.h"
 #include<GLFW/glfw3.h>
 namespace Hazel {
+
     Input* Input::s_Instance = new WindowsInput();
-    bool WindowsInput::IsKeyPressedImpl(int keycode)//是否按下
-    {
-        auto Window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());//窗口引用--类型转换
-        auto state = glfwGetKey(Window, keycode);//return 两个宏之一
-        return state == GLFW_PRESS || state == GLFW_REPEAT;//按下/重复--返回flase为释放
+    //是否按下  keycode为整形值
+    bool WindowsInput::IsKeyPressedImpl(int keycode)
+    {   //Application实例--window类对象--m_Window窗口实例
+        auto Window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+        auto state = glfwGetKey(Window, keycode);//glfw库 —— return 状态
+        return state == GLFW_PRESS || state == GLFW_REPEAT;//按下/重复--其中一个成立返回真
     }
     bool WindowsInput::IsMouseButtonPressedImpl(int button)
     {

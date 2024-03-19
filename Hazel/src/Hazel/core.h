@@ -33,5 +33,5 @@
 //事件的类型标签
 #define BIT(x) (1 <<x)//把1左移一位
 
-//this指向在当前类使用
-#define HZ_BIND_EVENT_FN(fn) std::bind(&fn,this,std::placeholders::_1)
+//bind—————第一个参数表示对象的成员函数，第二个参数表示对象的地址,形参 = 占位符对应的实参
+#define HZ_BIND_EVENT_FN(fn) std::bind(&fn,this,std::placeholders::_1)//fn 绑定到当前对象（this），调用fn函数

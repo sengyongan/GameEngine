@@ -1,12 +1,22 @@
 #pragma once
-//图形api
+//渲染
+//RendererAPI->RendererCommand->Renderer
+#include"RendererCommand.h"
+#include"OrthgraphicCamera.h"
+#include"Shader.h"
 namespace Hazel {
-    enum class RendererAPI {//枚举类
-        None = 0,OpenGL = 1
-    };
     class Renderer {
     public:
-        inline static RendererAPI GetAPI() { return s_RendererAPI; };
-        static RendererAPI s_RendererAPI;//图形api,s前缀为全局static
+        static void BeginScene(OrthgraphicCamera& camera);//开始准备
+        static void EndScene();
+        static void Submit( const std::shared_ptr<Shader>& shader,const std::shared_ptr<VertexArray>& vertexArray,const glm::mat4& transfrom = glm::mat4(1.0f));//渲染
+
+        inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
+    private:
+        struct SceneData
+        {
+            glm::mat4 ViewProjectionMatrix;//视图矩阵数据
+        };
+        static SceneData* m_SceneData;
     };
 }
