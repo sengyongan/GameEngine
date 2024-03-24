@@ -1,5 +1,6 @@
 #pragma once
 //宏
+#include <memory>
 //HZ_PLATFROM_WINDOWS--包含在premack5.lua
 #ifdef HZ_PLATFROM_WINDOWS//windows平台
     #if HZ_DYNAMIC_LINK//动态链接
@@ -33,5 +34,14 @@
 //事件的类型标签
 #define BIT(x) (1 <<x)//把1左移一位
 
-//bind—————第一个参数表示对象的成员函数，第二个参数表示对象的地址,形参 = 占位符对应的实参
-#define HZ_BIND_EVENT_FN(fn) std::bind(&fn,this,std::placeholders::_1)//fn 绑定到当前对象（this），调用fn函数
+//bind—————第一个参数表示对象的成员函数（可调用对象），第二个参数表示对象的地址,fn形参 = 占位符对应的实参
+#define HZ_BIND_EVENT_FN(fn) std::bind(&fn,this,std::placeholders::_1)//fn 绑定到当前对象（this），调用宏即调用fn函数
+
+//指针别名
+namespace Hazel {
+    template<typename T>
+    using Scope = std::unique_ptr<T>;
+
+    template<typename T>
+    using Ref = std::shared_ptr<T>;
+}

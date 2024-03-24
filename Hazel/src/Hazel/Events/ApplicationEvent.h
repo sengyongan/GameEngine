@@ -7,8 +7,7 @@ namespace Hazel {
 	class WindowResizeEvent : public Event
 	{
 	public:
-		// 窗口调整大小事件------构造函数WindowResizeEvent（）{}
-		//宽度高度
+		//参数从WindowsWindow中glfwSetWindowUserPointer中获取
 		WindowResizeEvent(unsigned int width, unsigned int height)
 			: m_Width(width), m_Height(height) {}//成员初始化列表
 

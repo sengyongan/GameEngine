@@ -37,7 +37,7 @@ namespace Hazel {
 	public:
 		virtual ~Event() = default;//默认折构
 
-		bool Handled = false;//层是否被处理过
+		bool Handled = false;//事件触发器
 		//纯虚函数
 		virtual EventType GetEventType() const = 0;//获取事件类型//调用GetStaticType()
 		virtual const char* GetName() const = 0;//获取事件名字
@@ -53,29 +53,31 @@ namespace Hazel {
 		bool m_Handled = false;
 	};
 
+
 	class EventDispatcher//事件分发器（如果bool函数事件成立，将事件分发给bool函数
 	{   
         //模板--（T为任何函数名）
         template<typename T>
         using EventFn = std::function<bool(T&)>;//定义别名--bool类型函数
+
 	public:
 		//构造
-        EventDispatcher(Event& event)
+        EventDispatcher(Event& event)//event--event类（可以派生类）
             : m_Event(event) {}
 
         //函数模板
 		template<typename T>
-		bool Dispatch(EventFn<T> func)
-		{
+		bool Dispatch(EventFn<T> func)//func--bool类型函数-----BIND_ENENT_FN(OnWindowClose)
+		{//判断event和func是否同类型
 			if (m_Event.GetEventType() == T::GetStaticType())
-			{//执行将 m_Event 对象转换为类型为T的引用,传递给func函数。从而调用bool函数，执行Event& event（事件）的函数
-				m_Event.Handled |= func(static_cast<T&>(m_Event));
+			{
+				m_Event.Handled |= func(static_cast<T&>(m_Event));//成立就调用func函数，并传入event
 				return true;
 			}
 			return false;
 		}
 	private:
-		Event& m_Event;//传入的bool函数
+		Event& m_Event;//传入的event
 	};
 
     inline std::ostream& operator<<(std::ostream& os, const Event& e)

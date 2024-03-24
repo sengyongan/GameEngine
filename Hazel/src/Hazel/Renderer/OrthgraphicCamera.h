@@ -5,6 +5,9 @@ namespace Hazel {
     class OrthgraphicCamera {
     public:
         OrthgraphicCamera(float left, float right, float bottom, float top);
+
+        void SetProjection(float left, float right, float bottom, float top);//重新设置投影矩阵（滚轮缩放)
+
         const glm::vec3& GetPosition() const { return m_Position; }
         void SetPosition(const glm::vec3& position) { m_Position = position;RecalculateViewMatrix(); }
 
@@ -15,8 +18,9 @@ namespace Hazel {
         const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
         const glm::mat4& GetViewProjextionMatrix() const { return m_ViewProjextionMatrix; }
 
+
     private:
-        void RecalculateViewMatrix();//重置视图矩阵位置
+        void RecalculateViewMatrix();//计算视图矩阵位置
     private:
         glm::mat4 m_ProjectionMatrix;//投影矩阵：规范到摄像机
         glm::mat4 m_ViewMatrix;//视图矩阵：模型相对于观察者的位置

@@ -1,8 +1,8 @@
 #pragma once
-//窗口基类
+//窗口基类（抽象类）
 #include "Hazel/Events/Event.h"
 namespace Hazel {
-    //窗口数据
+    //窗口初始化数据
 	struct WindowProps
 	{
 		std::string Title;//标题
@@ -17,7 +17,7 @@ namespace Hazel {
 	class Window
 	{
 	public:
-		using EventCallbackFn = std::function<void(Event&)>;//定义别名EventCallbackFn = 事件函数
+		using EventCallbackFn = std::function<void(Event&)>;//EventCallbackFn -》 回调函数
         //纯虚函数
 		virtual ~Window() = default;
 		virtual void OnUpdate() = 0;
@@ -25,7 +25,8 @@ namespace Hazel {
 		virtual uint32_t GetHeight() const = 0;
         //事件回调
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
-		virtual void SetVSync(bool enabled) = 0;//帧率fps,限制为30fps
+        //帧率fps,限制为30fps
+		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSync() const = 0;
         //获取本地窗口m_Window
 		virtual void* GetNativeWindow() const = 0;

@@ -16,8 +16,8 @@ namespace Hazel {
 		Application();
 		virtual ~Application();
 
-		void Run();//声明实时运行函数
-        void OnEvent(Event& e);//接受事件类
+		void Run();//实时运行
+        void OnEvent(Event& e);//循环所有事件
 
         void pushlayer(Layer* layer);//添加层
         void pushOverlayer(Layer* overlay);
@@ -26,12 +26,14 @@ namespace Hazel {
         inline Window& GetWindow() { return  *m_Window; }//返回窗口
     private:
         bool OnWindowClose(WindowCloseEvent& e);
+        bool OnWindowResize(WindowResizeEvent& e);
     private:
         std::unique_ptr<Window> m_Window;//Window类对象
 
         imGuiLayer* m_ImGuiLayer;//imgui层指针
 
         bool m_Running = true;//是否运行
+        bool m_Minimized = false;//窗口是否最小化
 
         LayerStack m_Layerstack;//总层类对象
 

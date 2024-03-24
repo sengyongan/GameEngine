@@ -43,7 +43,7 @@ namespace Hazel {
         //判断是否初始化
         if (s_GLFWInitiallized == false)
         {
-            int success = glfwInit();
+            int success = glfwInit();//调用glfwInit
             HZ_CORE_ASSERT(success, "Could not initialize GLFW!");
             glfwSetErrorCallback(GLFWErrorCallback);
             s_GLFWInitiallized = true;
@@ -52,27 +52,30 @@ namespace Hazel {
         //实际窗口创建，并赋予WindowProps中所有数据
         m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
         m_Context = new OpenGLContext(m_Window);//opengl的上下文
-        m_Context->Init();
-        //将用户自定义的数据与窗口关联起来
+        m_Context->Init();//glfwMakeContextCurrent
+
+        //将用户自定义的数据与窗口关联起来Title，Width,Height
         glfwSetWindowUserPointer(m_Window, &m_Data);
+
         SetVSync(true);
 
 //回调Callback/////////////////////////////////////////////////////////////////////////////////
-        //重载glfw中函数
+        //触发事件回调————注意：（window，[](){}）
+        //[]是lambda表达式，表示用户自定义函数
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int  height)
-            {
-                WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-                WindowResizeEvent  event(width, height);//ApplicationEvent中窗口调整大小事件
+            {               
+                HZ_CORE_WARN("{0},{1}", width, height);
+                WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);//获取当前窗口
+                WindowResizeEvent event(width, height);
                 data.Width = width;
-                data.Height = height;
-                data.EventCallback(event);
-
+                data.Height = height;//这里调用EventCallback（WindowResizeEvent），因为EventCallback =BIND_ENENT_FN(OnEvent)
+                data.EventCallback(event);//所以实则调用OnEvent（WindowResizeEvent）
             });
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
             {
                 WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
                 WindowCloseEvent event;
-                data.EventCallback(event);
+                data.EventCallback(event);//这里调用EventCallback（WindowCloseEvent）
 
             });
         glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -156,8 +159,8 @@ namespace Hazel {
 	void WindowsWindow::OnUpdate()
 	{
 
-		glfwPollEvents();
-        m_Context->SwapBuffers();//用于交换OpenGL的前缓冲区和后缓冲区
+		glfwPollEvents();//检查有没有触发什么事件
+        m_Context->SwapBuffers();//交换缓冲，显示到屏幕
 	}
     
 	void WindowsWindow::SetVSync(bool enabled)

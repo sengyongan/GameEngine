@@ -4,7 +4,7 @@ namespace Hazel {
     enum class ShaderDataType {//所有类型
         None = 0,Float, Float2, Float3, Float4,Mat3, Mat4,Int, Int2, Int3, Int4,Bool
     };
-    //类型大小
+    //步长
     static uint32_t ShaderDataTypeSize(ShaderDataType type) {
 
         switch (type)
@@ -31,7 +31,7 @@ namespace Hazel {
         uint32_t Offest;//偏移量
         bool Normalized;//正规化
         ButterElements(){}
-        ButterElements(ShaderDataType type, const std::string& name,bool normalized = false) ://只会传入两个参数
+        ButterElements(ShaderDataType type, const std::string& name,bool normalized = false) ://构造
             Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offest(0) , Normalized(normalized){
         }
         uint32_t GetComponentCount() const//
@@ -58,7 +58,7 @@ namespace Hazel {
     class BufferLayout {//渲染布局
     public:
         BufferLayout(){}
-        //init初始化list——可以传递 一组值
+        //initializer_list表示初始化列表。在构造函数内部遍历这个列表并输出其中的元素。
         BufferLayout(const std::initializer_list<ButterElements>& elements)
             :m_Elements(elements){
             CalculateOffsetsAndStride();//计算偏移和距离
@@ -80,8 +80,8 @@ namespace Hazel {
             }
         }
     private:
-        std::vector<ButterElements> m_Elements;//传递的一组经过计算（大小，偏移）的一组数
-        uint32_t m_Stride = 0;
+        std::vector<ButterElements> m_Elements;//传递的ButterElements列表
+        uint32_t m_Stride = 0;//步长
     };
  //  
     class VertexBuffer {

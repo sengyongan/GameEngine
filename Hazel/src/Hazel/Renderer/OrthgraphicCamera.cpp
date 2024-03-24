@@ -8,6 +8,12 @@ namespace Hazel {//正交投影矩阵,不同于透视投影，不会因为距离的变化而产生视觉上的
         m_ViewProjextionMatrix = m_ProjectionMatrix * m_ViewMatrix;
     }
 
+    void OrthgraphicCamera::SetProjection(float left, float right, float bottom, float top)
+    {
+        m_ProjectionMatrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+        m_ViewProjextionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+    }
+
     void OrthgraphicCamera::RecalculateViewMatrix()
     {//glm::mat4(1.0f)创建一个4x4的单位矩阵
         glm::mat4 transfrom = glm::translate(glm::mat4(1.0f), m_Position) * 

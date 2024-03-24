@@ -11,6 +11,7 @@
 #include"Hazel/Input.h"
 #include"Hazel/KeyCodes.h"
 #include"Hazel/MouseButtonCodes.h"
+#include"Hazel/OrthographicCameraController.h"
 //----renderer-------------------------
 #include"Hazel/Renderer/Renderer.h"
 #include"Hazel/Renderer/RendererCommand.h"
@@ -20,5 +21,7 @@
 #include"Hazel/Renderer/VertexArray.h"
 
 #include"Hazel/Renderer/OrthgraphicCamera.h"
+
+#include"Hazel/Renderer/Texture.h"
 //-----EntryPoint-----------------------
 #include"Hazel/EntryPoint.h"//ÆäËû

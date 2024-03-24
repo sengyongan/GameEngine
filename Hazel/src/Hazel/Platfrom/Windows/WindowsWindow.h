@@ -27,15 +27,15 @@ namespace Hazel {
 	private:
 		GLFWwindow* m_Window;//实际窗口
         //当前上下文
-        GraphicsContext* m_Context;
-        //实际窗口数据
+        GraphicsContext* m_Context;//窗口上下文类对象
+        //窗口当前数据
 		struct WindowData
 		{
 			std::string Title;
 			unsigned int Width, Height;
 			bool VSync;
 
-			EventCallbackFn EventCallback;
+			EventCallbackFn EventCallback;//回调 函数
 		};
 
 		WindowData m_Data;//结构对象

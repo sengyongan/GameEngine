@@ -5,9 +5,9 @@ namespace Hazel {
     ///////////////////////////////////////////////////////////////////////////
     //vetexbuffer//////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
-    OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
+    OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)//包含3个
     {   //glad_glCreateBuffers(Glsizei n, GLuint *buffers);
-        glCreateBuffers(1, &m_RendererID);
+        glCreateBuffers(1, &m_RendererID);//
         glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
         glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);//传递字节大小
     }
@@ -16,7 +16,7 @@ namespace Hazel {
     }
     void OpenGLVertexBuffer::Bind() const
     {
-        glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+        glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);//只包含glBindBuffer，有时只需要这一个
     }
     void OpenGLVertexBuffer::Unbind() const
     {
