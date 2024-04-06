@@ -10,6 +10,8 @@ namespace Hazel {
     }
     void OpenGLContext::Init()
     {
+        HZ_PROFILE_FUNCTION();
+
         glfwMakeContextCurrent(m_WindowHazel);//当前上下文
         int stauts = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);//获取程序地址
         HZ_CORE_ASSERT(stauts, "Failed to initialize glad");
@@ -21,6 +23,8 @@ namespace Hazel {
     }
     void OpenGLContext::SwapBuffers()
     {
+        HZ_PROFILE_FUNCTION();
+
         glfwSwapBuffers(m_WindowHazel);//交换缓冲区
 
     }

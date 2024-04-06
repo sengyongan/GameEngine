@@ -1,5 +1,5 @@
 #pragma once
-//解析顶点数据布局
+//解析顶点数据布局opengl派生类
 #include"Hazel/Renderer/VertexArray.h"
 namespace Hazel {
     class OpenGLVertexArray:public VertexArray

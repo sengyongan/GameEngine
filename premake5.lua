@@ -61,17 +61,17 @@ project "Hazel"
 	{
 		"GLFW",
 		"Glad",
-	   "ImGui",
+	    "ImGui",
 		"opengl32.lib"
 	}
 
 	filter"system:windows"
 	systemversion"latest"
-	defines
+	defines--定义宏
 	{
 		"HZ_PLATFROM_WINDOWS",
 		"HZ_BUILD_DLL",
-       -- "HZ_ENABLE_ASSERTS"
+       -- "HZ_ENABLE_ASSERTS"--已经被define定义
        "GLFW_INCLUDE_NONE",
        "HZ_BIND_EVENT_FN"
 	}

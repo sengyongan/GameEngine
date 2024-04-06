@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include "OrthographicCameraController.h"
-#include"Hazel/Input.h"
-#include"Hazel/KeyCodes.h"
+#include"Hazel/Core/Input.h"
+#include"Hazel/Core/KeyCodes.h"
 namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomLevel缩放，会4个参数都改变，例如16 / 9 = 1.78{-1.78，1.78，-1，1}
     OrthographicCameraController::OrthographicCameraController(float aspectRatio, bool rotation)
         :m_Camera(- m_AspectRatio * m_ZoomLevel, m_AspectRatio* m_ZoomLevel, - m_ZoomLevel, m_ZoomLevel), m_AspectRatio(aspectRatio),m_Rotation(rotation)
@@ -9,6 +9,8 @@ namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomL
     }
     void OrthographicCameraController::OnUpdate(Timestep ts)
     {
+        HZ_PROFILE_FUNCTION();
+
         //HZ_CLIENT_TRACE("time:{0}s", ts.GetSeconds());获取时差
         //float ts = ts;隐式强制转换，发生返回m_Time
         if (Input::IsKeyPressed(HZ_KEY_A))
@@ -35,12 +37,16 @@ namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomL
     }
     void OrthographicCameraController::OnEvent(Event& e)
     {
+        HZ_PROFILE_FUNCTION();
+
         EventDispatcher dispatcher(e);//<MouseScrolledEvent>显示模板实参
         dispatcher.Dispatch <MouseScrolledEvent>(HZ_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
         dispatcher.Dispatch <WindowResizeEvent>(HZ_BIND_EVENT_FN(OrthographicCameraController::OnWindowResized));
     }
     bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
     {
+        HZ_PROFILE_FUNCTION();
+
         m_ZoomLevel -= e.GetYOffset() * 0.5f;//设置纵坐标偏移为缩放级别
         m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);//最小为0.25（阻止越过图片）
         m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
@@ -48,6 +54,8 @@ namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomL
     }
     bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
     {
+        HZ_PROFILE_FUNCTION();
+
         m_AspectRatio = (float)e.GetWidth() / (float) e.GetHeight();
         m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
         return false;

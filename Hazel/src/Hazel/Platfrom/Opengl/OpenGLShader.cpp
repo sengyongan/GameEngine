@@ -16,6 +16,8 @@ namespace Hazel {
     }
 
     OpenGLShader::OpenGLShader(const std::string& filepath) {
+        HZ_PROFILE_FUNCTION();
+
         std::string source = ReadFile(filepath);//获取着色器的源码
         auto shaderSources = PreProcess(source);//将源码拆分
         Compile(shaderSources);//编译着色器
@@ -32,6 +34,8 @@ namespace Hazel {
     OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)//同时支持
         :m_Name(name)
     {
+        HZ_PROFILE_FUNCTION();
+
         std::unordered_map<GLenum, std::string> sources;
         sources[GL_VERTEX_SHADER] = vertexSrc;
         sources[GL_FRAGMENT_SHADER] = fragmentSrc;
@@ -39,16 +43,55 @@ namespace Hazel {
     }
     OpenGLShader::~OpenGLShader()
     {
+        HZ_PROFILE_FUNCTION();
+
         glDeleteProgram(m_RendererID);//销毁着色器程序
     }
     void OpenGLShader::Bind() const
     {
+        HZ_PROFILE_FUNCTION();
+
         glUseProgram(m_RendererID);
     }
     void OpenGLShader::Unbind() const
     {
+        HZ_PROFILE_FUNCTION();
+
         glUseProgram(0);
     }
+
+    void OpenGLShader::SetInt(const std::string& name, int value)
+    {
+        HZ_PROFILE_FUNCTION();
+
+        UploadUniformInt(name, value);
+    }
+
+    void OpenGLShader::SetFloat(const std::string& name, float value)
+    {
+        HZ_PROFILE_FUNCTION();
+
+        UploadUniformFloat(name, value);
+
+    }
+
+    void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value) {
+        HZ_PROFILE_FUNCTION();
+
+        UploadUniformFloat3(name, value);
+    }
+    void OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value) {
+        HZ_PROFILE_FUNCTION();
+
+        UploadUniformFloat4(name, value);
+    }
+    void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value) {
+        HZ_PROFILE_FUNCTION();
+
+        UploadUniformMat4(name, value);
+    }
+
+
     void OpenGLShader::UploadUniformInt(const std::string& name, int value)
     {
         GLint location = glGetUniformLocation(m_RendererID, name.c_str());
@@ -92,6 +135,8 @@ namespace Hazel {
     }
     std::string OpenGLShader::ReadFile(const std::string& filepath)
     {
+        HZ_PROFILE_FUNCTION();
+
         //从一个文件中读取数据并将其存储到一个名为result的容器中
         std::string result;
         std::ifstream in(filepath, std::ios::in | std::ios::binary);//打开一个文件,输入模式 | 二进制模式
@@ -109,6 +154,8 @@ namespace Hazel {
     }
     std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
     {
+        HZ_PROFILE_FUNCTION();
+
         std::unordered_map<GLenum, std::string> shaderSources;//存储---枚举类型（vertex……)，对应的源码
 
         const char* typeToken = "#type";
@@ -134,6 +181,8 @@ namespace Hazel {
 
     void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
     {
+        HZ_PROFILE_FUNCTION();
+
         //着色器程序
         GLuint program = glCreateProgram();
         HZ_CORE_ASSERT(shaderSources.size() <= 2, "We only support 2 shaders for now");//仅支持两个着色器

@@ -1,8 +1,8 @@
 #pragma once
-#include "Hazel/Window.h"
+#include "Hazel/Core/Window.h"
 #include "Hazel/Renderer/GraphicsContext.h"
 #include <GLFW/glfw3.h>
-//windows操作系统的窗口
+//windows操作系统 的窗口window
 namespace Hazel {
 	class WindowsWindow : public Window
 	{

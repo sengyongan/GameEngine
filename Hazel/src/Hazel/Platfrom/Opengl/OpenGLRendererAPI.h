@@ -1,5 +1,5 @@
 #pragma once
-//opengl中RendererAPI的实现
+//RendererAPI的opengl派生类
 #include"Hazel/Renderer/RendererAPI.h"
 namespace Hazel {
     class OpenGLRendererAPI :public RendererAPI {

@@ -2,9 +2,9 @@
 //正交摄像机
 #include<glm/glm.hpp>
 namespace Hazel {
-    class OrthgraphicCamera {
+    class OrthographicCamera {
     public:
-        OrthgraphicCamera(float left, float right, float bottom, float top);
+        OrthographicCamera(float left, float right, float bottom, float top);
 
         void SetProjection(float left, float right, float bottom, float top);//重新设置投影矩阵（滚轮缩放)
 

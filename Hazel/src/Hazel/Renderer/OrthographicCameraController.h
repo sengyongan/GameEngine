@@ -1,6 +1,6 @@
 #pragma once
-//camera controller
-#include"Hazel/Renderer/OrthgraphicCamera.h"
+//camera controller相机控制
+#include"Hazel/Renderer/OrthographicCamera.h"
 #include"Hazel/Core/Timestep.h"
 
 #include"Hazel/Events/ApplicationEvent.h"
@@ -14,8 +14,8 @@ namespace Hazel {
         void OnUpdate(Timestep ts);
         void OnEvent(Event& e);
 
-        OrthgraphicCamera& GetCamera() { return m_Camera; }
-        const OrthgraphicCamera& GetCamera()const { return m_Camera; }
+        OrthographicCamera& GetCamera() { return m_Camera; }
+        const OrthographicCamera& GetCamera()const { return m_Camera; }
 
         float GetZoomLevel()const { return m_ZoomLevel; }
         void SetZoomLevel(float level) { m_ZoomLevel = level; }
@@ -25,7 +25,7 @@ namespace Hazel {
     private:
         float m_AspectRatio;//宽高比
         float m_ZoomLevel  = 1.0f;//缩放级别
-        OrthgraphicCamera m_Camera;//获取摄像机
+        OrthographicCamera m_Camera;//获取摄像机
 
         bool m_Rotation;//是否允许旋转
         glm::vec3 m_CameraPosition = { 0.0f,0.0f,0.0f };

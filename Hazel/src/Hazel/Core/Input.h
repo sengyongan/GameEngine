@@ -1,4 +1,4 @@
-#include "Hazel/core.h"
+#include "Hazel/Core/core.h"
 #include"hzpch.h"
 //输入基类
 namespace Hazel {
@@ -20,4 +20,5 @@ namespace Hazel {
     private:
         static Input* s_Instance;//初始为WindowsInput类
     };
+
 }

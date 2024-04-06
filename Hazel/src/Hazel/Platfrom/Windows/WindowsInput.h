@@ -1,5 +1,5 @@
 #pragma once
-#include"Hazel/Input.h"
+#include"Hazel/Core/Input.h"
 //window∆ΩÃ® ‰»Î
 namespace Hazel {
     class WindowsInput :public Input {

@@ -1,17 +1,21 @@
 #include"hzpch.h"
 #include "Renderer.h"
-#include "Hazel/Platfrom//Opengl/OpenGLShader.h"
+#include "Hazel/Platfrom/Opengl/OpenGLShader.h"
+#include"Renderer2D.h"
 namespace Hazel {
     Renderer::SceneData* Renderer::m_SceneData = new Renderer::SceneData;
     void Renderer::Init()
     {
-        RendererCommand::Init();
+        HZ_PROFILE_FUNCTION();
+
+        RenderCommand::Init();
+        Renderer2D::Init();
     }
     void Renderer::OnWindowResize(uint32_t width, uint32_t height)
     {
-        RendererCommand::SetViewport(0, 0, width, height);
+        RenderCommand::SetViewport(0, 0, width, height);
     }
-    void Renderer::BeginScene(OrthgraphicCamera& camera)
+    void Renderer::BeginScene(OrthographicCamera& camera)
     {
         m_SceneData->ViewProjectionMatrix = camera.GetViewProjextionMatrix();//°ó¶¨ÎªViewProjextionMatrix
     }
@@ -27,6 +31,6 @@ namespace Hazel {
         //mi->Bind();
 
         vertexArray->Bind();
-        RendererCommand::DrawIndexed(vertexArray);
+        RenderCommand::DrawIndexed(vertexArray);
     }
 }

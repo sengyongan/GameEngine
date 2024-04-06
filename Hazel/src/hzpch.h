@@ -14,7 +14,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include"Hazel/Log.h"//日志
+#include"Hazel/Core/Log.h"//日志
+#include"Hazel/Debug/Instrumentor.h"//测量代码段的执行时间
 
 #ifdef HZ_PLATFROM_WINDOWS
 #include <Windows.h>

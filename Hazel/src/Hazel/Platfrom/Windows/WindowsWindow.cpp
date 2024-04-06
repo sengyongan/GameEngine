@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "WindowsWindow.h"
-#include"Hazel/core.h"
+#include"Hazel/Core/core.h"
 
 #include"Hazel/Events/ApplicationEvent.h"
 #include"Hazel/Events/KeyEvent.h"
@@ -25,16 +25,21 @@ namespace Hazel {
 
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
+        HZ_PROFILE_FUNCTION();
 		Init(props);
 	}
 
 	WindowsWindow::~WindowsWindow()
 	{
+        HZ_PROFILE_FUNCTION();
+
         Shutdown();
 	}
     
     void WindowsWindow::Init(const WindowProps& props)
     {
+        HZ_PROFILE_FUNCTION();
+
         m_Data.Title = props.Title;
         m_Data.Width = props.Width;
         m_Data.Height = props.Height;
@@ -43,6 +48,8 @@ namespace Hazel {
         //判断是否初始化
         if (s_GLFWInitiallized == false)
         {
+            HZ_PROFILE_SCOPE("glfwInit");
+
             int success = glfwInit();//调用glfwInit
             HZ_CORE_ASSERT(success, "Could not initialize GLFW!");
             glfwSetErrorCallback(GLFWErrorCallback);
@@ -50,7 +57,10 @@ namespace Hazel {
 
         }
         //实际窗口创建，并赋予WindowProps中所有数据
-        m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+        {
+            HZ_PROFILE_SCOPE("glfwCreateWindow");
+            m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
+        }
         m_Context = new OpenGLContext(m_Window);//opengl的上下文
         m_Context->Init();//glfwMakeContextCurrent
 
@@ -62,6 +72,7 @@ namespace Hazel {
 //回调Callback/////////////////////////////////////////////////////////////////////////////////
         //触发事件回调————注意：（window，[](){}）
         //[]是lambda表达式，表示用户自定义函数
+        //调用回调时自动赋值int width, int  height
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int  height)
             {               
                 HZ_CORE_WARN("{0},{1}", width, height);
@@ -152,12 +163,14 @@ namespace Hazel {
 
 	void WindowsWindow::Shutdown()
 	{
+        HZ_PROFILE_FUNCTION();
 
 		glfwDestroyWindow(m_Window);
 	}
 
 	void WindowsWindow::OnUpdate()
 	{
+        HZ_PROFILE_FUNCTION();
 
 		glfwPollEvents();//检查有没有触发什么事件
         m_Context->SwapBuffers();//交换缓冲，显示到屏幕
@@ -165,6 +178,7 @@ namespace Hazel {
     
 	void WindowsWindow::SetVSync(bool enabled)
 	{
+        HZ_PROFILE_FUNCTION();
 
 		if (enabled)
 			glfwSwapInterval(1);//垂直同步

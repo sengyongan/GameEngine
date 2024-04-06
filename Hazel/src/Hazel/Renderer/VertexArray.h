@@ -1,5 +1,5 @@
 #pragma once
-//基类——顶点数组
+//顶点数组
 #include"Buffer.h"
 #include<memory>
 namespace Hazel {
@@ -14,7 +14,7 @@ namespace Hazel {
         virtual const std::vector<Ref<VertexBuffer>>& GetVertexBuffer() const = 0;
         virtual const Ref<IndexBuffer>& GetIndexBuffer() const = 0;
         //
-        static VertexArray* Create();
+        static Ref<VertexArray> Create();
 
     };
 }

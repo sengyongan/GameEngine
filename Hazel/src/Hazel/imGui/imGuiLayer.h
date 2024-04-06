@@ -1,6 +1,6 @@
 #pragma once
 //imGuiLayer层
-#include "Hazel/Layer.h"
+#include "Hazel/Core/Layer.h"
 #include"Hazel/Events/KeyEvent.h"
 #include"Hazel/Events/MouseEvent.h"
 #include"Hazel/Events/ApplicationEvent.h"
@@ -13,7 +13,6 @@ namespace Hazel {
         ~imGuiLayer();
          void OnAttach() override;//附上
          void OnDetach() override;//取下
-         void OnImGuiRender() override;
 
         void Begin();//开始渲染
         void End();
