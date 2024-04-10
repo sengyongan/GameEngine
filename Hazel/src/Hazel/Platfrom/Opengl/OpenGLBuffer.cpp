@@ -13,6 +13,15 @@ namespace Hazel {
         glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
         glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);//传递字节大小
     }
+    OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size)
+    {
+        HZ_PROFILE_FUNCTION();
+
+        glCreateBuffers(1, &m_RendererID);//
+        glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+        glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);//传递字节大小
+
+    }
     OpenGLVertexBuffer::~OpenGLVertexBuffer(){
         HZ_PROFILE_FUNCTION();
 
@@ -30,6 +39,11 @@ namespace Hazel {
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    }
+    void OpenGLVertexBuffer::SetData(const void* data, uint32_t size)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);//缓冲区对象m_RendererID绑定到当前的数组缓冲区目标GL_ARRAY_BUFFER
+        glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);//数据上传到当前绑定的数组缓冲区中，覆盖原有的数据。
     }
     ///////////////////////////////////////////////////////////////////////////
     //indexbuffer//////////////////////////////////////////////////////////////

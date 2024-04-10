@@ -1,6 +1,7 @@
 #pragma once
 //Sandbox2D层
 #include"Hazel.h"
+#include"ParticleSystem.h"
 class Sandbox2D :public Hazel::Layer
 {
 public:
@@ -26,6 +27,7 @@ private:
 
     glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
 
-
+    ParticleSystem m_ParticleSystem;//粒子系统
+    ParticleProps m_Particle;//粒子属性
 };
 

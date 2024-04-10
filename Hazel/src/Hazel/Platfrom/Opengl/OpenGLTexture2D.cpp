@@ -1,9 +1,9 @@
 #include "hzpch.h"
-#include"OpenGLTexture.h"
+#include"OpenGLTexture2D.h"
 #include"stb_image.h"
 
 namespace Hazel {
-    OpenGLTexture::OpenGLTexture(const std::string& path)
+    OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
         : m_Path(path)
     {
         HZ_PROFILE_FUNCTION();
@@ -13,7 +13,7 @@ namespace Hazel {
         int width, height, channels;//加载图像文件，并将图像数据存储在data指针中，获取图像的宽度、高度和通道数。
         stbi_uc* data = nullptr;
         {
-            HZ_PROFILE_SCOPE("stbi_load - OpenGLTexture::OpenGLTexture(const std::string&");
+            HZ_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&");
             data = stbi_load(path.c_str(), &width, &height, &channels, 0);
         }
         HZ_CORE_ASSERT(data, "Failed to load image!");
@@ -46,7 +46,7 @@ namespace Hazel {
         //释放了之前加载的图像数据所占用的内存
         stbi_image_free(data);
     }
-    OpenGLTexture::OpenGLTexture(uint32_t width, uint32_t height)
+    OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
         :m_Width(width), m_Height(height)
     {
         HZ_PROFILE_FUNCTION();
@@ -64,14 +64,14 @@ namespace Hazel {
         glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     }
-    OpenGLTexture::~OpenGLTexture()
+    OpenGLTexture2D::~OpenGLTexture2D()
     {
         HZ_PROFILE_FUNCTION();
 
         glDeleteTextures(1, &m_RendererID);
     }
 
-    void OpenGLTexture::SetData(void* data, uint32_t size)
+    void OpenGLTexture2D::SetData(void* data, uint32_t size)
     {
         HZ_PROFILE_FUNCTION();
 
@@ -80,11 +80,11 @@ namespace Hazel {
         glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat,GL_UNSIGNED_BYTE,data);//将数据更新到纹理
     }
 
-    void OpenGLTexture::Bind(uint32_t slot) const
+    void OpenGLTexture2D::Bind(uint32_t slot) const
     {
         HZ_PROFILE_FUNCTION();
 
-        glBindTextureUnit(slot, m_RendererID);//solt在OpenGLTexture重写中初始为0
+        glBindTextureUnit(slot, m_RendererID);//solt在OpenGLTexture2D重写中初始为0
     }
 
 }

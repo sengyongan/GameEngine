@@ -14,8 +14,8 @@ public:
 	Sandbox()
 	{
         //pushlayer(new ExampleLayer());//´´½¨Ê¾Àı²ã
-       // pushlayer(new Sandbox2D());//2däÖÈ¾²ã
-        pushlayer(new GameLayer());//ÓÎÏ·²ã
+        pushlayer(new Sandbox2D());//2däÖÈ¾²ã
+        //pushlayer(new GameLayer());//ÓÎÏ·²ã
 	}
 	~Sandbox()
 	{

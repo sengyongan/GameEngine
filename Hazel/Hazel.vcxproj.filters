@@ -120,7 +120,7 @@
     <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLShader.h">
       <Filter>src\Hazel\Platfrom\Opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLTexture.h">
+    <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLTexture2D.h">
       <Filter>src\Hazel\Platfrom\Opengl</Filter>
     </ClInclude>
     <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLVertexArray.h">
@@ -1448,7 +1448,7 @@
     <ClCompile Include="src\Hazel\Platfrom\Opengl\OpenGLShader.cpp">
       <Filter>src\Hazel\Platfrom\Opengl</Filter>
     </ClCompile>
-    <ClCompile Include="src\Hazel\Platfrom\Opengl\OpenGLTexture.cpp">
+    <ClCompile Include="src\Hazel\Platfrom\Opengl\OpenGLTexture2D.cpp">
       <Filter>src\Hazel\Platfrom\Opengl</Filter>
     </ClCompile>
     <ClCompile Include="src\Hazel\Platfrom\Opengl\OpenGLVertexArray.cpp">

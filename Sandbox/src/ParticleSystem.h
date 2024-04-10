@@ -14,12 +14,12 @@ struct ParticleProps//粒子属性结构体
 class ParticleSystem//粒子系统类
 {
 public:
-    ParticleSystem();
+    ParticleSystem(uint32_t maxParticle = 1000);
 
-    void Emit(const ParticleProps& particleProps);//发射一个粒子
+    void Emit(const ParticleProps& particleProps);//发射粒子
 
     void OnUpdate(Hazel::Timestep ts);//更新粒子的状态
-    void OnRender();//绘制粒子
+    void OnRender(Hazel::OrthographicCamera& camera);//绘制粒子
 private:
     struct Particle
     {
@@ -30,10 +30,10 @@ private:
         float SizeBegin, SizeEnd;
 
         float LifeTime = 1.0f;
-        float LifeRemaining = 0.0f;
+        float LifeRemaining = 0.0f;//剩余生命
 
-        bool Active = false;
+        bool Active = false;//是否激活
     };
     std::vector<Particle> m_ParticlePool;
-    uint32_t m_PoolIndex = 999;
+    uint32_t m_PoolIndex;//当前粒子----索引
 };

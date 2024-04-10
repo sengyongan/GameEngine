@@ -19,8 +19,8 @@ namespace Hazel {
             s_RendererAPI->Clear();
         }
 
-        inline static void DrawIndexed(const Ref<VertexArray>& vertexArray) {
-            s_RendererAPI->DrawIndexed(vertexArray);//调用OpenGLRendererAPI中DrawIndexed
+        inline static void DrawIndexed(const Ref<VertexArray>& vertexArray,uint32_t count = 0) {
+            s_RendererAPI->DrawIndexed(vertexArray,count);//调用OpenGLRendererAPI中DrawIndexed
         }
     private:
         static RendererAPI* s_RendererAPI;
