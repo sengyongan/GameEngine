@@ -28,15 +28,19 @@ namespace Hazel {
         const OrthographicCamera& GetCamera()const { return m_Camera; }
 
         float GetZoomLevel()const { return m_ZoomLevel; }
-        void SetZoomLevel(float level) { m_ZoomLevel = level; }
+        void SetZoomLevel(float level) {
+            m_ZoomLevel = level; CalculateView();
+        }
 
         const OrthographicCameraBounds& GetBounds() const { return m_Bounds; }
     private:
+        void CalculateView();//计算视图
+
         bool OnMouseScrolled(MouseScrolledEvent& e);//鼠标滚动事件——缩放场景
         bool OnWindowResized(WindowResizeEvent& e);//窗口调整大小——摄像机投影视图设置为窗口宽高比
     private:
         float m_AspectRatio;//宽高比
-        float m_ZoomLevel  = 1.0f;//缩放级别
+        float m_ZoomLevel = 1.0f;//缩放级别
 
         OrthographicCameraBounds m_Bounds;//摄像机边界
         OrthographicCamera m_Camera;//获取摄像机

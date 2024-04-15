@@ -7,12 +7,10 @@ layout(location = 3) in float a_TexIndex;
 layout(location = 4) in float a_TextureFactor;
 
 uniform mat4 u_ViewProjection;
-
 out vec4 v_Color;
 out vec2 v_TexCoord;
 out float v_TexIndex;
 out float v_TextureFactor;
-
 void main(){
     v_Color = a_Color;
     v_TexCoord = a_TexCoord;

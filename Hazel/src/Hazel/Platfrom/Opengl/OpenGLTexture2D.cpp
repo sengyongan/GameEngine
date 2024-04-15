@@ -7,7 +7,7 @@ namespace Hazel {
         : m_Path(path)
     {
         HZ_PROFILE_FUNCTION();
-        
+
         //加载图像并将其存储为OpenGL纹理的过程
         stbi_set_flip_vertically_on_load(1);//翻转为正确图像
         int width, height, channels;//加载图像文件，并将图像数据存储在data指针中，获取图像的宽度、高度和通道数。
@@ -57,7 +57,7 @@ namespace Hazel {
         glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
         glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
         //设置纹理的过滤方式
-        glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
         glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -76,8 +76,8 @@ namespace Hazel {
         HZ_PROFILE_FUNCTION();
 
         uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
-        HZ_CORE_ASSERT(size == m_Width * m_Height * bpp,"Data must be entire texture!");
-        glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat,GL_UNSIGNED_BYTE,data);//将数据更新到纹理
+        HZ_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");
+        glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);//将数据更新到纹理
     }
 
     void OpenGLTexture2D::Bind(uint32_t slot) const

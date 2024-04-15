@@ -6,7 +6,7 @@
 namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomLevel缩放，会4个参数都改变，例如16 / 9 = 1.78{-1.78，1.78，-1，1}
     OrthographicCameraController::OrthographicCameraController(float aspectRatio, bool rotation)
         : m_Bounds({ -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel }), m_Camera(m_Bounds.Left, m_Bounds.Right, m_Bounds.Bottom, m_Bounds.Top),
-        m_AspectRatio(aspectRatio),m_Rotation(rotation)
+        m_AspectRatio(aspectRatio), m_Rotation(rotation)
     {
     }
     void OrthographicCameraController::OnUpdate(Timestep ts)
@@ -24,7 +24,7 @@ namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomL
         else if (Input::IsKeyPressed(HZ_KEY_S))
             m_CameraPosition.y -= m_CameraTranslationSpeed * ts;
 
-        if (m_Rotation) 
+        if (m_Rotation)
         {
             if (Input::IsKeyPressed(HZ_KEY_Q))
                 m_CameraRotation += m_CameraRotationSpeed * ts;
@@ -45,23 +45,26 @@ namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomL
         dispatcher.Dispatch <MouseScrolledEvent>(HZ_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
         dispatcher.Dispatch <WindowResizeEvent>(HZ_BIND_EVENT_FN(OrthographicCameraController::OnWindowResized));
     }
+    void OrthographicCameraController::CalculateView() {
+        m_Bounds = { -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel };
+        m_Camera.SetProjection(m_Bounds.Left, m_Bounds.Right, m_Bounds.Bottom, m_Bounds.Top);
+
+    }
     bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
     {
         HZ_PROFILE_FUNCTION();
 
         m_ZoomLevel -= e.GetYOffset() * 0.5f;//设置纵坐标偏移为缩放级别
         m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);//最小为0.25（阻止越过图片）
-        m_Bounds = { -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel };
-        m_Camera.SetProjection(m_Bounds.Left, m_Bounds.Right, m_Bounds.Bottom, m_Bounds.Top);
+        CalculateView();
         return false;
     }
     bool OrthographicCameraController::OnWindowResized(WindowResizeEvent& e)
     {
         HZ_PROFILE_FUNCTION();
 
-        m_AspectRatio = (float)e.GetWidth() / (float) e.GetHeight();
-        m_Bounds = { -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel };
-        m_Camera.SetProjection(m_Bounds.Left, m_Bounds.Right, m_Bounds.Bottom, m_Bounds.Top);
+        m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();//宽高比改变
+        CalculateView();
         return false;
     }
 }
