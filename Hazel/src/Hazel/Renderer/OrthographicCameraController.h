@@ -6,16 +6,6 @@
 #include"Hazel/Events/ApplicationEvent.h"
 #include"Hazel/Events/MouseEvent.h"
 namespace Hazel {
-    //获取摄像机边界
-    struct OrthographicCameraBounds
-    {
-        float Left, Right;
-        float Bottom, Top;
-
-        float GetWidth() { return Right - Left; }
-        float GetHeight() { return Top - Bottom; }
-    };
-
     class OrthographicCameraController
     {
     public:
@@ -29,20 +19,16 @@ namespace Hazel {
 
         float GetZoomLevel()const { return m_ZoomLevel; }
         void SetZoomLevel(float level) {
-            m_ZoomLevel = level; CalculateView();
+            m_ZoomLevel = level;
         }
 
-        const OrthographicCameraBounds& GetBounds() const { return m_Bounds; }
     private:
-        void CalculateView();//计算视图
-
         bool OnMouseScrolled(MouseScrolledEvent& e);//鼠标滚动事件——缩放场景
         bool OnWindowResized(WindowResizeEvent& e);//窗口调整大小——摄像机投影视图设置为窗口宽高比
     private:
         float m_AspectRatio;//宽高比
         float m_ZoomLevel = 1.0f;//缩放级别
 
-        OrthographicCameraBounds m_Bounds;//摄像机边界
         OrthographicCamera m_Camera;//获取摄像机
 
 

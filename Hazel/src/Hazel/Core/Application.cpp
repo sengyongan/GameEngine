@@ -50,6 +50,10 @@ namespace Hazel {
         overlay->OnAttach();
 
     }
+    void Application::Close()
+    {
+        m_Running = false;
+    }
     //
     void Application::OnEvent(Event& e)//如果当前e与 <WindowCloseEvent> / <WindowResizeEvent>等一致，就转化为这个类型
     {

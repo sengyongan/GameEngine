@@ -153,39 +153,24 @@ namespace Hazel {
             FlushAndReset();
         }
         //当前quad的四个顶点的属性，QuadVertexBufferPtr指向QuadVertexBufferBase[QuadVertex（struct）]数组的成员，设置每个结构体成员的属性
-        const float texIndex = 0.0f;// White Texture
-        const float textureFactor = 1.0f;
+        constexpr size_t quadVertexCount = 4;
+        const float textureIndex = 0.0f; // White Texture
+        constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+        const float tilingFactor = 1.0f;
 
-        glm::mat4 transfrom = glm::translate(glm::mat4(1.0f), position)
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
             * glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
 
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[0];
-        s_Data.QuadVertexBufferPtr->Color = color;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 0.0f, 0.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = texIndex;//因为没有纹理的绘制，只是一个白色纹理，所以为0位置
-        s_Data.QuadVertexBufferPtr->TextureFactor = textureFactor;
-        s_Data.QuadVertexBufferPtr++;//顶点数组的指针后移，下一个顶点
+        for (size_t i = 0; i < quadVertexCount; i++)
+        {
+            s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
+            s_Data.QuadVertexBufferPtr->Color = color;
+            s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
+            s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
+            s_Data.QuadVertexBufferPtr->TextureFactor = tilingFactor;
+            s_Data.QuadVertexBufferPtr++;
+        }
 
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[1];
-        s_Data.QuadVertexBufferPtr->Color = color;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 1.0f, 0.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = texIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = textureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[2];
-        s_Data.QuadVertexBufferPtr->Color = color;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 1.0f, 1.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = texIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = textureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[3];
-        s_Data.QuadVertexBufferPtr->Color = color;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 0.0f, 1.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = texIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = textureFactor;
-        s_Data.QuadVertexBufferPtr++;
 
         s_Data.QuadIndexCount += 6;
         s_Data.Stats.QuadCount++;
@@ -196,7 +181,7 @@ namespace Hazel {
 
         //glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) 
         //    * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-        //s_Data.TextureShader->SetMat4("u_Transfrom", transform);
+        //s_Data.TextureShader->SetMat4("u_transform", transform);
         //转移
         //s_Data.QuadVertexArray->Bind();//转移
         //RenderCommand::DrawIndexed(s_Data.QuadVertexArray);
@@ -216,14 +201,9 @@ namespace Hazel {
         }
 
         //当前quad的四个顶点的属性
-        constexpr size_t quadVextexCount = 4;
-        constexpr glm::vec4 tintcolor = {1.0f,1.0f,1.0f,1.0f };
-        constexpr glm::vec2 textureCoords[] = {
-            {0.0f,0.0f},
-            {1.0f,0.0f},
-            {1.0f,1.0f},
-            {0.0f,1.0f}
-        };
+        constexpr size_t quadVertexCount = 4;
+        constexpr glm::vec4 tintColor = {1.0f,1.0f,1.0f,1.0f };
+        constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 
         float textureIndex = 0.0f;//从0开始查找，获取当前纹理texture在TextureSolts 数组中的位置
         for (uint32_t i = 1;i < s_Data.TextureSlotIndex;i++) {//TextureSlotIndex当前数组中的有数据索引的位置
@@ -237,107 +217,22 @@ namespace Hazel {
             s_Data.TextureSolts[s_Data.TextureSlotIndex] = texture;//并在数组末尾添加texture
             s_Data.TextureSlotIndex++;
         }
-        glm::mat4 transfrom = glm::translate(glm::mat4(1.0f), position)
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
             * glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
 
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[0];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[0];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;//4个点的纹理槽都一致
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[1];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[1];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;   
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[2];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[2];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[3];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[3];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
+        for (size_t i = 0; i < quadVertexCount; i++)
+        {
+            s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
+            s_Data.QuadVertexBufferPtr->Color = tintColor;
+            s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
+            s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
+            s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
+            s_Data.QuadVertexBufferPtr++;
+        }
         s_Data.QuadIndexCount += 6;
         s_Data.Stats.QuadCount++;
 
     }
-    void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<SubTexture2D>& subtexture, float TextureFactor, const glm::vec4& color) {
-        DrawQuad({ position.x, position.y, 0.0f }, size, subtexture, TextureFactor, color);
-    }
-
-    void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<SubTexture2D>& subtexture, float TextureFactor, const glm::vec4& color)
-    {
-        HZ_PROFILE_FUNCTION();
-
-        if (s_Data.QuadIndexCount > Renderer2DData::MaxIndices) {
-            FlushAndReset();
-        }
-
-        //当前quad的四个顶点的属性
-        constexpr size_t quadVextexCount = 4;
-        constexpr glm::vec4 tintcolor = { 1.0f,1.0f,1.0f,1.0f };
-        const glm::vec2* textureCoords = subtexture->GetTexCoords();
-        const Ref<Texture2D> texture = subtexture->GetTexture();
-
-        float textureIndex = 0.0f;//从0开始查找，获取当前纹理texture在TextureSolts 数组中的位置
-        for (uint32_t i = 1;i < s_Data.TextureSlotIndex;i++) {//TextureSlotIndex当前数组中的有数据索引的位置
-            if (*s_Data.TextureSolts[i].get() == *texture.get()) {
-                textureIndex = (float)i;//如果找到了就返回该位置的索引值
-                break;
-            }
-        }
-        if (textureIndex == 0.0f) {//表示没有找到
-            textureIndex = (float)s_Data.TextureSlotIndex;//textureIndex=数组末尾
-            s_Data.TextureSolts[s_Data.TextureSlotIndex] = texture;//并在数组末尾添加texture
-            s_Data.TextureSlotIndex++;
-        }
-        glm::mat4 transfrom = glm::translate(glm::mat4(1.0f), position)
-            * glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[0];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[0];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;//4个点的纹理槽都一致
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[1];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[1];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[2];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[2];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[3];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[3];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadIndexCount += 6;
-        s_Data.Stats.QuadCount++;
-
-    }
-
 
     //////DrawRotatedQuad/////////////////////////////////////////////////////////
     void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
@@ -353,40 +248,24 @@ namespace Hazel {
             FlushAndReset();
         }
 
+        constexpr size_t quadVertexCount = 4;
         const float textureIndex = 0.0f; // White Texture
+        constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
         const float tilingFactor = 1.0f;
 
-        glm::mat4 transfrom = glm::translate(glm::mat4(1.0f), position)
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
             * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f, 0.0f, 1.0f })
             * glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
 
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[0];
-        s_Data.QuadVertexBufferPtr->Color = color;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 0.0f, 0.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = tilingFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[1];
-        s_Data.QuadVertexBufferPtr->Color = color;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 1.0f, 0.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = tilingFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[2];
-        s_Data.QuadVertexBufferPtr->Color = color;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 1.0f, 1.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = tilingFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[3];
-        s_Data.QuadVertexBufferPtr->Color = color;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 0.0f, 1.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = tilingFactor;
-        s_Data.QuadVertexBufferPtr++;
+        for (size_t i = 0; i < quadVertexCount; i++)
+        {
+            s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
+            s_Data.QuadVertexBufferPtr->Color = color;
+            s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
+            s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
+            s_Data.QuadVertexBufferPtr->TextureFactor = tilingFactor;
+            s_Data.QuadVertexBufferPtr++;
+        }
 
         s_Data.QuadIndexCount += 6;
         s_Data.Stats.QuadCount++;
@@ -406,7 +285,9 @@ namespace Hazel {
             FlushAndReset();
         }
 
-        constexpr glm::vec4 tintcolor = { 1.0f,1.0f,1.0f,1.0f };
+        constexpr size_t quadVertexCount = 4;
+        constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+        constexpr glm::vec4 tintColor = { 1.0f,1.0f,1.0f,1.0f };
 
         float textureIndex = 0.0f;//从0开始查找，获取当前纹理texture在TextureSolts 数组中的位置
 
@@ -421,102 +302,20 @@ namespace Hazel {
             s_Data.TextureSolts[s_Data.TextureSlotIndex] = texture;//并在数组末尾添加texture
             s_Data.TextureSlotIndex++;
         }
-        glm::mat4 transfrom = glm::translate(glm::mat4(1.0f), position)
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
             * glm::rotate(glm::mat4(1.0f),rotation, { 0.0f,0.0f,1.0f })
             * glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
 
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[0];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 0.0f, 0.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;//4个点的纹理槽都一致
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[1];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 1.0f, 0.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[2];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 1.0f, 1.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[3];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = { 0.0f, 1.0f };
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadIndexCount += 6;
-        s_Data.Stats.QuadCount++;
-    }
-    void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subtexture, float TextureFactor, const glm::vec4& color)
-    {
-        DrawRotatedQuad({ position.x,position.y,0.0f }, size, rotation, subtexture, TextureFactor, color);
-
-    }
-
-    void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<SubTexture2D>& subtexture, float TextureFactor, const glm::vec4& color)
-    {
-        HZ_PROFILE_FUNCTION();
-        if (s_Data.QuadIndexCount > Renderer2DData::MaxIndices) {
-            FlushAndReset();
+        for (size_t i = 0; i < quadVertexCount; i++)
+        {
+            s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
+            s_Data.QuadVertexBufferPtr->Color = tintColor;
+            s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
+            s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
+            s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
+            s_Data.QuadVertexBufferPtr++;
         }
 
-        constexpr glm::vec4 tintcolor = { 1.0f,1.0f,1.0f,1.0f };
-        const glm::vec2* textureCoords = subtexture->GetTexCoords();
-        const Ref<Texture2D> texture = subtexture->GetTexture();
-        
-        float textureIndex = 0.0f;//从0开始查找，获取当前纹理texture在TextureSolts 数组中的位置
-
-        for (uint32_t i = 1;i < s_Data.TextureSlotIndex;i++) {//TextureSlotIndex当前数组中的有数据索引的位置
-            if (*s_Data.TextureSolts[i].get() == *texture.get()) {
-                textureIndex = (float)i;//如果找到了就返回该位置的索引值
-                break;
-            }
-        }
-        if (textureIndex == 0.0f) {//表示没有找到
-            textureIndex = (float)s_Data.TextureSlotIndex;//textureIndex=数组末尾
-            s_Data.TextureSolts[s_Data.TextureSlotIndex] = texture;//并在数组末尾添加texture
-            s_Data.TextureSlotIndex++;
-        }
-        glm::mat4 transfrom = glm::translate(glm::mat4(1.0f), position)
-            * glm::rotate(glm::mat4(1.0f), rotation, { 0.0f,0.0f,1.0f })
-            * glm::scale(glm::mat4(1.0f), { size.x,size.y,1.0f });
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[0];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[0];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;//4个点的纹理槽都一致
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[1];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[1];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[2];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[2];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
-
-        s_Data.QuadVertexBufferPtr->Position = transfrom * s_Data.QuadVertexPositions[3];
-        s_Data.QuadVertexBufferPtr->Color = tintcolor;
-        s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[3];
-        s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-        s_Data.QuadVertexBufferPtr->TextureFactor = TextureFactor;
-        s_Data.QuadVertexBufferPtr++;
 
         s_Data.QuadIndexCount += 6;
         s_Data.Stats.QuadCount++;

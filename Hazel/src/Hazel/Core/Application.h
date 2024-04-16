@@ -20,6 +20,7 @@ namespace Hazel {
 
         void pushlayer(Layer* layer);//添加层
         void pushOverlayer(Layer* overlay);
+        void Close();
 
         inline static  Application& Get() { return  *s_Instance; }//返回Application类对象
         inline Window& GetWindow() { return  *m_Window; }//返回窗口
