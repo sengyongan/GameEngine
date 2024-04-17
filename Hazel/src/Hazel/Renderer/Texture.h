@@ -1,6 +1,6 @@
 #pragma once
 //Œ∆¿Ì
-#include"Hazel/Core/core.h"
+#include"Hazel/Core/Base.h"
 #include <string>
 namespace Hazel {
     class Texture {

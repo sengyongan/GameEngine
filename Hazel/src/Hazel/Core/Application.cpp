@@ -11,13 +11,13 @@ namespace Hazel {
 
     Application* Application::s_Instance = nullptr;//类静态成员s_Instance 初始为null
         //在sandboxapp创建类对象
-    Application::Application()
+    Application::Application(const std::string& name)
     {
         HZ_PROFILE_FUNCTION();
         //HZ_CORE_ASSERT(s_Instance, "Application already exists");//TODO:???
         s_Instance = this;
         //指针=window类型，调用函数的指针
-        m_Window = std::unique_ptr<Window>(Window::Create());//创建窗口（调用Init）
+        m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(name)));//创建窗口（调用Init）
         m_Window->SetEventCallback(BIND_ENENT_FN(OnEvent));//m_Window-》EventCallback = std::bind(OnEvent, this, std::placeholders::_1)
 
         Renderer::Init();//渲染初始化————混合

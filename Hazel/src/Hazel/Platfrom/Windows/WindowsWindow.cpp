@@ -1,6 +1,6 @@
 #include "hzpch.h"
 #include "WindowsWindow.h"
-#include"Hazel/Core/core.h"
+#include"Hazel/Core/Base.h"
 
 #include"Hazel/Events/ApplicationEvent.h"
 #include"Hazel/Events/KeyEvent.h"

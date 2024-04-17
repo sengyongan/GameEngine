@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClInclude Include="src\Hazel.h" />
     <ClInclude Include="src\Hazel\Core\Application.h" />
+    <ClInclude Include="src\Hazel\Core\Base.h" />
     <ClInclude Include="src\Hazel\Core\EntryPoint.h" />
     <ClInclude Include="src\Hazel\Core\Input.h" />
     <ClInclude Include="src\Hazel\Core\KeyCodes.h" />
@@ -154,12 +155,12 @@
     <ClInclude Include="src\Hazel\Core\MouseButtonCodes.h" />
     <ClInclude Include="src\Hazel\Core\Timestep.h" />
     <ClInclude Include="src\Hazel\Core\Window.h" />
-    <ClInclude Include="src\Hazel\Core\core.h" />
     <ClInclude Include="src\Hazel\Debug\Instrumentor.h" />
     <ClInclude Include="src\Hazel\Events\ApplicationEvent.h" />
     <ClInclude Include="src\Hazel\Events\Event.h" />
     <ClInclude Include="src\Hazel\Events\KeyEvent.h" />
     <ClInclude Include="src\Hazel\Events\MouseEvent.h" />
+    <ClInclude Include="src\Hazel\Platfrom\Opengl\OpeGLFramebuffer.h" />
     <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLBuffer.h" />
     <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLContext.h" />
     <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLRendererAPI.h" />
@@ -169,6 +170,7 @@
     <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsInput.h" />
     <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Hazel\Renderer\Buffer.h" />
+    <ClInclude Include="src\Hazel\Renderer\Framebuffer.h" />
     <ClInclude Include="src\Hazel\Renderer\GraphicsContext.h" />
     <ClInclude Include="src\Hazel\Renderer\OrthographicCamera.h" />
     <ClInclude Include="src\Hazel\Renderer\OrthographicCameraController.h" />
@@ -605,6 +607,7 @@
     <ClCompile Include="src\Hazel\Core\Layer.cpp" />
     <ClCompile Include="src\Hazel\Core\LayerStack.cpp" />
     <ClCompile Include="src\Hazel\Core\Log.cpp" />
+    <ClCompile Include="src\Hazel\Platfrom\Opengl\OpeGLFramebuffer.cpp" />
     <ClCompile Include="src\Hazel\Platfrom\Opengl\OpenGLBuffer.cpp" />
     <ClCompile Include="src\Hazel\Platfrom\Opengl\OpenGLContext.cpp" />
     <ClCompile Include="src\Hazel\Platfrom\Opengl\OpenGLRendererAPI.cpp" />
@@ -614,6 +617,7 @@
     <ClCompile Include="src\Hazel\Platfrom\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Hazel\Platfrom\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Hazel\Renderer\Buffer.cpp" />
+    <ClCompile Include="src\Hazel\Renderer\Framebuffer.cpp" />
     <ClCompile Include="src\Hazel\Renderer\OrthographicCamera.cpp" />
     <ClCompile Include="src\Hazel\Renderer\OrthographicCameraController.cpp" />
     <ClCompile Include="src\Hazel\Renderer\RenderCommand.cpp" />

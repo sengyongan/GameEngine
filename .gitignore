@@ -3,5 +3,6 @@
 bin/
 bin-int/
 /Sandbox/HazelProfile-Runtime.json
+/Hazel-Editor/HazelProfile-Runtime.json
 #fire
 *.user

@@ -12,7 +12,7 @@ namespace Hazel {
 	class HAZEL_API Application//HAZEL_API默认空
 	{
 	public:
-		Application();
+		Application(const std::string& name = "Hazel App");
 		virtual ~Application();
 
 		void Run();//实时运行

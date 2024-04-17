@@ -2,7 +2,6 @@
 #include "OrthographicCameraController.h"
 #include"Hazel/Core/Input.h"
 #include"Hazel/Core/KeyCodes.h"
-//m_Camera(- m_AspectRatio * m_ZoomLevel, m_AspectRatio* m_ZoomLevel, - m_ZoomLevel, m_ZoomLevel),
 namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomLevel缩放，会4个参数都改变，例如16 / 9 = 1.78{-1.78，1.78，-1，1}
     OrthographicCameraController::OrthographicCameraController(float aspectRatio, bool rotation)
         :m_Camera(-m_AspectRatio * m_ZoomLevel, m_AspectRatio* m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel), m_AspectRatio(aspectRatio), m_Rotation(rotation)
@@ -57,7 +56,7 @@ namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomL
     {
         HZ_PROFILE_FUNCTION();
 
-        m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();//宽高比改变
+        m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
         m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
         return false;
     }

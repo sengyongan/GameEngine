@@ -1,6 +1,6 @@
 #pragma once
 //所有事件基类
-#include"Hazel/Core/core.h"
+#include"Hazel/Core/Base.h"
 #include"hzpch.h"
 namespace Hazel {
     //事件类型：窗口，键盘，鼠标
