@@ -4,7 +4,6 @@
 
 #include"Sandbox2D.h"//²ã
 #include"ExampleLayer.h"
-#include "GameLayer.h"
 
 
 //client

@@ -13,10 +13,14 @@ namespace Hazel {
         ~imGuiLayer();
          void OnAttach() override;//附上
          void OnDetach() override;//取下
+         void OnEvent(Event& e);
 
         void Begin();//开始渲染
         void End();
+
+        void BlockEvents(bool block) { m_BlockEvents = block; }//是否被阻止
     private:
+        bool m_BlockEvents = true;
         float m_Time = 0.0f;
 
 };

@@ -43,12 +43,19 @@ namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomL
         dispatcher.Dispatch <MouseScrolledEvent>(HZ_BIND_EVENT_FN(OrthographicCameraController::OnMouseScrolled));
         dispatcher.Dispatch <WindowResizeEvent>(HZ_BIND_EVENT_FN(OrthographicCameraController::OnWindowResized));
     }
+    void OrthographicCameraController::OnResize(float width, float height)
+    {
+        HZ_PROFILE_FUNCTION();
+
+        m_AspectRatio = width / height;
+        m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
+    }
     bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
     {
         HZ_PROFILE_FUNCTION();
 
         m_ZoomLevel -= e.GetYOffset() * 0.5f;//设置纵坐标偏移为缩放级别
-        m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);//最小为0.25（阻止越过图片）
+        m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);//最小为0.25（阻止越过图片)
         m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
         return false;
     }
@@ -56,8 +63,7 @@ namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomL
     {
         HZ_PROFILE_FUNCTION();
 
-        m_AspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
-        m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
+        OnResize((float)e.GetWidth() , (float)e.GetHeight());
         return false;
     }
 }

@@ -6,14 +6,14 @@
 
 namespace Hazel {
     //client
-    class HazelEditor : public Hazel::Application
+    class Hazelnut : public Hazel::Application
     {
     public:
-        HazelEditor() : Application("senlongan Editor")
+        Hazelnut() : Application("senlongan nut")
         {
             pushlayer(new EditorLayer());//2däÖÈ¾²ã
         }
-        ~HazelEditor()
+        ~Hazelnut()
         {
 
         }
@@ -22,6 +22,6 @@ namespace Hazel {
     //·µ»Ø¿Í»§¶Ë
     Application* CreatApplication()
     {
-        return new HazelEditor();
+        return new Hazelnut();
     }
 }

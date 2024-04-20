@@ -2,6 +2,7 @@
 #include"OpeGLFramebuffer.h"
 #include<glad/glad.h>
 namespace Hazel {
+    static const uint32_t s_MaxFramebuffer = 8192;
     OpeGLFramebuffer::OpeGLFramebuffer(const FramebufferSpecification& spec)
         : m_Specification(spec)
     {
@@ -10,9 +11,16 @@ namespace Hazel {
     OpeGLFramebuffer::~OpeGLFramebuffer()
     {
         glDeleteFramebuffers(1, &m_RendererID);
+        glDeleteFramebuffers(1, &m_ColorAttachment);
+        glDeleteFramebuffers(1, &m_DepthAttachment);
     }
     void OpeGLFramebuffer::Invalidate()
     {
+        if (m_RendererID) {
+            glDeleteFramebuffers(1, &m_RendererID);
+            glDeleteFramebuffers(1, &m_ColorAttachment);
+            glDeleteFramebuffers(1, &m_DepthAttachment);
+        }
         glCreateFramebuffers(1, &m_RendererID);//创建帧缓冲
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);//绑定
 
@@ -39,11 +47,22 @@ namespace Hazel {
     void OpeGLFramebuffer::Bind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);//绑定
+        glViewport(0, 0, m_Specification.Width, m_Specification.Height);
 
     }
     void OpeGLFramebuffer::Unbind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);//绑定
 
+    }
+    void OpeGLFramebuffer::Resize(uint32_t Width, uint32_t Height)
+    {
+        if (Width < 0 || Height < 0 || Width > s_MaxFramebuffer || Height > s_MaxFramebuffer) {
+            HZ_CORE_WARN("Attempted to resize Framebuffer to {0},{1}", Width, Height);
+            return;
+        }
+        m_Specification.Width = Width;
+        m_Specification.Height = Height;
+        Invalidate();
     }
 }

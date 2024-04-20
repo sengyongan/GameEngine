@@ -67,7 +67,7 @@ namespace Hazel {
         for (auto it = m_Layerstack.end(); it != m_Layerstack.begin();)
         {
             (*--it)->OnEvent(e);
-            if (e.Handled)
+            if (e.Handled)//默认为否，不会退出
                 break;
         }
     }

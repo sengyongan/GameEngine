@@ -56,6 +56,15 @@ namespace Hazel {
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
     }
+    void imGuiLayer::OnEvent(Event& e)
+    {
+        if(m_BlockEvents)//???
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            e.Handled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;//当前触发的事件类型，和用户输入的事件
+            e.Handled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureKeyboard;
+        }
+    }
     void imGuiLayer::Begin() {
         HZ_PROFILE_FUNCTION();
 
