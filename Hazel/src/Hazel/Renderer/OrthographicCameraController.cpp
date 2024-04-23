@@ -53,7 +53,7 @@ namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomL
     bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
     {
         HZ_PROFILE_FUNCTION();
-
+        //滚轮向上offset增加，m_ZoomLevel减小，视口变小，物体占比大
         m_ZoomLevel -= e.GetYOffset() * 0.5f;//设置纵坐标偏移为缩放级别
         m_ZoomLevel = std::max(m_ZoomLevel, 0.25f);//最小为0.25（阻止越过图片)
         m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);

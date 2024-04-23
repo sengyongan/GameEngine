@@ -21,7 +21,18 @@ namespace Hazel {
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
         m_Framebuffer = Framebuffer::Create(fbSpec);
+        ///////////////////////////////////////////////////////////
+        m_ActiveScene = CreateRef<Scene>();
+        auto square = m_ActiveScene->CreateEntity("square");//创建实体
+        //添加组件
+        square.AddComponent<SpriteRendererComponent>(glm::vec4{0.0f,1.0f,0.0f,1.0f});
+        m_SquareEntity = square;//全局变量
 
+        m_CameraEntity = m_ActiveScene->CreateEntity("camera");
+        m_CameraEntity.AddComponent<CameraComponent>();
+        m_SenondCameraEntity = m_ActiveScene->CreateEntity("SenondCamera");
+        auto& cc = m_SenondCameraEntity.AddComponent<CameraComponent>();
+        cc.Primary = false;
     }
 
     void EditorLayer::OnDetach()
@@ -32,49 +43,30 @@ namespace Hazel {
 
     void EditorLayer::OnUpdate(Timestep ts)
     {
-
-        HZ_PROFILE_FUNCTION("EditorLayer::OnUpdate");
+        //获取帧缓冲
+        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification(); m_ViewportSize.x > 0 && m_ViewportSize.y > 0
+            (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))//在非最小化状态
+        {
+            m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);//让帧缓冲内随着窗口改变
+            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);//OrthographicCameraController相机渲染大小改变（如果不变，相机依旧渲染原来大小，会被压缩）
+            m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);//让场景（新的场景摄像机camera）随着窗口改变
+        }
 
         //camera
         if (m_ViewportFocused) {//接收用户的输入
             m_CameraController.OnUpdate(ts);//可以相机控制
-
         }
 
         // Render
-        Renderer2D::ResetStats();
-        {
-            HZ_PROFILE_SCOPE("Renderer Prep");
-            m_Framebuffer->Bind();
-            RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-            RenderCommand::Clear();
-        }
-
-        {
-            static float rotation = 0.0f;
-            rotation += ts * 50.0f;
-
-            HZ_PROFILE_SCOPE("Renderer Draw");
-            Hazel::Renderer2D::BeginScene(m_CameraController.GetCamera());
-            Hazel::Renderer2D::DrawRotatedQuad({ 1.0f, 0.0f }, { 0.8f, 0.8f }, -45.0f, { 0.8f, 0.2f, 0.3f, 1.0f });
-            Hazel::Renderer2D::DrawQuad({ -1.0f, 0.0f }, { 0.8f, 0.8f }, { 0.8f, 0.2f, 0.3f, 1.0f });
-            Hazel::Renderer2D::DrawQuad({ 0.5f, -0.5f }, { 0.5f, 0.75f }, m_SquareColor);
-            Hazel::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 20.0f, 20.0f }, m_Texture, 10.0f);
-            Hazel::Renderer2D::DrawRotatedQuad({ -2.0f, 0.0f, 0.0f }, { 1.0f, 1.0f }, rotation, m_Texture, 20.0f);
-            Hazel::Renderer2D::EndScene();
-
-            Renderer2D::BeginScene(m_CameraController.GetCamera());
-            for (float y = -5.0f; y < 5.0f; y += 0.5f)
-            {
-                for (float x = -5.0f; x < 5.0f; x += 0.5f)
-                {
-                    glm::vec4 color = { (x + 5.0f) / 10.0f, 0.4f, (y + 5.0f) / 10.0f, 0.7f };
-                    Hazel::Renderer2D::DrawQuad({ x, y }, { 0.45f, 0.45f }, color);
-                }
-            }            Renderer2D::EndScene();
-            m_Framebuffer->Unbind();
-        }
-
+        Renderer2D::ResetStats();//？？？
+        m_Framebuffer->Bind();
+        RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+        RenderCommand::Clear();
+        
+        //scene
+        m_ActiveScene->OnUpdate(ts);
+        //
+        m_Framebuffer->Unbind();
     }
 
     void EditorLayer::OnImGuiRender()
@@ -131,7 +123,7 @@ namespace Hazel {
             ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
         }
-
+        //创建开始菜单，有下面功能
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("Options"))
@@ -149,7 +141,7 @@ namespace Hazel {
             ImGui::EndMenuBar();
         }
 
-        //////////////////////////////////////////////////////////////////////////////////////
+        /////Setting面板/////////////////////////////////////////////////////////////////////////
         ImGui::Begin("Setting");
 
         auto statis = Renderer2D::GetStats();
@@ -158,30 +150,51 @@ namespace Hazel {
         ImGui::Text("Quads Calls %d", statis.QuadCount);
         ImGui::Text("Vertices Calls %d", statis.GetTotalVertexCount());
         ImGui::Text("Indies Calls %d", statis.GetTotalIndexCount());
-        ImGui::ColorEdit3("Square Color", glm::value_ptr(m_SquareColor));
+        //
+        if(m_SquareEntity)
+        {
+            ImGui::Separator();
+            auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
+            ImGui::Text("%s", tag.c_str());
+
+            auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
+            ImGui::ColorEdit3("Square Color", glm::value_ptr(squareColor));//value_ptr转化为指针存储到squareColor
+            ImGui::Separator();
+        }
+        //控制m_CameraEntity主摄像机的transform的3个成员
+        ImGui::DragFloat3("Camera Transform",
+            glm::value_ptr(m_CameraEntity.GetComponent<TransformComponent>().Transform[3]));
+        //
+        if (ImGui::Checkbox("Camera A ", &m_PrimaryCamera)) {//当选中为m_PrimaryCamera == true，否则为false，从而改变两个相机的primary
+            m_CameraEntity.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
+            m_SenondCameraEntity.GetComponent<CameraComponent>().Primary = !m_PrimaryCamera;
+        }
+        //
+        {
+            auto& camera = m_SenondCameraEntity.GetComponent<CameraComponent>().Camera;
+            float orthoSize = camera.GetOrthopraghicSize();
+            if (ImGui::DragFloat("Senond Camera Ortho Size", &orthoSize))
+                camera.SetOrthopraghicSize(orthoSize);
+        }
 
         ImGui::End();
 
+        /////Viewport面板/////////////////////////////////////////////////////////////////////
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });//取消边框
         ImGui::Begin("Viewport");
-
+        //获取用户操作情况
         m_ViewportFocused = ImGui::IsWindowFocused();//获取当前值
         m_ViewportHovered = ImGui::IsWindowHovered();
         Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);//其中一个不成立,结果就为真
         //
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();//获取内容区域可用性
-        if (m_ViewportSize != *((glm::vec2*)&viewportPanelSize) && viewportPanelSize.x > 0 && viewportPanelSize.y > 0)
-        {
-            m_ViewportSize = {(uint32_t) viewportPanelSize.x, (uint32_t)viewportPanelSize.y };
-            m_Framebuffer->Resize(m_ViewportSize.x, m_ViewportSize.y);//让帧缓冲内随着窗口改变
-
-            m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);//相机渲染大小改变
-        }
+        m_ViewportSize = { (uint32_t)viewportPanelSize.x, (uint32_t)viewportPanelSize.y };
+        //绘制到Image
         uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();//获取帧缓冲ID,渲染到image
         ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0,1 }, ImVec2{ 1,0 });
         ImGui::End();
         ImGui::PopStyleVar();
-
+        ///////////////////////////
         ImGui::End();
     }
 

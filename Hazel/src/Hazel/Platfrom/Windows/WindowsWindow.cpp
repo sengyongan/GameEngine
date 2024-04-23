@@ -78,9 +78,9 @@ namespace Hazel {
                 HZ_CORE_WARN("{0},{1}", width, height);
                 WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);//获取当前窗口
                 WindowResizeEvent event(width, height);
-                data.Width = width;
-                data.Height = height;//这里调用EventCallback（WindowResizeEvent），因为EventCallback =BIND_ENENT_FN(OnEvent)
-                data.EventCallback(event);//所以实则调用OnEvent（WindowResizeEvent）
+                data.Width = width;//这里调用EventCallback（WindowResizeEvent()），因为EventCallback =BIND_ENENT_FN(OnEvent)
+                data.Height = height;//上面替换：BIND_ENENT_FN(OnEvent)（参数=WindowResizeEvent（））
+                data.EventCallback(event);//所以实则调用OnEvent（WindowResizeEvent()）
             });
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
             {
@@ -146,7 +146,7 @@ namespace Hazel {
 
             });
         glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset)
-            {
+            { std::cout << "Y offset: " << yoffset << std::endl;
                 WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
                 MouseScrolledEvent event((float)xoffset, (float)yoffset);
                 data.EventCallback(event);

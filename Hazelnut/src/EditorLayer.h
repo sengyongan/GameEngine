@@ -1,5 +1,5 @@
 #pragma once
-//EditorLayer层
+//EditorLayer应用层
 #include"Hazel.h"
 namespace Hazel {
     class EditorLayer :public Layer
@@ -18,9 +18,15 @@ namespace Hazel {
         Ref<VertexArray> m_SquareVA;
         Ref<Shader> m_FlatColorShader;
         Ref<Framebuffer> m_Framebuffer;
-
         Ref<Texture2D>m_Texture;
+        //
+        Ref<Scene> m_ActiveScene;//包含实体的场景
+        Entity m_SquareEntity;
+        Entity m_CameraEntity;
+        Entity m_SenondCameraEntity;
 
+        bool m_PrimaryCamera = true;
+        //
         bool m_ViewportFocused = false, m_ViewportHovered = false;//焦点（窗口正在接收用户的输入） / 悬停（指针是否在窗口上悬停）
 
         glm::vec2 m_ViewportSize = {0.0f, 0.0f};

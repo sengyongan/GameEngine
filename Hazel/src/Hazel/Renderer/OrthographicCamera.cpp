@@ -14,7 +14,7 @@ namespace Hazel {//正交投影矩阵,不同于透视投影，不会因为距离的变化而产生视觉上的
     {
         HZ_PROFILE_FUNCTION();
 
-        m_ProjectionMatrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
+        m_ProjectionMatrix = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);//近远平面
         m_ViewProjextionMatrix = m_ProjectionMatrix * m_ViewMatrix;
     }
 
