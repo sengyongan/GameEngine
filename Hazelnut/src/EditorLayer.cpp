@@ -1,3 +1,4 @@
+//工具层客户端：编辑器
 #include "EditorLayer.h"
 #include "imgui/imgui.h"
 
@@ -15,24 +16,56 @@ namespace Hazel {
         HZ_PROFILE_FUNCTION();
 
         m_Texture = Texture2D::Create("assets/textures/Checkerboard.png");
-        m_CameraController.SetZoomLevel(5.0f);
+        //m_CameraController.SetZoomLevel(5.0f);
 
         FramebufferSpecification fbSpec;
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
         m_Framebuffer = Framebuffer::Create(fbSpec);
-        ///////////////////////////////////////////////////////////
+        //ECS//////////////////////////////////////////////////////////////////////////////////////
         m_ActiveScene = CreateRef<Scene>();
-        auto square = m_ActiveScene->CreateEntity("square");//创建实体
+        auto square = m_ActiveScene->CreateEntity("Green Square");//创建实体
         //添加组件
         square.AddComponent<SpriteRendererComponent>(glm::vec4{0.0f,1.0f,0.0f,1.0f});
         m_SquareEntity = square;//全局变量
 
+        auto redSquare = m_ActiveScene->CreateEntity("Red Square");
+        redSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
+        //
         m_CameraEntity = m_ActiveScene->CreateEntity("camera");
         m_CameraEntity.AddComponent<CameraComponent>();
+        //
         m_SenondCameraEntity = m_ActiveScene->CreateEntity("SenondCamera");
         auto& cc = m_SenondCameraEntity.AddComponent<CameraComponent>();
         cc.Primary = false;
+        //添加脚本///////////////////////////////////////////////////
+        class CameraController : public ScriptableEntity {
+        public:
+            void OnCreate() {
+                auto& transform = GetComponent<TransformComponent>().Transform;
+                transform[3][0] = rand() % 10 - 5.0f;
+            }
+            void OnDestory() {
+
+            }
+            void OnUpdate(Timestep ts) {
+                auto& transform = GetComponent<TransformComponent>().Transform;
+                float speed = 5.0f;
+
+                if (Input::IsKeyPressed(HZ_KEY_A))
+                    transform[3][0] -= speed * ts;//x
+                if (Input::IsKeyPressed(HZ_KEY_D))
+                    transform[3][0] += speed * ts;
+                if (Input::IsKeyPressed(HZ_KEY_W))
+                    transform[3][1] += speed * ts;//y
+                if (Input::IsKeyPressed(HZ_KEY_S))
+                    transform[3][1] -= speed * ts;
+            }
+        };
+        m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+        m_SenondCameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+        ///SceneHierarchyPanel/////////////////////////////////////////////
+        m_SceneHierarchyPanel.SetContext(m_ActiveScene);
     }
 
     void EditorLayer::OnDetach()
@@ -43,8 +76,9 @@ namespace Hazel {
 
     void EditorLayer::OnUpdate(Timestep ts)
     {
-        //获取帧缓冲
-        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification(); m_ViewportSize.x > 0 && m_ViewportSize.y > 0
+        //获取帧缓冲//形式：for(int i = 0;i……分号）
+        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification(); //获取帧缓冲区
+            m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f &&
             (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))//在非最小化状态
         {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);//让帧缓冲内随着窗口改变
@@ -140,7 +174,8 @@ namespace Hazel {
 
             ImGui::EndMenuBar();
         }
-
+        //SceneHierarchyPanel//////////////////////////////////////////////////////////////////
+        m_SceneHierarchyPanel.OnImGuiRender();
         /////Setting面板/////////////////////////////////////////////////////////////////////////
         ImGui::Begin("Setting");
 

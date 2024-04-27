@@ -1,6 +1,7 @@
 #pragma once
 //EditorLayer应用层
 #include"Hazel.h"
+#include"Panels/SceneHierarchyPanel.h"
 namespace Hazel {
     class EditorLayer :public Layer
     {
@@ -21,7 +22,7 @@ namespace Hazel {
         Ref<Texture2D>m_Texture;
         //
         Ref<Scene> m_ActiveScene;//包含实体的场景
-        Entity m_SquareEntity;
+        Entity m_SquareEntity;//绿色实体
         Entity m_CameraEntity;
         Entity m_SenondCameraEntity;
 
@@ -32,6 +33,8 @@ namespace Hazel {
         glm::vec2 m_ViewportSize = {0.0f, 0.0f};
 
         glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
+
+        SceneHierarchyPanel m_SceneHierarchyPanel;//层级面板
     };
 
 }

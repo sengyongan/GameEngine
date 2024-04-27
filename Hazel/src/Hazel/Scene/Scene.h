@@ -1,4 +1,4 @@
-//管理场景及绘制
+//管理场景初始化，更新
 #pragma once
 #include"entt.hpp"
 #include"Hazel/Core/Timestep.h"
@@ -16,7 +16,9 @@ namespace Hazel {
 
     private:
         entt::registry m_Registry;//注册表：用于实体管理和组件管理
-        friend class Entity;
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+
+        friend class Entity;
+        friend class SceneHierarchyPanel;//场景与场景层级
     };
 }

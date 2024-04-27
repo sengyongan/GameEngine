@@ -5,27 +5,42 @@
 namespace Hazel {
     SceneCamera::SceneCamera()
     {
-        RecalculateProject();
+        RecalculateProjection();
+    }
+    void SceneCamera::SetPerspective(float verticalFOV, float nearClip, float farClip)
+    {
+        m_ProjectionType = ProjectionType::Perspective;
+        m_PerspectiveFOV = verticalFOV;
+        m_PerspectiveNear = nearClip;
+        m_PerspectiveFar = farClip;
+        RecalculateProjection();
     }
     void SceneCamera::SetOrthgraphic(float size, float nearClip, float farClip)
     {
+        m_ProjectionType = ProjectionType::Orthographic;
         m_OrthographicSize = size;
         m_OrthographicNear = nearClip;
         m_OrthographicFar = farClip;
-        RecalculateProject();
+        RecalculateProjection();
     }
     void SceneCamera::SetViewportSize(uint32_t width, uint32_t height)
     {
         m_AspectRatio = (float)width / (float)height;
-        RecalculateProject();
+        RecalculateProjection();
     }
-    void SceneCamera::RecalculateProject()//重置投影矩阵
+    void SceneCamera::RecalculateProjection()//重置投影矩阵
     {
-        float orthoLeft = -m_OrthographicSize * m_AspectRatio * 0.5f;
-        float orthoRight = m_OrthographicSize * m_AspectRatio * 0.5f;
-        float orthoBottom = -m_OrthographicSize * 0.5f;
-        float orthoTop = m_OrthographicSize * 0.5f;
-        //改变投影矩阵变量（在scene的update传入着色器
-        m_Projection = glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, m_OrthographicNear, m_OrthographicFar);
+        if (m_ProjectionType == ProjectionType::Perspective)//透视
+        {
+            m_Projection = glm::perspective(m_PerspectiveFOV, m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
+        }
+        else {//正交
+            float orthoLeft = -m_OrthographicSize * m_AspectRatio * 0.5f;
+            float orthoRight = m_OrthographicSize * m_AspectRatio * 0.5f;
+            float orthoBottom = -m_OrthographicSize * 0.5f;
+            float orthoTop = m_OrthographicSize * 0.5f;
+            //改变投影矩阵变量（在scene的update传入着色器
+            m_Projection = glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, m_OrthographicNear, m_OrthographicFar);
+        }
     }
 }

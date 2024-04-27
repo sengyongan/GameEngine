@@ -15,6 +15,7 @@
 //---ECS----------------------------
 #include"Hazel/Scene/Scene.h"
 #include"Hazel/Scene/Entity.h"
+#include"Hazel/Scene/ScriptableEntity.h"
 #include"Hazel/Scene/Components.h"
 //----renderer-------------------------
 #include"Hazel/Renderer/Renderer.h"

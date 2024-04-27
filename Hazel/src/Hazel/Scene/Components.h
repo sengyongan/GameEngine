@@ -1,6 +1,7 @@
 //组件系统
 #pragma once
 #include"SceneCamera.h"
+#include"ScriptableEntity.h"
 #include<glm/glm.hpp>
 namespace Hazel {
     struct TagComponent {
@@ -36,5 +37,19 @@ namespace Hazel {
 
         CameraComponent() = default;
         CameraComponent(const CameraComponent&) = default;
+    };
+
+    struct NativeScriptComponent//本地脚本
+    {
+        ScriptableEntity* Instance = nullptr;//基类
+
+        ScriptableEntity* (*InstantiateScript)();//函数指针，返回ScriptableEntity
+        void (*DestoryScript) (NativeScriptComponent*);//函数指针
+
+        template<typename T>
+        void Bind() {
+            InstantiateScript = []() {return static_cast<ScriptableEntity*> (new T());};
+            DestoryScript = [](NativeScriptComponent* nsc) {delete nsc->Instance; nsc->Instance = nullptr;};
+        }
     };
 }

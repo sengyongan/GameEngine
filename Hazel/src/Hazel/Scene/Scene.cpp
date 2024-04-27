@@ -5,44 +5,16 @@
 #include"Entity.h"
 #include<glm/glm.hpp>
 namespace Hazel {
-    static void DoMaths(const glm::mat4 Transform) {
 
-    }
-    static void OnTransformConstruct(entt::registry& registry, entt::entity entity) {
-
-    }
     Scene::Scene()
     {
-#if 0
-        entt::entity entity = m_Registry.create();//实体管理创建实体
-        m_Registry.emplace< TransformComponent>(entity, glm::mat4(1.0f));//将组件与实体关联
-
-        //当TransformComponent被构造时，链接函数作为回调函数
-        m_Registry.on_construct< TransformComponent>().connect<&OnTransformConstruct>();
-
-        //检查实体是否具有指定类型的组件
-        if (m_Registry.has< TransformComponent>(entity)) {
-            TransformComponent& transform = m_Registry.get< TransformComponent>(entity);
-        }
-        //所有具有指定类型组件的实体
-        auto view = m_Registry.view< TransformComponent>();
-        for (auto entity : view) {
-            TransformComponent& transform = view.get< TransformComponent>(entity);
-        }
-        //所有具有组件（两个）的实体的组
-        auto group = m_Registry.group< TransformComponent>(entt::get< MeshComponent>);
-        for (auto entity : group) {
-            auto&[Transform, mesh] = group.get< TransformComponent, MeshComponent>(entity);
-            
-        }
-#endif
     }
     Scene::~Scene()
     {
     }
-    Entity Scene::CreateEntity(const std::string& name)
+    Entity Scene::CreateEntity(const std::string& name)//因为都是在一个场景调用创建方法，实体都在一个注册表
     {
-        Entity entity = { m_Registry.create(),this };//创建实体类
+        Entity entity = { m_Registry.create(),this };//创建实体类{实体，场景}，
         entity.AddComponent< TransformComponent>();//为实体添加组件
         auto& tag = entity.AddComponent< TagComponent>();
         tag.Tag = name.empty() ? "Entity" : name;//传入组件的成员
@@ -50,6 +22,21 @@ namespace Hazel {
     }
     void Scene::OnUpdate(Timestep ts)
     {
+        {
+            m_Registry.view<NativeScriptComponent>().each
+            (
+                [=](auto entity, auto& nsc) {//nsc->缩写NativeScriptComponent
+                    if (!nsc.Instance) 
+                    {
+                        nsc.Instance = nsc.InstantiateScript();
+                        nsc.Instance->m_Entity = Entity{ entity, this };
+                        nsc.Instance->OnCreate();
+                    }
+                    nsc.Instance->OnUpdate(ts);
+                }
+            );
+        }
+
         //找到具有组件的实体
         Camera* mainCamera = nullptr;
         glm::mat4* cameraTransform = nullptr;
@@ -57,7 +44,7 @@ namespace Hazel {
         {
             auto view = m_Registry.view<TransformComponent, CameraComponent>();
             for (auto entity : view) {//赋值给左边变量
-                auto& [transform, camera] = view.get< TransformComponent, CameraComponent>(entity);
+                auto [transform, camera] = view.get< TransformComponent, CameraComponent>(entity);
 
                 if (camera.Primary) {//唯一的主相机实体
                     mainCamera = &camera.Camera;
@@ -72,7 +59,7 @@ namespace Hazel {
             Renderer2D::BeginScene(mainCamera->GetProjection(), *cameraTransform);
             auto group = m_Registry.group< TransformComponent>(entt::get< SpriteRendererComponent>);//所有具有组件（两个）的实体的组
             for (auto entity : group) {
-                auto& [transform, sprite] = group.get< TransformComponent, SpriteRendererComponent>(entity);
+                auto [transform, sprite] = group.get< TransformComponent, SpriteRendererComponent>(entity);
                 Renderer2D::DrawQuad(transform, sprite.Color);
             }
             Renderer2D::EndScene();

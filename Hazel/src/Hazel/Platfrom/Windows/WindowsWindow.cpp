@@ -146,7 +146,7 @@ namespace Hazel {
 
             });
         glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset)
-            { std::cout << "Y offset: " << yoffset << std::endl;
+            {
                 WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
                 MouseScrolledEvent event((float)xoffset, (float)yoffset);
                 data.EventCallback(event);
