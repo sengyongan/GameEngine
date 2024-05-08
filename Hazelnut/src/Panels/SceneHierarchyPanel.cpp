@@ -1,7 +1,9 @@
+ï»¿//ç»˜åˆ¶éƒ¨åˆ†é¢æ¿
 #include "SceneHierarchyPanel.h"
 #include"Hazel/Scene/Components.h"
 #include"hzpch.h"
 #include<imgui/imgui.h>
+#include<imgui/imgui_internal.h>
 #include<glm/gtc/type_ptr.hpp>
 namespace Hazel {
     SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
@@ -13,89 +15,208 @@ namespace Hazel {
         m_Context = context;
     }
     void SceneHierarchyPanel::OnImGuiRender()
-    {
+    {   
+        //Hierarchyå±‚çº§é¢æ¿////////////////////////////////////////////////////////////////////////
         ImGui::Begin("Scene Hierarchy");
 
         m_Context->m_Registry.each(
             [&](auto entityID) {
-                Entity entity{ entityID, m_Context.get() };//m_Context.get()·µ»Ø³¡¾°Ö¸Õë
+                Entity entity{ entityID, m_Context.get() };//m_Context.get()è¿”å›åœºæ™¯æŒ‡é’ˆ
                 DrawEntityNode(entity);
             }
         );
-        if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {//µã»÷¿Õ°×£¬
-            m_SelectionContext = {};//Ã»ÓĞÑ¡ÖĞÊµÌå
+        if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {//ç‚¹å‡»ç©ºç™½ï¼Œ
+            m_SelectionContext = {};//æ²¡æœ‰é€‰ä¸­å®ä½“
+        }
+        //åˆ›å»ºå®ä½“èœå•
+        if (ImGui::BeginPopupContextWindow(0,1,false)) {//0æ˜¯ID 1æ˜¯å³é”®
+            if (ImGui::MenuItem("create Empty Entity")) {
+                m_Context->CreateEntity("Empty Entity");
+            }
+            ImGui::EndPopup();//å½“å‰å¸§ç»“æŸå—åï¼Œä¸‹ä¸€å¸§é‡æ–°åˆ›å»º
         }
 
         ImGui::End();
-
+        //å±æ€§é¢æ¿//////////////////////////////////////////////////////////////////////////////////
         ImGui::Begin("Properties");
         if (m_SelectionContext) {
-            DrawComponents(m_SelectionContext);//½¨Á¢±»Ñ¡ÖĞ½ÚµãµÄÊôĞÔÃæ°å
+            DrawComponents(m_SelectionContext);//å»ºç«‹è¢«é€‰ä¸­èŠ‚ç‚¹çš„å±æ€§é¢æ¿
+            //æ·»åŠ ç»„ä»¶æŒ‰é’®
+            if (ImGui::Button("Add Component")){
+                ImGui::OpenPopup("AddComponent");
+            }
+            if (ImGui::BeginPopup("AddComponent")) {
+                if (ImGui::MenuItem("Camera")) {
+                    m_SelectionContext.AddComponent<CameraComponent>();
+                        ImGui::CloseCurrentPopup();
+                }
+                if (ImGui::MenuItem("Sprite Renderer")) {
+                    m_SelectionContext.AddComponent<SpriteRendererComponent>();
+                        ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
         }
         ImGui::End();
     }
     void SceneHierarchyPanel::DrawEntityNode(Entity entity)
     {
         auto& tag = entity.GetComponent< TagComponent>().Tag;
-        //typedef int ±êÖ¾£¬==µÄÕâ¸ö½ÚµãÓĞÁËImGuiTreeNodeFlags_Selected±êÖ¾
-        ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;//½Úµã±»Ñ¡ÖĞ | ÓÃ»§µã»÷¼ıÍ·Ê±£¬¸Ã½Úµã½«Õ¹¿ª»òÕÛµş
-        bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity,flags,tag.c_str());//¸Ã½Úµã´´½¨ËÄ²æÊ÷
+        //typedef int æ ‡å¿—ï¼Œ==çš„è¿™ä¸ªèŠ‚ç‚¹æœ‰äº†ImGuiTreeNodeFlags_Selectedæ ‡å¿—
+        ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;//èŠ‚ç‚¹è¢«é€‰ä¸­ | ç”¨æˆ·ç‚¹å‡»ç®­å¤´æ—¶ï¼Œè¯¥èŠ‚ç‚¹å°†å±•å¼€æˆ–æŠ˜å 
+        flags |= ImGuiTreeNodeFlags_SpanAvailWidth;//å¯ä»¥åœ¨éæŒ‰é’®åŒä¸€è¡Œè¿›è¡Œé€‰æ‹©
+        
+        bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity,flags,tag.c_str());//è¯¥èŠ‚ç‚¹åˆ›å»ºå››å‰æ ‘
 
-        if (ImGui::IsItemClicked()) {//µ±µã»÷ÄÄ¸ö½Úµã£¬±íÊ¾Ñ¡ÖĞÄ³½Úµã£¬m_SelectionContex¸üĞÂÎª¸Ã½Úµã
+        if (ImGui::IsItemClicked()) {//å½“ç‚¹å‡»å“ªä¸ªèŠ‚ç‚¹ï¼Œè¡¨ç¤ºé€‰ä¸­æŸèŠ‚ç‚¹ï¼Œm_SelectionContexæ›´æ–°ä¸ºè¯¥èŠ‚ç‚¹
 
             m_SelectionContext = entity;
         }
-        if (opened) {//¸Ã½Úµã±»´ò¿ª
-            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;//½Úµã±»Ñ¡ÖĞ | ÓÃ»§µã»÷¼ıÍ·Ê±£¬¸Ã½Úµã½«Õ¹¿ª»òÕÛµş
-            bool opened = ImGui::TreeNodeEx((void*)1, flags, tag.c_str());//´´½¨×Ó½Úµã
-            if (opened) {//ÒÑ¾­´ò¿ª
-                ImGui::TreePop();//¹Ø±Õ×Ó½Úµã£¨´úÂëÕÛµş£¬²»»æÖÆ½Úµã£©
-
+        //åˆ é™¤å®ä½“èœå•
+        bool entityDeleted = false;
+        if (ImGui::BeginPopupContextItem()) {//æœ‰é»˜è®¤åˆå§‹å€¼
+            if (ImGui::MenuItem("Delete Empty Entity")) {
+                entityDeleted = true;
             }
-            ImGui::TreePop();//¹Ø±Õ¸¸½Úµã
+            ImGui::EndPopup();
         }
 
+        if (opened) {//è¯¥èŠ‚ç‚¹è¢«æ‰“å¼€
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;//èŠ‚ç‚¹è¢«é€‰ä¸­ | ç”¨æˆ·ç‚¹å‡»ç®­å¤´æ—¶ï¼Œè¯¥èŠ‚ç‚¹å°†å±•å¼€æˆ–æŠ˜å 
+            bool opened = ImGui::TreeNodeEx((void*)1, flags, tag.c_str());//åˆ›å»ºå­èŠ‚ç‚¹
+            if (opened) {//å·²ç»æ‰“å¼€
+                ImGui::TreePop();//å…³é—­å­èŠ‚ç‚¹ï¼ˆä»£ç æŠ˜å ï¼Œä¸ç»˜åˆ¶èŠ‚ç‚¹ï¼‰
+
+            }
+            ImGui::TreePop();//å…³é—­çˆ¶èŠ‚ç‚¹
+        }
+        if (entityDeleted) {
+            m_Context->DestroyEntity(entity);
+            if (m_SelectionContext == entity)m_SelectionContext = {};//æ­£å¥½é€‰ä¸­å½“å‰è¢«åˆ é™¤çš„èŠ‚ç‚¹ï¼Œå°†é€‰æ‹©å˜ä¸ºç©º
+        }
     }
-    void SceneHierarchyPanel::DrawComponents(Entity entity)//±»Ñ¡ÖĞ½Úµã
+    //æ ‡ç­¾ï¼Œå®é™…å€¼ï¼Œé‡ç½®å€¼ï¼Œæ ‡ç­¾å®½åº¦
+    static void DrawVec3Control(const std::string& lable, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f) {
+        //é»˜è®¤å­—ä½“
+        ImGuiIO& io = ImGui::GetIO();
+        auto boldFont = io.Fonts->Fonts[0];
+        //
+        ImGui::PushID(lable.c_str());//ç”¨æˆ·ä¸ UI äº¤äº’æ—¶èƒ½å¤Ÿæ­£ç¡®åœ°å¤„ç†å’Œæ›´æ–°ç›¸åº”çš„æ•°æ®
+
+        ImGui::Columns(2);//ç¬¬ä¸€åˆ—æ ‡ç­¾ï¼Œç¬¬äºŒåˆ—3ä¸ªæ§ä»¶
+        ImGui::SetColumnWidth(0,columnWidth);
+        ImGui::Text(lable.c_str());
+        ImGui::NextColumn();
+        
+        ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));//ç¼©è¿›é—´è·
+
+        float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;//è¡Œé«˜åº¦
+        ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
+        //////////////
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
+        //æŒ‰é’®
+        ImGui::PushFont(boldFont);
+        if (ImGui::Button("X", buttonSize))
+            values.x = resetValue;
+        ImGui::PopFont();
+        ImGui::PopStyleColor(3);
+        //æ§ä»¶
+        ImGui::SameLine();
+        ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");//speed,min,max,æ ¼å¼
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+        ////////////
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
+
+        ImGui::PushFont(boldFont);
+        if (ImGui::Button("Y", buttonSize))
+            values.y = resetValue;
+        ImGui::PopStyleColor(3);
+        ImGui::PopFont();
+
+        ImGui::SameLine();
+        ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+        ///////////
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
+
+        ImGui::PushFont(boldFont);
+        if (ImGui::Button("Z", buttonSize))
+            values.z = resetValue;
+        ImGui::PopStyleColor(3);
+        ImGui::PopFont();
+
+        ImGui::SameLine();// è¿”å›ä¸Šä¸€è¡Œï¼Œç»§ç»­æ¨ªå‘å¸ƒå±€
+        ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
+        ImGui::PopItemWidth();
+
+        ImGui::PopStyleVar();
+
+        ImGui::Columns(1);
+        ImGui::PopID();
+    }
+
+    template <typename T, typename UIFunction>
+    static void DrawComponent()
+
+    void SceneHierarchyPanel::DrawComponents(Entity entity)//è¢«é€‰ä¸­èŠ‚ç‚¹
     {
         if (entity.HasComponent<TagComponent>()) {
             auto& tag = entity.GetComponent< TagComponent>().Tag;
 
             char buffer[256];
-            memset(buffer, 0, sizeof(buffer));//bufferÊı×éµÄËùÓĞÔªËØ¶¼ÉèÖÃÎª0¡£
-            strcpy_s(buffer, sizeof(buffer), tag.c_str());//½«tag×Ö·û´®¸´ÖÆµ½bufferÊı×éÖĞ¡£
+            memset(buffer, 0, sizeof(buffer));//bufferæ•°ç»„çš„æ‰€æœ‰å…ƒç´ éƒ½è®¾ç½®ä¸º0ã€‚
+            strcpy_s(buffer, sizeof(buffer), tag.c_str());//å°†tagå­—ç¬¦ä¸²å¤åˆ¶åˆ°bufferæ•°ç»„ä¸­ã€‚
 
-            if (ImGui::InputText("Tag", buffer, sizeof(buffer))) {//Èç¹ûÊäÈëÎÄ±¾
-                tag = std::string(buffer);//½«ÊäÈëµÄÎÄ±¾¸ø±êÇ©
+            if (ImGui::InputText("Tag", buffer, sizeof(buffer))) {//å¦‚æœè¾“å…¥æ–‡æœ¬
+                tag = std::string(buffer);//å°†è¾“å…¥çš„æ–‡æœ¬ç»™æ ‡ç­¾
             }
         }
+        //æ ‡å¿—
+        const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;//æ ‡å¿— = é»˜è®¤å±•å¼€ /  å…è®¸é¡¹ç›®é‡å 
+        //
         if (entity.HasComponent<TransformComponent>()) {
-            //±êÊ¶·û£¬±êÖ¾£¬±êÇ©
-            //Ìí¼ÓImGuiTreeNodeFlags_DefaultOpen±êÖ¾£¨Ä¬ÈÏ±»´ò¿ª£©£¬½ÚµãÃû×ÖÎªTransform
-            if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Transform")) {
-                auto& transform = entity.GetComponent< TransformComponent>().Transform;
-                ImGui::DragFloat3("Position", glm::value_ptr(transform[3]), 0.1f);//Îª½ÚµãÌí¼Ó3¸ö¸¡µã¿ØÖÆtransform¡¾3]
-                ImGui::TreePop();//½áÊøµ±Ç°½ÚµãµÄ»æÖÆ¡£
-            }
+            //æ ‡è¯†ç¬¦ï¼Œæ ‡å¿—ï¼Œæ ‡ç­¾
+            //æ·»åŠ ImGuiTreeNodeFlags_DefaultOpenæ ‡å¿—ï¼ˆé»˜è®¤è¢«æ‰“å¼€ï¼‰ï¼ŒèŠ‚ç‚¹åå­—ä¸ºTransform
+            bool open = ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), treeNodeFlags, "Transform");//å°šæœªåˆ›å»º,ä¼šåˆ›å»ºå¹¶è¿”å›Â true,
 
+            //
+            if (open) {
+                auto& tc = entity.GetComponent< TransformComponent>();
+                DrawVec3Control("Translation", tc.Translation);//ä¼ å…¥åˆå§‹å€¼
+                glm::vec3 rotation = glm::degrees(tc.Rotation);//è½¬ä¸ºè§’åº¦åˆ¶
+                DrawVec3Control("Rotation", rotation);
+                tc.Rotation = glm::radians(rotation);//è½¬å›å¼§åº¦åˆ¶
+                DrawVec3Control("Scale", tc.Scale, 1.0f);
+                ImGui::TreePop();
+            }
         }
         if (entity.HasComponent<CameraComponent>()) {
-            //±êÊ¶·û£¬±êÖ¾£¬±êÇ©
-            //´æÔÚImGuiTreeNodeFlags_DefaultOpen±êÖ¾£¬½ÚµãÃû×ÖÎªTransform
-            if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Camera")) {
+            //æ ‡è¯†ç¬¦ï¼Œæ ‡å¿—ï¼Œæ ‡ç­¾
+            //åˆ›å»ºèŠ‚ç‚¹æˆåŠŸImGuiTreeNodeFlags_DefaultOpenæ ‡å¿—ï¼ŒèŠ‚ç‚¹åå­—ä¸ºTransform
+            if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), treeNodeFlags, "Camera")) {
                 //
-                auto& cameraComponent = entity.GetComponent< CameraComponent>();//µ±Ç°±»Ñ¡ÖĞµÄÊµÌå»ñÈ¡×é¼ş
+                auto& cameraComponent = entity.GetComponent< CameraComponent>();//å½“å‰è¢«é€‰ä¸­çš„å®ä½“è·å–ç»„ä»¶
                 auto& camera = cameraComponent.Camera;
 
                 ImGui::Checkbox("Primary", &cameraComponent.Primary);
                 //
-                const char* projectionTypeStrings[] = { "Perspective", "Orthographic" };//Í¸ÊÓ / Õı½»
-                const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];//ÉèÖÃÑ¡ÔñÄ¬ÈÏÖµ£ºÊı×éË÷Òı 0 / 1 
-                if (ImGui::BeginCombo("Projection", currentProjectionTypeString)) {//Ñ¡Ôñ
+                const char* projectionTypeStrings[] = { "Perspective", "Orthographic" };//é€è§† / æ­£äº¤
+                const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];//è®¾ç½®é€‰æ‹©é»˜è®¤å€¼ï¼šæ•°ç»„ç´¢å¼• 0 / 1 
+                if (ImGui::BeginCombo("Projection", currentProjectionTypeString)) {//é€‰æ‹©
 
-                    for (int i = 0; i < 2; i++) {//Ñ¡ÖĞÄÄ¸ö£¬currentProjectionTypeString¸üĞÂÎªÄÄ¸ö
-                        bool isSelected = currentProjectionTypeString == projectionTypeStrings[i];//µ±Ç°Ñ¡ÖĞµÄ == Êı×éÖĞµÄÕâÒ»Î»Ê±£¬isSelectedÎªÕæ,·ñÔòÓÒ±ß²»³ÉÁ¢Îª·ñ
-                        if (ImGui::Selectable(projectionTypeStrings[i], isSelected)) {//´´½¨¿ÉÑ¡ÔñÔªËØ£ºÔªËØÄÚÈİ£¬µ±ÓÃ»§µã»÷¸ÃÔªËØÊ±£¬isSelected¸üĞÂÎªtrue
+                    for (int i = 0; i < 2; i++) {//é€‰ä¸­å“ªä¸ªï¼ŒcurrentProjectionTypeStringæ›´æ–°ä¸ºå“ªä¸ª
+                        bool isSelected = currentProjectionTypeString == projectionTypeStrings[i];//å½“å‰é€‰ä¸­çš„ == æ•°ç»„ä¸­çš„è¿™ä¸€ä½æ—¶ï¼ŒisSelectedä¸ºçœŸ,å¦åˆ™å³è¾¹ä¸æˆç«‹ä¸ºå¦
+                        if (ImGui::Selectable(projectionTypeStrings[i], isSelected)) {//åˆ›å»ºå¯é€‰æ‹©å…ƒç´ ï¼šå…ƒç´ å†…å®¹ï¼Œå½“ç”¨æˆ·ç‚¹å‡»è¯¥å…ƒç´ æ—¶ï¼ŒisSelectedæ›´æ–°ä¸ºtrue
                             //currentProjectionTypeString = projectionTypeStrings[i];
                             cameraComponent.Camera.SetProjectionType((SceneCamera::ProjectionType)i);
                         }
@@ -105,10 +226,10 @@ namespace Hazel {
                     }
                     ImGui::EndCombo();
                 }
-                //¸ü¸ÄÍ¶Ó°¾ØÕó´óĞ¡£¨Ãæ°å£©
-                if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective) {//Í¸ÊÓ
-                    float verticalFov = glm::degrees(camera.GetPerspectiveVerticalFOV());
-                    if (ImGui::DragFloat("Vertical FOV", &verticalFov))
+                //æ›´æ”¹æŠ•å½±çŸ©é˜µå¤§å°ï¼ˆé¢æ¿ï¼‰
+                if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective) {//é€è§†
+                    float verticalFov = glm::degrees(camera.GetPerspectiveVerticalFOV());//ä¿å­˜ä¸Šä¸€æ¬¡æ•°æ®
+                    if (ImGui::DragFloat("Vertical FOV", &verticalFov))//æ¯å¸§é‡æ–°ç»˜åˆ¶æ›´æ–°
                         camera.SetPerspectiveVerticalFOV(glm::radians(verticalFov));
 
                     float orthoNear = camera.GetPerspectiveNearClip();
@@ -120,7 +241,7 @@ namespace Hazel {
                         camera.SetPerspectiveFarClip(orthoFar);
                 }
 
-                if (camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic) {//Õı½»
+                if (camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic) {//æ­£äº¤
                     float orthoSize = camera.GetOrthopraghicSize();
                     if (ImGui::DragFloat("Size", &orthoSize)) {
                         camera.SetOrthopraghicSize(orthoSize);
@@ -138,8 +259,44 @@ namespace Hazel {
                     ImGui::Checkbox("Fixed Aspect Ratio", &cameraComponent.FixedAspectRatio);
                 }
 
-                ImGui::TreePop();//½áÊøµ±Ç°½ÚµãµÄ»æÖÆ¡£
+                ImGui::TreePop();//ç»“æŸå½“å‰èŠ‚ç‚¹çš„ç»˜åˆ¶ã€‚
             }
         }
+
+
+        if (entity.HasComponent<SpriteRendererComponent>()) 
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
+            bool open = ImGui::TreeNodeEx((void*)typeid(SpriteRendererComponent).hash_code(), treeNodeFlags, "Sprite Renderer");
+            ImGui::SameLine(ImGui::GetWindowWidth() - 25.0f);
+            //ç§»é™¤ç»„ä»¶æŒ‰é’®(åº”ä½äºæ¸²æŸ“imguiä¹‹å‰ï¼‰
+            if (ImGui::Button("+",ImVec2{ 20,20 })) {
+                ImGui::OpenPopup("ComponentSettings");
+            }
+            ImGui::PopStyleVar();
+
+            bool removeComponenet = false;
+            if (ImGui::BeginPopup("ComponentSettings"))
+            {
+                if (ImGui::MenuItem("Removecomponent")) {
+                    removeComponenet = true;
+                }
+                ImGui::EndPopup();
+            }
+
+            //æ ‡è¯†ç¬¦ï¼Œæ ‡å¿—ï¼Œæ ‡ç­¾
+            //æ·»åŠ ImGuiTreeNodeFlags_DefaultOpenæ ‡å¿—ï¼ˆé»˜è®¤è¢«æ‰“å¼€ï¼‰ï¼ŒèŠ‚ç‚¹åå­—ä¸ºTransform
+            if (open) {
+                auto& src = entity.GetComponent< SpriteRendererComponent>();
+                ImGui::ColorEdit4("Color", glm::value_ptr(src.Color));//ä¸ºèŠ‚ç‚¹æ·»åŠ 3ä¸ªæµ®ç‚¹æ§åˆ¶transformã€3]
+                ImGui::TreePop();//ç»“æŸå½“å‰èŠ‚ç‚¹çš„ç»˜åˆ¶ã€‚
+            }
+            //
+            if (removeComponenet) {
+                entity.RemoveComponent< TransformComponent>();
+            }
+
+        }
+
     }
 }

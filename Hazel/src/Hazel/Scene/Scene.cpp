@@ -20,6 +20,10 @@ namespace Hazel {
         tag.Tag = name.empty() ? "Entity" : name;//传入组件的成员
         return entity;//返回实体类
     }
+    void Scene::DestroyEntity(Entity entity)
+    {
+        m_Registry.destroy(entity);
+    }
     void Scene::OnUpdate(Timestep ts)
     {
         {
@@ -42,13 +46,13 @@ namespace Hazel {
         glm::mat4* cameraTransform = nullptr;
 
         {
-            auto view = m_Registry.view<TransformComponent, CameraComponent>();
+            auto view = m_Registry.view<TransformComponent, CameraComponent>();//所有摄像机
             for (auto entity : view) {//赋值给左边变量
-                auto [transform, camera] = view.get< TransformComponent, CameraComponent>(entity);
+                auto [transform, camera] = view.get< TransformComponent, CameraComponent>(entity);//从实体获取组件赋值给变量
 
                 if (camera.Primary) {//唯一的主相机实体
                     mainCamera = &camera.Camera;
-                    cameraTransform = &transform.Transform;
+                    cameraTransform = &transform.GetTransform();
                     break;
                 }
             }
@@ -56,11 +60,11 @@ namespace Hazel {
         //找到具有多个组件的组的实体
         if(mainCamera)
         {
-            Renderer2D::BeginScene(mainCamera->GetProjection(), *cameraTransform);
+            Renderer2D::BeginScene(mainCamera->GetProjection(), *cameraTransform);//将cameraTransform传入着色器
             auto group = m_Registry.group< TransformComponent>(entt::get< SpriteRendererComponent>);//所有具有组件（两个）的实体的组
             for (auto entity : group) {
                 auto [transform, sprite] = group.get< TransformComponent, SpriteRendererComponent>(entity);
-                Renderer2D::DrawQuad(transform, sprite.Color);
+                Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
             }
             Renderer2D::EndScene();
         }
@@ -77,4 +81,24 @@ namespace Hazel {
             }
         }
     } 
+    //OnComponentAdded
+    template<typename T>
+    void Scene::OnComponentAdded(Entity enitty, T& component)
+    {
+        static_assert(false);
+    }
+    template<>
+    void Scene::OnComponentAdded<TransformComponent>(Entity enitty, TransformComponent& component) {}
+    template<>
+    void Scene::OnComponentAdded<CameraComponent>(Entity enitty, CameraComponent& component) {
+        component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
+    }
+    template<>
+    void Scene::OnComponentAdded<SpriteRendererComponent>(Entity enitty, SpriteRendererComponent& component) {}
+    template<>
+    void Scene::OnComponentAdded<TagComponent>(Entity enitty, TagComponent& component) {}
+    template<>
+    void Scene::OnComponentAdded<NativeScriptComponent>(Entity enitty, NativeScriptComponent& component) {}
+
+
 }

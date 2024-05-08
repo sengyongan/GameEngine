@@ -32,34 +32,34 @@ namespace Hazel {
         auto redSquare = m_ActiveScene->CreateEntity("Red Square");
         redSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
         //
-        m_CameraEntity = m_ActiveScene->CreateEntity("camera");
+        m_CameraEntity = m_ActiveScene->CreateEntity("Camera A");
         m_CameraEntity.AddComponent<CameraComponent>();
         //
-        m_SenondCameraEntity = m_ActiveScene->CreateEntity("SenondCamera");
+        m_SenondCameraEntity = m_ActiveScene->CreateEntity("Camera B");
         auto& cc = m_SenondCameraEntity.AddComponent<CameraComponent>();
         cc.Primary = false;
-        //添加脚本///////////////////////////////////////////////////
+        //相机控制脚本///////////////////////////////////////////////////
         class CameraController : public ScriptableEntity {
         public:
             void OnCreate() {
-                auto& transform = GetComponent<TransformComponent>().Transform;
-                transform[3][0] = rand() % 10 - 5.0f;
+                auto& translation = GetComponent<TransformComponent>().Translation;
+                translation.x = rand() % 10 - 5.0f;//随机数-5——4
             }
             void OnDestory() {
 
             }
             void OnUpdate(Timestep ts) {
-                auto& transform = GetComponent<TransformComponent>().Transform;
+                auto& translation = GetComponent<TransformComponent>().Translation;
                 float speed = 5.0f;
 
                 if (Input::IsKeyPressed(HZ_KEY_A))
-                    transform[3][0] -= speed * ts;//x
+                    translation.x -= speed * ts;//x
                 if (Input::IsKeyPressed(HZ_KEY_D))
-                    transform[3][0] += speed * ts;
+                    translation.x += speed * ts;
                 if (Input::IsKeyPressed(HZ_KEY_W))
-                    transform[3][1] += speed * ts;//y
+                    translation.y += speed * ts;//y
                 if (Input::IsKeyPressed(HZ_KEY_S))
-                    transform[3][1] -= speed * ts;
+                    translation.y -= speed * ts;
             }
         };
         m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
@@ -75,9 +75,9 @@ namespace Hazel {
     }
 
     void EditorLayer::OnUpdate(Timestep ts)
-    {
-        //获取帧缓冲//形式：for(int i = 0;i……分号）
-        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification(); //获取帧缓冲区
+    {   //只有当首次帧 / 调整窗口才会执行
+        //获取帧缓冲//形式：for(int i = 0;i……分号） //m_ViewportSize ， imgui的区域
+        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification(); //获取帧缓冲区(渲染区域)
             m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f &&
             (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))//在非最小化状态
         {
@@ -176,8 +176,8 @@ namespace Hazel {
         }
         //SceneHierarchyPanel//////////////////////////////////////////////////////////////////
         m_SceneHierarchyPanel.OnImGuiRender();
-        /////Setting面板/////////////////////////////////////////////////////////////////////////
-        ImGui::Begin("Setting");
+        /////Stats面板/////////////////////////////////////////////////////////////////////////
+        ImGui::Begin("Stats");
 
         auto statis = Renderer2D::GetStats();
         ImGui::Text("Renderer2D statis");
@@ -185,32 +185,6 @@ namespace Hazel {
         ImGui::Text("Quads Calls %d", statis.QuadCount);
         ImGui::Text("Vertices Calls %d", statis.GetTotalVertexCount());
         ImGui::Text("Indies Calls %d", statis.GetTotalIndexCount());
-        //
-        if(m_SquareEntity)
-        {
-            ImGui::Separator();
-            auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
-            ImGui::Text("%s", tag.c_str());
-
-            auto& squareColor = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
-            ImGui::ColorEdit3("Square Color", glm::value_ptr(squareColor));//value_ptr转化为指针存储到squareColor
-            ImGui::Separator();
-        }
-        //控制m_CameraEntity主摄像机的transform的3个成员
-        ImGui::DragFloat3("Camera Transform",
-            glm::value_ptr(m_CameraEntity.GetComponent<TransformComponent>().Transform[3]));
-        //
-        if (ImGui::Checkbox("Camera A ", &m_PrimaryCamera)) {//当选中为m_PrimaryCamera == true，否则为false，从而改变两个相机的primary
-            m_CameraEntity.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
-            m_SenondCameraEntity.GetComponent<CameraComponent>().Primary = !m_PrimaryCamera;
-        }
-        //
-        {
-            auto& camera = m_SenondCameraEntity.GetComponent<CameraComponent>().Camera;
-            float orthoSize = camera.GetOrthopraghicSize();
-            if (ImGui::DragFloat("Senond Camera Ortho Size", &orthoSize))
-                camera.SetOrthopraghicSize(orthoSize);
-        }
 
         ImGui::End();
 
