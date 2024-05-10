@@ -9,7 +9,7 @@
 
 //主要入口点——程序运行起始处
 namespace Hazel {
-	class HAZEL_API Application//HAZEL_API默认空
+	class  Application//默认空
 	{
 	public:
 		Application(const std::string& name = "Hazel App");

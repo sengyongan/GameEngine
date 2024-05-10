@@ -41,22 +41,6 @@ namespace Hazel {
         ImGui::Begin("Properties");
         if (m_SelectionContext) {
             DrawComponents(m_SelectionContext);//建立被选中节点的属性面板
-            //添加组件按钮
-            if (ImGui::Button("Add Component")){
-                ImGui::OpenPopup("AddComponent");
-            }
-            if (ImGui::BeginPopup("AddComponent")) {
-                if (ImGui::MenuItem("Camera")) {
-                    m_SelectionContext.AddComponent<CameraComponent>();
-                        ImGui::CloseCurrentPopup();
-                }
-                if (ImGui::MenuItem("Sprite Renderer")) {
-                    m_SelectionContext.AddComponent<SpriteRendererComponent>();
-                        ImGui::CloseCurrentPopup();
-                }
-
-                ImGui::EndPopup();
-            }
         }
         ImGui::End();
     }
@@ -164,12 +148,58 @@ namespace Hazel {
         ImGui::Columns(1);
         ImGui::PopID();
     }
-
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //绘制移除组件，组件名，实体，绘制组件函数（在DrawComponents被调用）
     template <typename T, typename UIFunction>
-    static void DrawComponent()
+    static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction) {
+        //标志
+        const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | 
+            ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
+        //
+        if (entity.HasComponent<T>()) {
+            //
+            auto& component  = entity.GetComponent< T>();
+            //
+            ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
+            float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+            ImGui::Separator();
+            bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
+            ImGui::PopStyleVar();
+            ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
+            //移除组件按钮(应位于渲染imgui之前）
+            if (ImGui::Button("+", ImVec2{ lineHeight,lineHeight })) {
+                ImGui::OpenPopup("ComponentSettings");
+            }
+            //
+            bool removeComponenet = false;
+            if (ImGui::BeginPopup("ComponentSettings"))
+            {
+                if (ImGui::MenuItem("Removecomponent")) {
+                    removeComponenet = true;
+                }
+                ImGui::EndPopup();
+            }
 
+            //标识符，标志，标签
+            //添加ImGuiTreeNodeFlags_DefaultOpen标志（默认被打开），节点名字为Transform
+            if (open) {
+                uiFunction(component);//调用自定义函数，并传入组件
+                ImGui::TreePop();//结束当前节点的绘制。
+            }
+            //
+            if (removeComponenet) {
+                entity.RemoveComponent< T>();
+            }
+        }
+    }
+    //////////////////////////////////////
+    //////////////////////////////////////////
+    /////////////////////////////////////////
     void SceneHierarchyPanel::DrawComponents(Entity entity)//被选中节点
     {
+        //////////////////////////////////////////////////////////////////////////////////////////////////
         if (entity.HasComponent<TagComponent>()) {
             auto& tag = entity.GetComponent< TagComponent>().Tag;
 
@@ -177,38 +207,47 @@ namespace Hazel {
             memset(buffer, 0, sizeof(buffer));//buffer数组的所有元素都设置为0。
             strcpy_s(buffer, sizeof(buffer), tag.c_str());//将tag字符串复制到buffer数组中。
 
-            if (ImGui::InputText("Tag", buffer, sizeof(buffer))) {//如果输入文本
+            if (ImGui::InputText("##Tag", buffer, sizeof(buffer))) {//如果输入文本(##表示注释掉）
                 tag = std::string(buffer);//将输入的文本给标签
             }
         }
-        //标志
-        const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap;//标志 = 默认展开 /  允许项目重叠
-        //
-        if (entity.HasComponent<TransformComponent>()) {
-            //标识符，标志，标签
-            //添加ImGuiTreeNodeFlags_DefaultOpen标志（默认被打开），节点名字为Transform
-            bool open = ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), treeNodeFlags, "Transform");//尚未创建,会创建并返回 true,
-
-            //
-            if (open) {
-                auto& tc = entity.GetComponent< TransformComponent>();
-                DrawVec3Control("Translation", tc.Translation);//传入初始值
-                glm::vec3 rotation = glm::degrees(tc.Rotation);//转为角度制
-                DrawVec3Control("Rotation", rotation);
-                tc.Rotation = glm::radians(rotation);//转回弧度制
-                DrawVec3Control("Scale", tc.Scale, 1.0f);
-                ImGui::TreePop();
-            }
+        //AddComponent//////////////////////////////////////////////////////////////////////////
+        ImGui::SameLine();
+        ImGui::PushItemWidth(-1);
+        //添加组件按钮
+        if (ImGui::Button("Add Component")) {
+            ImGui::OpenPopup("AddComponent");
         }
-        if (entity.HasComponent<CameraComponent>()) {
-            //标识符，标志，标签
-            //创建节点成功ImGuiTreeNodeFlags_DefaultOpen标志，节点名字为Transform
-            if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), treeNodeFlags, "Camera")) {
-                //
-                auto& cameraComponent = entity.GetComponent< CameraComponent>();//当前被选中的实体获取组件
-                auto& camera = cameraComponent.Camera;
+        if (ImGui::BeginPopup("AddComponent")) {
+            if (ImGui::MenuItem("Camera")) {
+                m_SelectionContext.AddComponent<CameraComponent>();
+                ImGui::CloseCurrentPopup();
+            }
+            if (ImGui::MenuItem("Sprite Renderer")) {
+                m_SelectionContext.AddComponent<SpriteRendererComponent>();
+                ImGui::CloseCurrentPopup();
+            }
 
-                ImGui::Checkbox("Primary", &cameraComponent.Primary);
+            ImGui::EndPopup();
+        }
+        ImGui::PopItemWidth();
+        //////////////////////////////////////////////////////////////////////////////////////////////////
+        DrawComponent< TransformComponent>("Transform", entity,
+            [](auto& component) {//自定义函数
+                DrawVec3Control("Translation", component.Translation);//传入初始值
+                glm::vec3 rotation = glm::degrees(component.Rotation);//转为角度制
+                DrawVec3Control("Rotation", rotation);
+                component.Rotation = glm::radians(rotation);//转回弧度制
+                DrawVec3Control("Scale", component.Scale, 1.0f);
+            }
+        );
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        DrawComponent< CameraComponent>("Camera", entity,
+            [](auto& component) {//自定义函数
+                //
+                auto& camera = component.Camera;
+
+                ImGui::Checkbox("Primary", &component.Primary);
                 //
                 const char* projectionTypeStrings[] = { "Perspective", "Orthographic" };//透视 / 正交
                 const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];//设置选择默认值：数组索引 0 / 1 
@@ -218,7 +257,7 @@ namespace Hazel {
                         bool isSelected = currentProjectionTypeString == projectionTypeStrings[i];//当前选中的 == 数组中的这一位时，isSelected为真,否则右边不成立为否
                         if (ImGui::Selectable(projectionTypeStrings[i], isSelected)) {//创建可选择元素：元素内容，当用户点击该元素时，isSelected更新为true
                             //currentProjectionTypeString = projectionTypeStrings[i];
-                            cameraComponent.Camera.SetProjectionType((SceneCamera::ProjectionType)i);
+                            component.Camera.SetProjectionType((SceneCamera::ProjectionType)i);
                         }
                         if (isSelected) {
                             ImGui::SetItemDefaultFocus();
@@ -256,47 +295,17 @@ namespace Hazel {
                     if (ImGui::DragFloat("Far", &orthoFar)) {
                         camera.SetOrthopraghicFarClip(orthoFar);
                     }
-                    ImGui::Checkbox("Fixed Aspect Ratio", &cameraComponent.FixedAspectRatio);
+                    ImGui::Checkbox("Fixed Aspect Ratio", &component.FixedAspectRatio);
                 }
-
-                ImGui::TreePop();//结束当前节点的绘制。
             }
-        }
-
-
-        if (entity.HasComponent<SpriteRendererComponent>()) 
-        {
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
-            bool open = ImGui::TreeNodeEx((void*)typeid(SpriteRendererComponent).hash_code(), treeNodeFlags, "Sprite Renderer");
-            ImGui::SameLine(ImGui::GetWindowWidth() - 25.0f);
-            //移除组件按钮(应位于渲染imgui之前）
-            if (ImGui::Button("+",ImVec2{ 20,20 })) {
-                ImGui::OpenPopup("ComponentSettings");
+        );
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //实例化模板
+        DrawComponent< SpriteRendererComponent>("Sprite Renderer", entity,
+            [](auto& component) {//自定义函数
+                ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));//颜色面板,
             }
-            ImGui::PopStyleVar();
-
-            bool removeComponenet = false;
-            if (ImGui::BeginPopup("ComponentSettings"))
-            {
-                if (ImGui::MenuItem("Removecomponent")) {
-                    removeComponenet = true;
-                }
-                ImGui::EndPopup();
-            }
-
-            //标识符，标志，标签
-            //添加ImGuiTreeNodeFlags_DefaultOpen标志（默认被打开），节点名字为Transform
-            if (open) {
-                auto& src = entity.GetComponent< SpriteRendererComponent>();
-                ImGui::ColorEdit4("Color", glm::value_ptr(src.Color));//为节点添加3个浮点控制transform【3]
-                ImGui::TreePop();//结束当前节点的绘制。
-            }
-            //
-            if (removeComponenet) {
-                entity.RemoveComponent< TransformComponent>();
-            }
-
-        }
+        );
 
     }
 }

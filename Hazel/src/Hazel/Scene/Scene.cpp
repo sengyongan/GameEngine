@@ -81,7 +81,7 @@ namespace Hazel {
             }
         }
     } 
-    //OnComponentAdded
+    //OnComponentAdded在添加组件时执行的
     template<typename T>
     void Scene::OnComponentAdded(Entity enitty, T& component)
     {

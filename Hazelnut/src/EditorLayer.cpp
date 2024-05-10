@@ -1,11 +1,11 @@
 //工具层客户端：编辑器
 #include "EditorLayer.h"
-#include "imgui/imgui.h"
-
+#include <imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <chrono>
+#include "Hazel/Scene/SceneSerializer.h"
+
 namespace Hazel {
     EditorLayer::EditorLayer()
         : Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f)
@@ -24,6 +24,7 @@ namespace Hazel {
         m_Framebuffer = Framebuffer::Create(fbSpec);
         //ECS//////////////////////////////////////////////////////////////////////////////////////
         m_ActiveScene = CreateRef<Scene>();
+#if 0
         auto square = m_ActiveScene->CreateEntity("Green Square");//创建实体
         //添加组件
         square.AddComponent<SpriteRendererComponent>(glm::vec4{0.0f,1.0f,0.0f,1.0f});
@@ -64,8 +65,12 @@ namespace Hazel {
         };
         m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
         m_SenondCameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+#endif
         ///SceneHierarchyPanel/////////////////////////////////////////////
         m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+        //
+        //SceneSerializer serializer(m_ActiveScene);
+        //serializer.Serialize("assets/scenes/Example.hazel");
     }
 
     void EditorLayer::OnDetach()
@@ -150,23 +155,43 @@ namespace Hazel {
         if (opt_fullscreen)
             ImGui::PopStyleVar(2);
 
-        // DockSpace停靠空间
+        ///DockSpace停靠空间////////////////////////////////////////////////////////////////////////////////////////////////////
         ImGuiIO& io = ImGui::GetIO();
+        //设置停靠最小尺寸
+        ImGuiStyle& style = ImGui::GetStyle();
+        float minWinSizeX = style.WindowMinSize.x;
+        style.WindowMinSize.x = 370.0f;
+        //
         if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
         {
             ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
         }
+
+        style.WindowMinSize.x = minWinSizeX;
+        ///Line(Serialize)////////////////////////////////////////////////////////////////////////////
         //创建开始菜单，有下面功能
         if (ImGui::BeginMenuBar())
         {
-            if (ImGui::BeginMenu("Options"))
+            if (ImGui::BeginMenu("Line"))
             {
                 // Disabling fullscreen would allow the window to be moved to the front of other windows,
                 // which we can't undo at the moment without finer window depth/z control.
-                ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
-                ImGui::MenuItem("Padding", NULL, &opt_padding);
-                ImGui::Separator();
+                //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
+                //ImGui::MenuItem("Padding", NULL, &opt_padding);
+                //ImGui::Separator();
+
+                if (ImGui::MenuItem("Serialize"))
+                {
+                    SceneSerializer serializer(m_ActiveScene);
+                    serializer.Serialize("assets/scenes/Example.hazel");
+                }
+
+                if (ImGui::MenuItem("Deserialize"))
+                {
+                    SceneSerializer serializer(m_ActiveScene);
+                    serializer.Deserialize("assets/scenes/Example.hazel");
+                }
 
                 if (ImGui::MenuItem("Exit"))Application::Get().Close();
                 ImGui::EndMenu();
@@ -200,7 +225,7 @@ namespace Hazel {
         m_ViewportSize = { (uint32_t)viewportPanelSize.x, (uint32_t)viewportPanelSize.y };
         //绘制到Image
         uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();//获取帧缓冲ID,渲染到image
-        ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0,1 }, ImVec2{ 1,0 });
+        ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }); 
         ImGui::End();
         ImGui::PopStyleVar();
         ///////////////////////////

@@ -6,7 +6,7 @@
 #include"Hazel/Events/ApplicationEvent.h"
 
 namespace Hazel {
-    class HAZEL_API imGuiLayer : public Layer
+    class  imGuiLayer : public Layer
     { 
     public:
         imGuiLayer();
@@ -19,6 +19,8 @@ namespace Hazel {
         void End();
 
         void BlockEvents(bool block) { m_BlockEvents = block; }//ÊÇ·ñ±»×èÖ¹
+
+        void SetDarkThemeColors();
     private:
         bool m_BlockEvents = true;
         float m_Time = 0.0f;
