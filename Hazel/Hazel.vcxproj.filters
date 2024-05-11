@@ -31,6 +31,9 @@
     <Filter Include="src\Hazel\Scene">
       <UniqueIdentifier>{0DD9E8B3-7964-5678-8275-D96CEE7FB278}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Hazel\Utils">
+      <UniqueIdentifier>{506D16B4-BCF8-8378-C509-076D3114E078}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Hazel\imGui">
       <UniqueIdentifier>{3AF17BB5-A67C-E979-AF8D-6C6E1B98457A}</UniqueIdentifier>
     </Filter>
@@ -138,7 +141,7 @@
     <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLVertexArray.h">
       <Filter>src\Hazel\Platfrom\Opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsInput.h">
+    <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsPlatformUtils.h">
       <Filter>src\Hazel\Platfrom\Windows</Filter>
     </ClInclude>
     <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsWindow.h">
@@ -203,6 +206,9 @@
     </ClInclude>
     <ClInclude Include="src\Hazel\Scene\ScriptableEntity.h">
       <Filter>src\Hazel\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hazel\Utils\PlatformUtils.h">
+      <Filter>src\Hazel\Utils</Filter>
     </ClInclude>
     <ClInclude Include="src\Hazel\imGui\imGuiLayer.h">
       <Filter>src\Hazel\imGui</Filter>

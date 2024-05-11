@@ -69,9 +69,9 @@ namespace Hazel {
 		template<typename T>
 		bool Dispatch(EventFn<T> func)//func--bool类型函数-----BIND_ENENT_FN(OnWindowClose)
 		{//判断event和func是否同类型
-			if (m_Event.GetEventType() == T::GetStaticType())
+			if (m_Event.GetEventType() == T::GetStaticType())//event如果==<KeyPressedEvent>，就调用func，因为func = HZ_BIND_EVENT_FN(EditorLayer::OnKeyPressed)
 			{
-				m_Event.Handled |= func(static_cast<T&>(m_Event));//成立就调用func函数，并传入event
+				m_Event.Handled |= func(static_cast<T&>(m_Event));//调用func函数，并传入event//func为自定义函数（参数 = event） == OnKeyPressed（event）
 				return true;
 			}
 			return false;

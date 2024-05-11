@@ -1,73 +1,72 @@
 #pragma once
-#pragma once
 
-#include "Event.h"
+#include "Hazel/Events/Event.h"
+#include "Hazel/Core/KeyCodes.h"
 
 namespace Hazel {
-	//按键事件
-	class KeyEvent : public Event
-	{
-	public:
-		int GetKeyCode() const { return m_KeyCode; }
 
-		EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
-	protected:
-		//构造
-		KeyEvent(const int keycode)
-			: m_KeyCode(keycode) {}//被派生类初始
+    class KeyEvent : public Event
+    {
+    public:
+        KeyCode GetKeyCode() const { return m_KeyCode; }
 
-		int m_KeyCode;
-	};
-    //按键事件
-	class KeyPressedEvent : public KeyEvent
-	{
-	public:
-		KeyPressedEvent(const int keycode, bool isRepeat = false)
-			: KeyEvent(keycode), m_IsRepeat(isRepeat) {}
+        EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
+    protected:
+        KeyEvent(const KeyCode keycode)
+            : m_KeyCode(keycode) {}
 
-		bool IsRepeat() const { return m_IsRepeat; }
+        KeyCode m_KeyCode;
+    };
 
-		std::string ToString() const override
-		{
-			std::stringstream ss;
-			ss << "KeyPressedEvent: " << m_KeyCode << " (repeat = " << m_IsRepeat << ")";
-			return ss.str();
-		}
+    class KeyPressedEvent : public KeyEvent
+    {
+    public:
+        KeyPressedEvent(const KeyCode keycode, const uint16_t repeatCount)
+            : KeyEvent(keycode), m_RepeatCount(repeatCount) {}
 
-		EVENT_CLASS_TYPE(KeyPressed)//定义event中的函数
-	private:
-		bool m_IsRepeat;
-	};
-    //按键释放事件
-	class KeyReleasedEvent : public KeyEvent
-	{
-	public:
-		KeyReleasedEvent(const int keycode)
-			: KeyEvent(keycode) {}
+        uint16_t GetRepeatCount() const { return m_RepeatCount; }
 
-		std::string ToString() const override
-		{
-			std::stringstream ss;
-			ss << "KeyReleasedEvent: " << m_KeyCode;
-			return ss.str();
-		}
+        std::string ToString() const override
+        {
+            std::stringstream ss;
+            ss << "KeyPressedEvent: " << m_KeyCode << " (" << m_RepeatCount << " repeats)";
+            return ss.str();
+        }
 
-		EVENT_CLASS_TYPE(KeyReleased)
-	};
-    // 按键式事件
-	class KeyTypedEvent : public KeyEvent
-	{
-	public:
-		KeyTypedEvent(const int keycode)
-			: KeyEvent(keycode) {}
+        EVENT_CLASS_TYPE(KeyPressed)
+    private:
+        uint16_t m_RepeatCount;
+    };
 
-		std::string ToString() const override
-		{
-			std::stringstream ss;
-			ss << "KeyTypedEvent: " << m_KeyCode;
-			return ss.str();
-		}
+    class KeyReleasedEvent : public KeyEvent
+    {
+    public:
+        KeyReleasedEvent(const KeyCode keycode)
+            : KeyEvent(keycode) {}
 
-		EVENT_CLASS_TYPE(KeyTyped)
-	};
+        std::string ToString() const override
+        {
+            std::stringstream ss;
+            ss << "KeyReleasedEvent: " << m_KeyCode;
+            return ss.str();
+        }
+
+        EVENT_CLASS_TYPE(KeyReleased)
+    };
+
+    class KeyTypedEvent : public KeyEvent
+    {
+    public:
+        KeyTypedEvent(const KeyCode keycode)
+            : KeyEvent(keycode) {}
+
+        std::string ToString() const override
+        {
+            std::stringstream ss;
+            ss << "KeyTypedEvent: " << m_KeyCode;
+            return ss.str();
+        }
+
+        EVENT_CLASS_TYPE(KeyTyped)
+    };
 }

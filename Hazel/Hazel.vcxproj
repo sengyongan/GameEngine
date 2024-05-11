@@ -173,7 +173,6 @@
     <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLShader.h" />
     <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLTexture2D.h" />
     <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLVertexArray.h" />
-    <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsInput.h" />
     <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Hazel\Renderer\Buffer.h" />
     <ClInclude Include="src\Hazel\Renderer\Camera.h" />
@@ -195,6 +194,7 @@
     <ClInclude Include="src\Hazel\Scene\SceneCamera.h" />
     <ClInclude Include="src\Hazel\Scene\SceneSerializer.h" />
     <ClInclude Include="src\Hazel\Scene\ScriptableEntity.h" />
+    <ClInclude Include="src\Hazel\Utils\PlatformUtils.h" />
     <ClInclude Include="src\Hazel\imGui\imGuiLayer.h" />
     <ClInclude Include="src\hzpch.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />
@@ -628,6 +628,7 @@
     <ClCompile Include="src\Hazel\Platfrom\Opengl\OpenGLTexture2D.cpp" />
     <ClCompile Include="src\Hazel\Platfrom\Opengl\OpenGLVertexArray.cpp" />
     <ClCompile Include="src\Hazel\Platfrom\Windows\WindowsInput.cpp" />
+    <ClCompile Include="src\Hazel\Platfrom\Windows\WindowsPlatformUtils.cpp" />
     <ClCompile Include="src\Hazel\Platfrom\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Hazel\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Hazel\Renderer\Framebuffer.cpp" />

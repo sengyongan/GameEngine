@@ -73,15 +73,17 @@ namespace Hazel {
         //触发事件回调————注意：（window，[](){}）
         //[]是lambda表达式，表示用户自定义函数
         //调用回调时自动赋值int width, int  height
-        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int  height)
-            {               
-                HZ_CORE_WARN("{0},{1}", width, height);
-                WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);//获取当前窗口
-                WindowResizeEvent event(width, height);
-                data.Width = width;//这里调用EventCallback（WindowResizeEvent()），因为EventCallback =BIND_ENENT_FN(OnEvent)
-                data.Height = height;//上面替换：BIND_ENENT_FN(OnEvent)（参数=WindowResizeEvent（））
-                data.EventCallback(event);//所以实则调用OnEvent（WindowResizeEvent()）
-            });
+        glfwSetWindowSizeCallback(m_Window,
+            [](GLFWwindow* window, int width, int  height)
+                {               
+                    HZ_CORE_WARN("{0},{1}", width, height);
+                    WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);//获取当前窗口
+                    WindowResizeEvent event(width, height);
+                    data.Width = width;//这里调用EventCallback（WindowResizeEvent()），因为EventCallback =BIND_ENENT_FN(OnEvent)
+                    data.Height = height;//上面替换：BIND_ENENT_FN(OnEvent)（参数=WindowResizeEvent（））
+                    data.EventCallback(event);//所以实则调用OnEvent（WindowResizeEvent()）
+                }
+        );
         glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
             {
                 WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);

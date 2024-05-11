@@ -5,7 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Hazel/Scene/SceneSerializer.h"
-
+#include"Hazel/Utils/PlatformUtils.h"
 namespace Hazel {
     EditorLayer::EditorLayer()
         : Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f)
@@ -24,7 +24,7 @@ namespace Hazel {
         m_Framebuffer = Framebuffer::Create(fbSpec);
         //ECS//////////////////////////////////////////////////////////////////////////////////////
         m_ActiveScene = CreateRef<Scene>();
-#if 0
+#if 0 
         auto square = m_ActiveScene->CreateEntity("Green Square");//创建实体
         //添加组件
         square.AddComponent<SpriteRendererComponent>(glm::vec4{0.0f,1.0f,0.0f,1.0f});
@@ -53,13 +53,13 @@ namespace Hazel {
                 auto& translation = GetComponent<TransformComponent>().Translation;
                 float speed = 5.0f;
 
-                if (Input::IsKeyPressed(HZ_KEY_A))
-                    translation.x -= speed * ts;//x
-                if (Input::IsKeyPressed(HZ_KEY_D))
+                if (Input::IsKeyPressed(Key::A))
+                    translation.x -= speed * ts;
+                if (Input::IsKeyPressed(Key::D))
                     translation.x += speed * ts;
-                if (Input::IsKeyPressed(HZ_KEY_W))
-                    translation.y += speed * ts;//y
-                if (Input::IsKeyPressed(HZ_KEY_S))
+                if (Input::IsKeyPressed(Key::W))
+                    translation.y += speed * ts;
+                if (Input::IsKeyPressed(Key::S))
                     translation.y -= speed * ts;
             }
         };
@@ -169,28 +169,27 @@ namespace Hazel {
         }
 
         style.WindowMinSize.x = minWinSizeX;
-        ///Line(Serialize)////////////////////////////////////////////////////////////////////////////
+        ///Line()////////////////////////////////////////////////////////////////////////////
         //创建开始菜单，有下面功能
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("Line"))
             {
-                // Disabling fullscreen would allow the window to be moved to the front of other windows,
-                // which we can't undo at the moment without finer window depth/z control.
                 //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
                 //ImGui::MenuItem("Padding", NULL, &opt_padding);
                 //ImGui::Separator();
-
-                if (ImGui::MenuItem("Serialize"))
-                {
-                    SceneSerializer serializer(m_ActiveScene);
-                    serializer.Serialize("assets/scenes/Example.hazel");
+                if (ImGui::MenuItem("New...", "Ctrl+N")){//添加新文件（新的场景）
+                    NewScene();
                 }
 
-                if (ImGui::MenuItem("Deserialize"))
+                if (ImGui::MenuItem("Open...","Ctrl+O"))//打开文件
                 {
-                    SceneSerializer serializer(m_ActiveScene);
-                    serializer.Deserialize("assets/scenes/Example.hazel");
+                    OpenScene();
+                }
+
+                if (ImGui::MenuItem("Save As...","Ctrl+Shift+S"))//另存为文件
+                {
+                    SaveSceneAs();
                 }
 
                 if (ImGui::MenuItem("Exit"))Application::Get().Close();
@@ -235,7 +234,74 @@ namespace Hazel {
     void EditorLayer::OnEvent(Event& event)
     {
         m_CameraController.OnEvent(event);
+        //
+        EventDispatcher dispatcher(event);
+        dispatcher.Dispatch<KeyPressedEvent>(HZ_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+    }
 
+    bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)//传入KeyPressedEvent
+    {
+        // Shortcuts
+        if (e.GetRepeatCount() > 0)
+            return false;
+        //ctrl / shift
+        bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+        bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
+        switch (e.GetKeyCode())
+        {
+            case Key::N:
+            {
+                if (control)
+                    NewScene();
+
+                break;
+            }
+            case Key::O:
+            {
+                if (control)
+                    OpenScene();
+
+                break;
+            }
+            case Key::S:
+            {
+                if (control && shift)
+                    SaveSceneAs();
+
+                break;
+            }
+        }
+    }
+
+    void EditorLayer::NewScene()
+    {   //新的空场景
+        m_ActiveScene = CreateRef<Scene>();
+        m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+        m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+    }
+
+    void EditorLayer::OpenScene()
+    {
+        std::string filepath = FileDialogs::OpenFile("Hazel Scene (*.hazel)\0*.hazel\0");//查找具有.hazel扩展名的所有文件
+        if (!filepath.empty())//找到了
+        {
+            m_ActiveScene = CreateRef<Scene>();
+            m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);//更新视口大小
+            m_SceneHierarchyPanel.SetContext(m_ActiveScene);//场景面板
+
+            SceneSerializer serializer(m_ActiveScene);//反序列化场景
+            serializer.Deserialize(filepath);
+        }
+    }
+
+    void EditorLayer::SaveSceneAs()
+    {
+        std::string filepath = FileDialogs::SaveFile("Hazel Scene (*.hazel)\0*.hazel\0");
+        if (!filepath.empty())
+        {
+            SceneSerializer serializer(m_ActiveScene);
+            serializer.Serialize(filepath);
+        }
     }
 
 }

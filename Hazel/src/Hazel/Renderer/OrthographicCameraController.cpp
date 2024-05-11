@@ -13,21 +13,39 @@ namespace Hazel {//float left, float right, float bottom, float top当进行m_ZoomL
 
         //HZ_CLIENT_TRACE("time:{0}s", ts.GetSeconds());获取时差
         //float ts = ts;隐式强制转换，发生返回m_Time
-        if (Input::IsKeyPressed(HZ_KEY_A))
-            m_CameraPosition.x -= m_CameraTranslationSpeed * ts;
-        else if (Input::IsKeyPressed(HZ_KEY_D))
-            m_CameraPosition.x += m_CameraTranslationSpeed * ts;
-        if (Input::IsKeyPressed(HZ_KEY_W))
-            m_CameraPosition.y += m_CameraTranslationSpeed * ts;
-        else if (Input::IsKeyPressed(HZ_KEY_S))
-            m_CameraPosition.y -= m_CameraTranslationSpeed * ts;
+        if (Input::IsKeyPressed(Key::A))
+        {
+            m_CameraPosition.x -= cos(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
+            m_CameraPosition.y -= sin(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
+        }
+        else if (Input::IsKeyPressed(Key::D))
+        {
+            m_CameraPosition.x += cos(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
+            m_CameraPosition.y += sin(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
+        }
+
+        if (Input::IsKeyPressed(Key::W))
+        {
+            m_CameraPosition.x += -sin(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
+            m_CameraPosition.y += cos(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
+        }
+        else if (Input::IsKeyPressed(Key::S))
+        {
+            m_CameraPosition.x -= -sin(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
+            m_CameraPosition.y -= cos(glm::radians(m_CameraRotation)) * m_CameraTranslationSpeed * ts;
+        }
 
         if (m_Rotation)
         {
-            if (Input::IsKeyPressed(HZ_KEY_Q))
+            if (Input::IsKeyPressed(Key::Q))
                 m_CameraRotation += m_CameraRotationSpeed * ts;
-            if (Input::IsKeyPressed(HZ_KEY_E))
+            if (Input::IsKeyPressed(Key::E))
                 m_CameraRotation -= m_CameraRotationSpeed * ts;
+
+            if (m_CameraRotation > 180.0f)
+                m_CameraRotation -= 360.0f;
+            else if (m_CameraRotation <= -180.0f)
+                m_CameraRotation += 360.0f;
 
             m_Camera.SetRotation(m_CameraRotation);
         }

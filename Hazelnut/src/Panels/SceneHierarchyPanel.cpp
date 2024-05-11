@@ -13,6 +13,7 @@ namespace Hazel {
     void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
     {
         m_Context = context;
+        m_SelectionContext = {};//重设上下文（场景指针）
     }
     void SceneHierarchyPanel::OnImGuiRender()
     {   
