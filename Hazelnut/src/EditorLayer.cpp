@@ -6,6 +6,11 @@
 
 #include "Hazel/Scene/SceneSerializer.h"
 #include"Hazel/Utils/PlatformUtils.h"
+
+#include"ImGuizmo.h"
+
+#include"Hazel/Math/Math.h"
+
 namespace Hazel {
     EditorLayer::EditorLayer()
         : Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f)
@@ -24,6 +29,8 @@ namespace Hazel {
         m_Framebuffer = Framebuffer::Create(fbSpec);
         //ECS//////////////////////////////////////////////////////////////////////////////////////
         m_ActiveScene = CreateRef<Scene>();
+
+        m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 #if 0 
         auto square = m_ActiveScene->CreateEntity("Green Square");//创建实体
         //添加组件
@@ -89,13 +96,14 @@ namespace Hazel {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);//让帧缓冲内随着窗口改变
             m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);//OrthographicCameraController相机渲染大小改变（如果不变，相机依旧渲染原来大小，会被压缩）
             m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);//让场景（新的场景摄像机camera）随着窗口改变
+            m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
         }
 
         //camera
         if (m_ViewportFocused) {//接收用户的输入
             m_CameraController.OnUpdate(ts);//可以相机控制
         }
-
+        m_EditorCamera.OnUpdate(ts);
         // Render
         Renderer2D::ResetStats();//？？？
         m_Framebuffer->Bind();
@@ -103,7 +111,7 @@ namespace Hazel {
         RenderCommand::Clear();
         
         //scene
-        m_ActiveScene->OnUpdate(ts);
+        m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
         //
         m_Framebuffer->Unbind();
     }
@@ -212,7 +220,7 @@ namespace Hazel {
 
         ImGui::End();
 
-        /////Viewport面板/////////////////////////////////////////////////////////////////////
+        /////Viewport面板/////////////////////////////////////////////////////////////////////////////////////
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });//取消边框
         ImGui::Begin("Viewport");
         //获取用户操作情况
@@ -225,6 +233,57 @@ namespace Hazel {
         //绘制到Image
         uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();//获取帧缓冲ID,渲染到image
         ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }); 
+        ////////////////////////
+        //Gizmos/////////////////////
+        Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();//当前选中的实体
+
+        if (selectedEntity && m_GizmoType != -1) {//选择了某个变化才进行绘制
+            ImGuizmo::SetOrthographic(false);//支持透视
+            ImGuizmo::SetDrawlist();
+            //
+            float windowWidth = (float)ImGui::GetWindowWidth();
+            float windowHeight = (float)ImGui::GetWindowHeight();
+            ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+            // Camera
+            //auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();//主摄像机
+            //const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+            //const glm::mat4& cameraProjection = camera.GetProjection();//获取投影矩阵
+            //glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());//获取主摄像机的位置的
+            //
+            const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();//获取投影矩阵
+            glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();//获取主摄像机的位置的
+
+            // Entity transform
+            auto& tc = selectedEntity.GetComponent<TransformComponent>();
+            glm::mat4 transform = tc.GetTransform();//实体的位置
+
+            // Snapping捕捉
+            bool snap = Input::IsKeyPressed(Key::LeftControl);
+            float snapValue = 0.5f; // Snap to 0.5m for translation/scale
+            // Snap to 45 degrees for rotation
+            if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+                snapValue = 45.0f;
+
+            float snapValues[3] = { snapValue, snapValue, snapValue };
+
+            //Gizmos/////
+            ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
+                (ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),
+                nullptr, snap ? snapValues : nullptr);
+            //控制
+            if (ImGuizmo::IsUsing())
+            {
+                glm::vec3 translation, rotation, scale;
+                Math::DecomposeTransform(transform, translation, rotation, scale);
+
+                glm::vec3 deltaRotation = rotation - tc.Rotation;//计算旋转差
+                tc.Translation = translation;
+                tc.Rotation += deltaRotation;//避免万向节死锁
+                tc.Scale = scale;
+            }
+        }
+        //////////
         ImGui::End();
         ImGui::PopStyleVar();
         ///////////////////////////
@@ -234,6 +293,7 @@ namespace Hazel {
     void EditorLayer::OnEvent(Event& event)
     {
         m_CameraController.OnEvent(event);
+        m_EditorCamera.OnEvent(event);
         //
         EventDispatcher dispatcher(event);
         dispatcher.Dispatch<KeyPressedEvent>(HZ_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
@@ -244,14 +304,14 @@ namespace Hazel {
         // Shortcuts
         if (e.GetRepeatCount() > 0)
             return false;
-        //ctrl / shift
+        //ctrl / shift(键盘左右）
         bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
         bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
         switch (e.GetKeyCode())
         {
-            case Key::N:
+            case Key::N://按下n
             {
-                if (control)
+                if (control)//按下ctrl
                     NewScene();
 
                 break;
@@ -270,6 +330,19 @@ namespace Hazel {
 
                 break;
             }
+            // Gizmos
+            case Key::Q:
+                m_GizmoType = -1;
+                break;
+            case Key::W:
+                m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                break;
+            case Key::E:
+                m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+                break;
+            case Key::R:
+                m_GizmoType = ImGuizmo::OPERATION::SCALE;
+                break;
         }
     }
 

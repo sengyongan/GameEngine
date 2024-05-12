@@ -2,6 +2,10 @@
 #pragma once
 #include"SceneCamera.h"
 #include"ScriptableEntity.h"
+//四元数
+#define GLM_ENABLE_EXPERIMENTAL
+#include<glm/gtx/quaternion.hpp>
+
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 
@@ -25,16 +29,15 @@ namespace Hazel {
             :Translation(translation) {}
 
         glm::mat4 GetTransform() const {
-            glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), Rotation.x, { 1, 0, 0 })
-                * glm::rotate(glm::mat4(1.0f), Rotation.y, { 0, 1, 0 })
-                * glm::rotate(glm::mat4(1.0f), Rotation.z, { 0, 0, 1 });
+            glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
+
             return glm::translate(glm::mat4(1.0f), Translation)
                 * rotation
                 * glm::scale(glm::mat4(1.0f), Scale);
         }
     };
     struct SpriteRendererComponent {//贴图渲染组件
-        glm::vec4 Color;//变换成员
+        glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };//变换成员
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
@@ -53,15 +56,15 @@ namespace Hazel {
 
     struct NativeScriptComponent//本地脚本
     {
-        ScriptableEntity* Instance = nullptr;//基类
+        ScriptableEntity* Instance = nullptr;//基类，指针初始为空指针
 
         ScriptableEntity* (*InstantiateScript)();//函数指针，返回ScriptableEntity
         void (*DestoryScript) (NativeScriptComponent*);//函数指针
 
         template<typename T>
         void Bind() {
-            InstantiateScript = []() {return static_cast<ScriptableEntity*> (new T());};
-            DestoryScript = [](NativeScriptComponent* nsc) {delete nsc->Instance; nsc->Instance = nullptr;};
+            InstantiateScript = []() {return static_cast<ScriptableEntity*> (new T());};//转化为基类
+            DestoryScript = [](NativeScriptComponent* nsc) {delete nsc->Instance; nsc->Instance = nullptr;};//删除基类指针
         }
     };
 }

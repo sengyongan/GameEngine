@@ -19,8 +19,9 @@ project "Hazelnut"
 		"%{wks.location}/Hazel/src",
 		"%{wks.location}/Hazel/vendor",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.entt}"
-	}
+		"%{IncludeDir.entt}",
+        "%{IncludeDir.ImGuizmo}"
+    }
     defines
 	{
 		"HZ_PLATFROM_WINDOWS"

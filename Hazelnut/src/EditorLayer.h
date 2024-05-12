@@ -2,6 +2,8 @@
 //EditorLayer应用层
 #include"Hazel.h"
 #include"Panels/SceneHierarchyPanel.h"
+#include"Hazel/Renderer/EditorCamera.h"
+
 namespace Hazel {
     class EditorLayer :public Layer
     {
@@ -27,13 +29,15 @@ namespace Hazel {
         Ref<Shader> m_FlatColorShader;
         Ref<Framebuffer> m_Framebuffer;
         Ref<Texture2D>m_Texture;
-        //
+        //ecs
         Ref<Scene> m_ActiveScene;//包含实体的场景
         Entity m_SquareEntity;//绿色实体
         Entity m_CameraEntity;
         Entity m_SenondCameraEntity;
 
         bool m_PrimaryCamera = true;
+
+        EditorCamera m_EditorCamera;
         //
         bool m_ViewportFocused = false, m_ViewportHovered = false;//焦点（窗口正在接收用户的输入） / 悬停（指针是否在窗口上悬停）
 
@@ -41,6 +45,8 @@ namespace Hazel {
 
         glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
 
+        int m_GizmoType = -1;//平移0，旋转1，缩放2
+        //
         SceneHierarchyPanel m_SceneHierarchyPanel;//层级面板
     };
 

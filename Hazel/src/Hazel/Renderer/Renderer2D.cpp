@@ -38,9 +38,9 @@ namespace Hazel {
 
         Renderer2D::Statistics Stats;
     };
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
     static Renderer2DData s_Data;
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
     void Renderer2D::Init() {
         HZ_PROFILE_FUNCTION();
 
@@ -101,10 +101,12 @@ namespace Hazel {
         s_Data.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
         s_Data.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };
     }
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////
     void Renderer2D::Shutdown(){
         HZ_PROFILE_FUNCTION();
+        delete[] s_Data.QuadVertexBufferBase;
     }
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
     void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
     {
         HZ_PROFILE_FUNCTION();
@@ -114,10 +116,16 @@ namespace Hazel {
         s_Data.TextureShader->Bind();
         s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
 
-        s_Data.QuadIndexCount = 0;
-        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
-        s_Data.TextureSlotIndex = 1;//纹理索引
+        StartBatch();
+    }
 
+    void Renderer2D::BeginScene(const EditorCamera& camera)
+    {
+        glm::mat4 viewProj = camera.GetViewProjection();
+
+        s_Data.TextureShader->Bind();
+        s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+        StartBatch();
     }
 
     void Renderer2D::BeginScene(const OrthographicCamera& camera)
@@ -127,20 +135,28 @@ namespace Hazel {
         s_Data.TextureShader->Bind();
         s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjextionMatrix());
 
+        StartBatch();
+    }
+    void Renderer2D::StartBatch()
+    {
         s_Data.QuadIndexCount = 0;
         s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+
         s_Data.TextureSlotIndex = 1;//纹理索引
     }
+
     void Renderer2D::EndScene(){
         HZ_PROFILE_FUNCTION();
-
-        uint32_t dataSize = (uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase;//两个指针之间的字节偏移量。
-        s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);//数据上传到当前绑定的数组缓冲区
-
         Flush();
     }
     void Renderer2D::Flush()//
     {
+        if (s_Data.QuadIndexCount == 0)
+            return; // Nothing to draw
+        //
+        uint32_t dataSize = (uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase;//两个指针之间的字节偏移量。
+        s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);//数据上传到当前绑定的数组缓冲区
+        //
         for (uint32_t i = 0;i < s_Data.TextureSlotIndex;i++) {//设置纹理绑定的插槽位置
             s_Data.TextureSolts[i]->Bind(i);
         }
@@ -148,14 +164,14 @@ namespace Hazel {
         RenderCommand::DrawIndexed(s_Data.QuadVertexArray,s_Data.QuadIndexCount);
         s_Data.Stats.DrawCalls++;
     }
-    void Renderer2D::FlushAndReset() {
-        EndScene();
-        s_Data.QuadIndexCount = 0;
-        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
-        s_Data.TextureSlotIndex = 1;//纹理索引
+    void Renderer2D::NextBatch()
+    {
+        Flush();
+        StartBatch();
     }
-
-    //绘制
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //绘制DrawQuad/DrawRotatedQuad/////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
     void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
     {
         DrawQuad({ position.x, position.y, 0.0f }, size, color);
@@ -189,7 +205,7 @@ namespace Hazel {
     {
         HZ_PROFILE_FUNCTION();
         if (s_Data.QuadIndexCount > Renderer2DData::MaxIndices) {//超出范围立即停止
-            FlushAndReset();
+            NextBatch();
         }
         //当前quad的四个顶点的属性，QuadVertexBufferPtr指向QuadVertexBufferBase[QuadVertex（struct）]数组的成员，设置每个结构体成员的属性
         constexpr size_t quadVertexCount = 4;
@@ -216,7 +232,7 @@ namespace Hazel {
     void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float TextureFactor, const glm::vec4& color)
     {
         if (s_Data.QuadIndexCount > Renderer2DData::MaxIndices) {
-            FlushAndReset();
+            NextBatch();
         }
 
         //当前quad的四个顶点的属性
@@ -262,7 +278,7 @@ namespace Hazel {
     {
         HZ_PROFILE_FUNCTION();
         if (s_Data.QuadIndexCount > Renderer2DData::MaxIndices) {
-            FlushAndReset();
+            NextBatch();
         }
 
         constexpr size_t quadVertexCount = 4;
@@ -299,7 +315,7 @@ namespace Hazel {
     {
         HZ_PROFILE_FUNCTION();
         if (s_Data.QuadIndexCount > Renderer2DData::MaxIndices) {
-            FlushAndReset();
+            NextBatch();
         }
 
         constexpr size_t quadVertexCount = 4;
@@ -337,7 +353,7 @@ namespace Hazel {
         s_Data.QuadIndexCount += 6;
         s_Data.Stats.QuadCount++;
     }
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
     void Renderer2D::ResetStats()
     {
         memset(&s_Data.Stats, 0, sizeof(Statistics));

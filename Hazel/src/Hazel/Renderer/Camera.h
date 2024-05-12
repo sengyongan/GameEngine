@@ -8,7 +8,7 @@ namespace Hazel {
     {
     public:
         Camera() = default;
-        Camera(const glm::mat4& projection)
+        Camera(const glm::mat4& projection)//接受投影矩阵
             : m_Projection(projection) {}
 
         virtual ~Camera() = default;

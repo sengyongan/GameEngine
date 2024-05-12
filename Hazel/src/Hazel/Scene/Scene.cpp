@@ -24,19 +24,31 @@ namespace Hazel {
     {
         m_Registry.destroy(entity);
     }
-    void Scene::OnUpdate(Timestep ts)
+    void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
+    {
+        Renderer2D::BeginScene(camera);//将cameraTransform传入着色器
+        //绘制
+        auto group = m_Registry.group< TransformComponent>(entt::get< SpriteRendererComponent>);//所有具有组件（两个）的实体的组
+        for (auto entity : group) {
+            auto [transform, sprite] = group.get< TransformComponent, SpriteRendererComponent>(entity);
+            Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+        }
+        Renderer2D::EndScene();
+
+    }
+    void Scene::OnUpdateRuntime(Timestep ts)
     {
         {
             m_Registry.view<NativeScriptComponent>().each
             (
                 [=](auto entity, auto& nsc) {//nsc->缩写NativeScriptComponent
-                    if (!nsc.Instance) 
+                    if (!nsc.Instance) //指针初始为空指针
                     {
-                        nsc.Instance = nsc.InstantiateScript();
-                        nsc.Instance->m_Entity = Entity{ entity, this };
-                        nsc.Instance->OnCreate();
+                        nsc.Instance = nsc.InstantiateScript();//
+                        nsc.Instance->m_Entity = Entity{ entity, this };//基类的变量初始为entity类
+                        nsc.Instance->OnCreate();//统一的接口调用
                     }
-                    nsc.Instance->OnUpdate(ts);
+                    nsc.Instance->OnUpdate(ts);//统一的接口调用
                 }
             );
         }
@@ -80,7 +92,19 @@ namespace Hazel {
                 cameraComponent.Camera.SetViewportSize(width, height);
             }
         }
-    } 
+    }
+    Entity Scene::GetPrimaryCameraEntity()
+    {
+        auto view = m_Registry.view<CameraComponent>();
+        for (auto entity : view) {
+            const auto& camera = view.get<CameraComponent>(entity);//从每一个相机获取组件
+            if (camera.Primary) {//返回主摄像机
+                return Entity(entity, this);
+            }
+        }
+        return {};
+    }
+
     //OnComponentAdded在添加组件时执行的
     template<typename T>
     void Scene::OnComponentAdded(Entity enitty, T& component)

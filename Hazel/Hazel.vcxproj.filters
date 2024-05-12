@@ -40,6 +40,9 @@
     <Filter Include="vendor">
       <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
     </Filter>
+    <Filter Include="vendor\ImGuizmo">
+      <UniqueIdentifier>{73BF7F4C-DF4A-ED10-E85B-700554664911}</UniqueIdentifier>
+    </Filter>
     <Filter Include="vendor\glm">
       <UniqueIdentifier>{829FC5A8-6E57-07F6-D75E-E051C335A2E6}</UniqueIdentifier>
     </Filter>
@@ -141,9 +144,6 @@
     <ClInclude Include="src\Hazel\Platfrom\Opengl\OpenGLVertexArray.h">
       <Filter>src\Hazel\Platfrom\Opengl</Filter>
     </ClInclude>
-    <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsPlatformUtils.h">
-      <Filter>src\Hazel\Platfrom\Windows</Filter>
-    </ClInclude>
     <ClInclude Include="src\Hazel\Platfrom\Windows\WindowsWindow.h">
       <Filter>src\Hazel\Platfrom\Windows</Filter>
     </ClInclude>
@@ -215,6 +215,9 @@
     </ClInclude>
     <ClInclude Include="src\hzpch.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\ImGuizmo\ImGuizmo.h">
+      <Filter>vendor\ImGuizmo</Filter>
     </ClInclude>
     <ClInclude Include="vendor\glm\glm\common.hpp">
       <Filter>vendor\glm\glm</Filter>
@@ -1467,6 +1470,8 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="src\Hazel\Math\Math.h" />
+    <ClInclude Include="src\Hazel\Renderer\EditorCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Hazel\Core\Application.cpp">
@@ -1503,6 +1508,9 @@
       <Filter>src\Hazel\Platfrom\Opengl</Filter>
     </ClCompile>
     <ClCompile Include="src\Hazel\Platfrom\Windows\WindowsInput.cpp">
+      <Filter>src\Hazel\Platfrom\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hazel\Platfrom\Windows\WindowsPlatformUtils.cpp">
       <Filter>src\Hazel\Platfrom\Windows</Filter>
     </ClCompile>
     <ClCompile Include="src\Hazel\Platfrom\Windows\WindowsWindow.cpp">
@@ -1565,8 +1573,13 @@
     <ClCompile Include="src\hzpch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="vendor\ImGuizmo\ImGuizmo.cpp">
+      <Filter>vendor\ImGuizmo</Filter>
+    </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
+    <ClCompile Include="src\Hazel\Math\Math.cpp" />
+    <ClCompile Include="src\Hazel\Renderer\EditorCamera.cpp" />
   </ItemGroup>
 </Project>

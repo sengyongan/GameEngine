@@ -31,7 +31,7 @@ namespace Hazel {
     void SceneCamera::RecalculateProjection()//重置投影矩阵
     {
         if (m_ProjectionType == ProjectionType::Perspective)//透视
-        {
+        {   //弧度为单位的视角大小，宽高比
             m_Projection = glm::perspective(m_PerspectiveFOV, m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
         }
         else {//正交
