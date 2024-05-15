@@ -17,8 +17,10 @@ namespace Hazel {
         void OnEvent(Event& event)override;
 
     private:
+        //事件
         bool OnKeyPressed(KeyPressedEvent& e);
-
+        bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+        //
         void NewScene();
         void OpenScene();
         void SaveSceneAs();
@@ -35,19 +37,22 @@ namespace Hazel {
         Entity m_CameraEntity;
         Entity m_SenondCameraEntity;
 
+        Entity m_HoveredEntity;//悬停实体
+
         bool m_PrimaryCamera = true;
 
         EditorCamera m_EditorCamera;
         //
         bool m_ViewportFocused = false, m_ViewportHovered = false;//焦点（窗口正在接收用户的输入） / 悬停（指针是否在窗口上悬停）
 
-        glm::vec2 m_ViewportSize = {0.0f, 0.0f};
-
-        glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
-
-        int m_GizmoType = -1;//平移0，旋转1，缩放2
+        glm::vec2 m_ViewportSize = {0.0f, 0.0f};///视口大小
+        glm::vec2 m_ViewportBounds[2];//视口边界，vec2类型数组，大小为2（左上xy，右下xy）
         //
-        SceneHierarchyPanel m_SceneHierarchyPanel;//层级面板
+        glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
+        //GizmoType
+        int m_GizmoType = -1;//平移0，旋转1，缩放2
+        ////层级面板
+        SceneHierarchyPanel m_SceneHierarchyPanel;
     };
 
 }

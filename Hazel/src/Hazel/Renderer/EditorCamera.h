@@ -61,7 +61,7 @@ namespace Hazel {
         //初始鼠标位置
         glm::vec2 m_InitialMousePosition = { 0.0f, 0.0f };
         //
-        float m_Distance = 10.0f;
+        float m_Distance = 10.0f;//距离
         float m_Pitch = 0.0f, m_Yaw = 0.0f;//仰角和偏航角
         //视口大小
         float m_ViewportWidth = 1280, m_ViewportHeight = 720;

@@ -22,8 +22,8 @@ namespace Hazel {
         //
         GLenum internalFormat = 0, dataFormat = 0;//Format格式
         if (channels == 4) {//图片有透明通道
-            internalFormat = GL_RGBA8;
-            dataFormat = GL_RGBA;
+            internalFormat = GL_RGBA8;//内部格式
+            dataFormat = GL_RGBA;//数据格式
         }
         else if (channels == 3) {
             internalFormat = GL_RGB8;

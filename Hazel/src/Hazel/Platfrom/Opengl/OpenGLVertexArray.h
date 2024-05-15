@@ -17,6 +17,7 @@ namespace Hazel {
 
     private:
         uint32_t m_RendererID;//和缓冲时一样
+        uint32_t m_VertexBufferIndex = 0;
         std::vector<Ref<VertexBuffer>>m_VertexBuffers;//数组类型
         Ref<IndexBuffer>m_IndexBuffers;//智能指针类型
         

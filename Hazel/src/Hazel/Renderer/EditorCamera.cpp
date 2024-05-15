@@ -108,7 +108,7 @@ namespace Hazel {
         m_Pitch += delta.y * RotationSpeed();
     }
 
-    void EditorCamera::MouseZoom(float delta)
+    void EditorCamera::MouseZoom(float delta)//delta.y
     {
         m_Distance -= delta * ZoomSpeed();
         if (m_Distance < 1.0f)
@@ -118,7 +118,7 @@ namespace Hazel {
         }
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    glm::vec3 EditorCamera::GetUpDirection() const//获取自身坐标的上轴
+    glm::vec3 EditorCamera::GetUpDirection() const//获取按照自身坐标的上轴经过GetOrientation旋转后的坐标
     {
         return glm::rotate(GetOrientation(), glm::vec3(0.0f, 1.0f, 0.0f));
     }

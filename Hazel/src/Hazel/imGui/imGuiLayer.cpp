@@ -67,7 +67,7 @@ namespace Hazel {
     {
         if(m_BlockEvents)//???
         {
-            ImGuiIO& io = ImGui::GetIO();
+            ImGuiIO& io = ImGui::GetIO();//在类别中
             e.Handled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;//当前触发的事件类型，和用户输入的事件
             e.Handled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureKeyboard;
         }

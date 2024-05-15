@@ -16,7 +16,8 @@ namespace Hazel {
         : Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f)
     {
     }
-    void EditorLayer::OnAttach()
+    //OnAttach/////////////////////////////////////////////////////////////////////////////////////
+    void EditorLayer::OnAttach()//在HazelnutApp被调用
     {
         HZ_PROFILE_FUNCTION();
 
@@ -24,6 +25,7 @@ namespace Hazel {
         //m_CameraController.SetZoomLevel(5.0f);
 
         FramebufferSpecification fbSpec;
+        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8,FramebufferTextureFormat::RED_INTEGER,FramebufferTextureFormat::Depth };
         fbSpec.Width = 1280;
         fbSpec.Height = 720;
         m_Framebuffer = Framebuffer::Create(fbSpec);
@@ -85,7 +87,7 @@ namespace Hazel {
         HZ_PROFILE_FUNCTION();
 
     }
-
+    //OnUpdate/////////////////////////////////////////////////////////////////////////////////////
     void EditorLayer::OnUpdate(Timestep ts)
     {   //只有当首次帧 / 调整窗口才会执行
         //获取帧缓冲//形式：for(int i = 0;i……分号） //m_ViewportSize ， imgui的区域
@@ -109,13 +111,29 @@ namespace Hazel {
         m_Framebuffer->Bind();
         RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
         RenderCommand::Clear();
-        
+        // 清理颜色附件Clear our entity ID attachment to -1
+        m_Framebuffer->ClearAttachment(1, -1);
         //scene
-        m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+        m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);//绘制
+        //获取鼠标在窗口位置
+        auto [mx, my] = ImGui::GetMousePos();//获取到鼠标位置（屏幕上）
+        mx -= m_ViewportBounds[0].x;//减去左上（获取相对于左上的位置）
+        my -= m_ViewportBounds[0].y;
+        glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];//右下-左上 = 窗口大小
+        my = viewportSize.y - my;//翻转y坐标，
+        int mouseX = (int)mx;//相对于左下的坐标
+        int mouseY = (int)my;
+        if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+        {
+            int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);//像素（在当前鼠标位置，将红色分类清除为，附件为1的整数值）
+            //如果在没有被绘制的位置,返回空实体，否则传入当前的id值，也就是实体句柄（标识符id）
+            m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
+        }
+
         //
         m_Framebuffer->Unbind();
     }
-
+    ///OnImGuiRender//////////////////////////////////////////////////////////////////////////
     void EditorLayer::OnImGuiRender()
     {
         HZ_PROFILE_FUNCTION();
@@ -210,7 +228,12 @@ namespace Hazel {
         m_SceneHierarchyPanel.OnImGuiRender();
         /////Stats面板/////////////////////////////////////////////////////////////////////////
         ImGui::Begin("Stats");
-
+        //打印悬停的实体标签
+        std::string name = "None";//不存在为none
+        if (m_HoveredEntity)//如果实体存在
+            name = m_HoveredEntity.GetComponent<TagComponent>().Tag;//name变量 == 获取到标签
+        ImGui::Text("Hovered Entity: %s", name.c_str());
+        //
         auto statis = Renderer2D::GetStats();
         ImGui::Text("Renderer2D statis");
         ImGui::Text("Draw Calls %d", statis.DrawCalls);
@@ -221,18 +244,31 @@ namespace Hazel {
         ImGui::End();
 
         /////Viewport面板/////////////////////////////////////////////////////////////////////////////////////
+        auto viewportOffset = ImGui::GetCursorPos(); // Includes tab bar//获取当前光标位置
+
+        //
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0,0 });//取消边框
         ImGui::Begin("Viewport");
         //获取用户操作情况
-        m_ViewportFocused = ImGui::IsWindowFocused();//获取当前值
-        m_ViewportHovered = ImGui::IsWindowHovered();
-        Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);//其中一个不成立,结果就为真
-        //
-        ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();//获取内容区域可用性
+        m_ViewportFocused = ImGui::IsWindowFocused();//是否处于焦点状态
+        m_ViewportHovered = ImGui::IsWindowHovered();//是否处于悬停状态
+        Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);//其中一个成立,阻止事件结果就为真
+        ////获取内容区域可用性
+        ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         m_ViewportSize = { (uint32_t)viewportPanelSize.x, (uint32_t)viewportPanelSize.y };
-        //绘制到Image
-        uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();//获取帧缓冲ID,渲染到image
+        ////获取帧缓冲ID,渲染到image
+        uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
         ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 }); 
+        //获取view边界
+        auto windowSize = ImGui::GetWindowSize();
+        ImVec2 minBound = ImGui::GetWindowPos();//获取当前窗口的最小边界位置（0，0）
+        //minBound.x += viewportOffset.x;//（鼠标）（左上）
+        //minBound.y += viewportOffset.y;
+
+        ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };//最大边界（右下）
+
+        m_ViewportBounds[0] = { minBound.x, minBound.y };
+        m_ViewportBounds[1] = { maxBound.x, maxBound.y };
         ////////////////////////
         //Gizmos/////////////////////
         Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();//当前选中的实体
@@ -289,7 +325,7 @@ namespace Hazel {
         ///////////////////////////
         ImGui::End();
     }
-
+    ///OnEvent///////////////////////////////////////////////////////////////////////////
     void EditorLayer::OnEvent(Event& event)
     {
         m_CameraController.OnEvent(event);
@@ -297,6 +333,7 @@ namespace Hazel {
         //
         EventDispatcher dispatcher(event);
         dispatcher.Dispatch<KeyPressedEvent>(HZ_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+        dispatcher.Dispatch<MouseButtonPressedEvent>(HZ_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
     }
 
     bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)//传入KeyPressedEvent
@@ -346,6 +383,16 @@ namespace Hazel {
         }
     }
 
+    bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+    {
+        if (e.GetMouseButton() == Mouse::ButtonLeft)//按下左键
+        {
+            if (m_ViewportHovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))//鼠标悬停&&没有点在zmo上&&没有按下alt
+                m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);//设置为悬停的实体
+        }
+        return false;
+    }
+    //file///////////////////////////////////////////////////////////////////////////////////////
     void EditorLayer::NewScene()
     {   //新的空场景
         m_ActiveScene = CreateRef<Scene>();

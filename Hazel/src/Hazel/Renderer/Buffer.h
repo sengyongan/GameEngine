@@ -28,11 +28,11 @@ namespace Hazel {
         std::string Name;
         ShaderDataType Type;//类型——enum
         uint32_t Size;//类型大小
-        uint32_t Offest;//偏移量
+        uint32_t Offset;//偏移量
         bool Normalized;//正规化
         ButterElements(){}
         ButterElements(ShaderDataType type, const std::string& name,bool normalized = false) ://构造
-            Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offest(0) , Normalized(normalized){
+            Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offset(0) , Normalized(normalized){
         }
         uint32_t GetComponentCount() const//
         {
@@ -74,7 +74,7 @@ namespace Hazel {
             uint32_t offset = 0;
             m_Stride = 0;
             for (auto& element : m_Elements) {//获取传入的这组值，每个值有（type，name）
-                element.Offest = offset;//当前值，设置偏移位置
+                element.Offset = offset;//当前值，设置偏移位置
                 offset += element.Size;//更新下一个值偏移
                 m_Stride += element.Size;
             }

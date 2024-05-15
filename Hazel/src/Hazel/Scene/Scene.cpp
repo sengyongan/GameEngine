@@ -31,7 +31,7 @@ namespace Hazel {
         auto group = m_Registry.group< TransformComponent>(entt::get< SpriteRendererComponent>);//所有具有组件（两个）的实体的组
         for (auto entity : group) {
             auto [transform, sprite] = group.get< TransformComponent, SpriteRendererComponent>(entity);
-            Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+            Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
         }
         Renderer2D::EndScene();
 
@@ -76,7 +76,7 @@ namespace Hazel {
             auto group = m_Registry.group< TransformComponent>(entt::get< SpriteRendererComponent>);//所有具有组件（两个）的实体的组
             for (auto entity : group) {
                 auto [transform, sprite] = group.get< TransformComponent, SpriteRendererComponent>(entity);
-                Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+                Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
             }
             Renderer2D::EndScene();
         }
