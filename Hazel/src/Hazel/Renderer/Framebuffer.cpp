@@ -1,7 +1,7 @@
 #include "hzpch.h"
 #include"Framebuffer.h"
 #include"Renderer.h"
-#include"Hazel/Platfrom/Opengl/OpeGLFramebuffer.h"
+#include"Platform/OpenGL/OpeGLFramebuffer.h"
 
 namespace Hazel {
     Ref<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)

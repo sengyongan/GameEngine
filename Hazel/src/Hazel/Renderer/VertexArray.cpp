@@ -1,7 +1,7 @@
 #include"hzpch.h"
 #include"VertexArray.h"
 #include"Renderer.h"
-#include"Hazel/Platfrom/Opengl/OpenGLVertexArray.h"
+#include"Platform/OpenGL/OpenGLVertexArray.h"
 
 namespace Hazel {
     Ref<VertexArray> VertexArray::Create()

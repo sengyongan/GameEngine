@@ -1,7 +1,5 @@
-// Basic Texture Shader
-
 #type vertex
-#version 450 core
+#version 450 
 
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec4 a_Color;
@@ -22,27 +20,22 @@ struct VertexOutput
 	float TexIndex;
 	float TilingFactor;
 };
+
 layout (location = 0) out VertexOutput Output;
 layout (location = 4) out flat int v_EntityID;
 
-out vec4 v_Color;
-out vec2 v_TexCoord;
-out flat float v_TexIndex;
-out float v_TilingFactor;
-out flat int v_EntityID;
-
 void main()
 {
-    Output.Color = a_Color;
+	Output.Color = a_Color;
 	Output.TexCoord = a_TexCoord;
 	Output.TexIndex = a_TexIndex;
 	Output.TilingFactor = a_TilingFactor;
 	v_EntityID = a_EntityID;
+
 	gl_Position = u_ViewProjection * vec4(a_Position, 1.0);
 }
-
 #type fragment
-#version 450 core
+#version 450 
 
 layout(location = 0) out vec4 color;
 layout(location = 1) out int color2;
@@ -66,7 +59,7 @@ void main()
 
 	switch(int(Input.TexIndex))
 	{
-        case  0: texColor *= texture(u_Textures[ 0], Input.TexCoord * Input.TilingFactor); break;
+		case  0: texColor *= texture(u_Textures[ 0], Input.TexCoord * Input.TilingFactor); break;
 		case  1: texColor *= texture(u_Textures[ 1], Input.TexCoord * Input.TilingFactor); break;
 		case  2: texColor *= texture(u_Textures[ 2], Input.TexCoord * Input.TilingFactor); break;
 		case  3: texColor *= texture(u_Textures[ 3], Input.TexCoord * Input.TilingFactor); break;
@@ -98,7 +91,7 @@ void main()
 		case 29: texColor *= texture(u_Textures[29], Input.TexCoord * Input.TilingFactor); break;
 		case 30: texColor *= texture(u_Textures[30], Input.TexCoord * Input.TilingFactor); break;
 		case 31: texColor *= texture(u_Textures[31], Input.TexCoord * Input.TilingFactor); break;
-     }
+	}
 	color = texColor;
 
 	color2 = v_EntityID;

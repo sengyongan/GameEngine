@@ -11,7 +11,8 @@ namespace Hazel {
 
     Application* Application::s_Instance = nullptr;//类静态成员s_Instance 初始为null
         //在sandboxapp创建类对象
-    Application::Application(const std::string& name)
+    Application::Application(const std::string& name, ApplicationCommandLineArgs args)
+        : m_CommandLineArgs(args)
     {
         HZ_PROFILE_FUNCTION();
         //HZ_CORE_ASSERT(s_Instance, "Application already exists");//TODO:???

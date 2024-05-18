@@ -115,7 +115,8 @@ namespace Hazel {
     void Scene::OnComponentAdded<TransformComponent>(Entity enitty, TransformComponent& component) {}
     template<>
     void Scene::OnComponentAdded<CameraComponent>(Entity enitty, CameraComponent& component) {
-        component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
+        if (m_ViewportWidth > 0 && m_ViewportHeight > 0)
+            component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
     }
     template<>
     void Scene::OnComponentAdded<SpriteRendererComponent>(Entity enitty, SpriteRendererComponent& component) {}

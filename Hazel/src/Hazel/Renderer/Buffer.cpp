@@ -1,7 +1,7 @@
 #include"hzpch.h"
 #include"Buffer.h"
 #include"Renderer.h"
-#include"Hazel/Platfrom/Opengl/OpenGLBuffer.h"
+#include"Platform/OpenGL/OpenGLBuffer.h"
 namespace Hazel {
     Ref<VertexBuffer>  VertexBuffer::Create(float* vertices, uint32_t size)
     {

@@ -9,11 +9,24 @@
 
 //主要入口点——程序运行起始处
 namespace Hazel {
+    struct ApplicationCommandLineArgs
+    {
+        int Count = 0;
+        char** Args = nullptr;
+
+        const char* operator[](int index) const
+        {
+            HZ_CORE_ASSERT(index < Count);
+            return Args[index];
+        }
+    };
+
 	class  Application//默认空
 	{
 	public:
-		Application(const std::string& name = "Hazel App");
+        Application(const std::string& name = "Hazel App", ApplicationCommandLineArgs args = ApplicationCommandLineArgs());
 		virtual ~Application();
+        ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
 
 		void Run();//实时运行
         void OnEvent(Event& e);//循环所有事件
@@ -30,6 +43,9 @@ namespace Hazel {
         bool OnWindowClose(WindowCloseEvent& e);
         bool OnWindowResize(WindowResizeEvent& e);
     private:
+        //
+        ApplicationCommandLineArgs m_CommandLineArgs;
+        //
         std::unique_ptr<Window> m_Window;//Window类对象
 
         imGuiLayer* m_ImGuiLayer;//imgui层指针
@@ -44,6 +60,7 @@ namespace Hazel {
         static Application* s_Instance;//Application类对象
 	};
 	
-	Application* CreatApplication();//创建应用程序实例
+    Application* CreateApplication(ApplicationCommandLineArgs args);
+    //创建应用程序实例
 
 }
