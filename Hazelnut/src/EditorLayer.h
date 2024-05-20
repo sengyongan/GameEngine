@@ -2,6 +2,8 @@
 //EditorLayer应用层
 #include"Hazel.h"
 #include"Panels/SceneHierarchyPanel.h"
+#include "Panels/ContentBrowserPanel.h"
+
 #include"Hazel/Renderer/EditorCamera.h"
 
 namespace Hazel {
@@ -23,6 +25,7 @@ namespace Hazel {
         //
         void NewScene();
         void OpenScene();
+        void OpenScene(const std::filesystem::path& path);
         void SaveSceneAs();
     private:
         OrthographicCameraController m_CameraController;
@@ -51,8 +54,9 @@ namespace Hazel {
         glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
         //GizmoType
         int m_GizmoType = -1;//平移0，旋转1，缩放2
-        ////层级面板
+        //面板
         SceneHierarchyPanel m_SceneHierarchyPanel;
+        ContentBrowserPanel m_ContentBrowserPanel;
     };
 
 }

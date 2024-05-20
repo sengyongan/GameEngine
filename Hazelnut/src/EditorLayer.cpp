@@ -1,18 +1,18 @@
 #include "EditorLayer.h"
 #include <imgui/imgui.h>
-
+//
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
+//
 #include "Hazel/Scene/SceneSerializer.h"
-
 #include "Hazel/Utils/PlatformUtils.h"
-
+//
 #include "ImGuizmo.h"
-
+//
 #include "Hazel/Math/Math.h"
 
 namespace Hazel {
+    extern const std::filesystem::path g_AssetPath;
 
     EditorLayer::EditorLayer()
         : Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f), m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
@@ -162,8 +162,6 @@ namespace Hazel {
         bool opt_fullscreen = opt_fullscreen_persistant;
         static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
-        // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
-        // because it would be confusing to have two docking targets within each others.
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
         if (opt_fullscreen)
         {
@@ -177,15 +175,9 @@ namespace Hazel {
             window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
         }
 
-        // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
         if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
             window_flags |= ImGuiWindowFlags_NoBackground;
 
-        // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-        // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive, 
-        // all active windows docked into it will lose their parent and become undocked.
-        // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise 
-        // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("DockSpace Demo", &dockspaceOpen, window_flags);
         ImGui::PopStyleVar();
@@ -210,9 +202,6 @@ namespace Hazel {
         {
             if (ImGui::BeginMenu("File"))
             {
-                // Disabling fullscreen would allow the window to be moved to the front of other windows, 
-                // which we can't undo at the moment without finer window depth/z control.
-                //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);1
                 if (ImGui::MenuItem("New", "Ctrl+N"))
                     NewScene();
 
@@ -230,7 +219,8 @@ namespace Hazel {
         }
 
         m_SceneHierarchyPanel.OnImGuiRender();
-
+        m_ContentBrowserPanel.OnImGuiRender();
+        ////Stats////////////////////////////////////////////////////////////////////////////////////////////////////////
         ImGui::Begin("Stats");
 
         std::string name = "None";
@@ -265,6 +255,13 @@ namespace Hazel {
         uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
         ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
+        if (ImGui::BeginDragDropTarget()) {//开始拖放目标
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")) {//有效载荷
+                const wchar_t* path = (const wchar_t*)payload->Data;//获取相对目录名
+                OpenScene(std::filesystem::path(g_AssetPath) / path);//完整路径
+            }
+            ImGui::EndDragDropTarget();
+        }
         // Gizmos
         Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
         if (selectedEntity && m_GizmoType != -1)
@@ -415,13 +412,18 @@ namespace Hazel {
         std::string filepath = FileDialogs::OpenFile("Hazel Scene (*.hazel)\0*.hazel\0");
         if (!filepath.empty())
         {
+            OpenScene(filepath);
+        }
+    }
+
+    void EditorLayer::OpenScene(const std::filesystem::path& path)
+    {
             m_ActiveScene = CreateRef<Scene>();
             m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
             SceneSerializer serializer(m_ActiveScene);
-            serializer.Deserialize(filepath);
-        }
+            serializer.Deserialize(path.string());
     }
 
     void EditorLayer::SaveSceneAs()

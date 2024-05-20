@@ -2,6 +2,7 @@
 #pragma once
 #include"SceneCamera.h"
 #include"ScriptableEntity.h"
+#include "Hazel/Renderer/Texture.h"
 //四元数
 #define GLM_ENABLE_EXPERIMENTAL
 #include<glm/gtx/quaternion.hpp>
@@ -38,6 +39,8 @@ namespace Hazel {
     };
     struct SpriteRendererComponent {//贴图渲染组件
         glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };//变换成员
+        Ref<Texture2D> Texture;
+        float TilingFactor = 1.0f;
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;

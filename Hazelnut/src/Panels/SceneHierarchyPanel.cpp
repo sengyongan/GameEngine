@@ -6,6 +6,8 @@
 #include<imgui/imgui_internal.h>
 #include<glm/gtc/type_ptr.hpp>
 namespace Hazel {
+    extern const std::filesystem::path g_AssetPath;//asset路径
+
     SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
     {
         SetContext(context);
@@ -311,10 +313,24 @@ namespace Hazel {
             }
         );
         //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //实例化模板
         DrawComponent< SpriteRendererComponent>("Sprite Renderer", entity,
             [](auto& component) {//自定义函数
                 ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));//颜色面板,
+                //Texture
+                ImGui::Button("Texture", ImVec2(100.0f, 0.0f));
+
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))//获取到拖放的资源路径
+                    {
+                        const wchar_t* path = (const wchar_t*)payload->Data;
+                        std::filesystem::path texturePath = std::filesystem::path(g_AssetPath) / path;//取得完整路径
+                        component.Texture = Texture2D::Create(texturePath.string());//创建纹理
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                ImGui::DragFloat("Tiling Factor", &component.TilingFactor, 0.1f, 0.0f, 100.0f);//Tiling Factor
             }
         );
 
