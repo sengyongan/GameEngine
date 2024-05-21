@@ -22,9 +22,11 @@ namespace Hazel {
     void EditorLayer::OnAttach()
     {
         HZ_PROFILE_FUNCTION();
-
+        //
         m_Texture = Texture2D::Create("assets/textures/Checkerboard.png");
-
+        m_IconPlay = Texture2D::Create("Resources/Icons/ContentBrowser/PlayButton.png");
+        m_IconStop = Texture2D::Create("Resources/Icons/ContentBrowser/StopButton.png");
+        //
         FramebufferSpecification fbSpec;
         fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
         fbSpec.Width = 1280;
@@ -133,14 +135,31 @@ namespace Hazel {
         m_Framebuffer->ClearAttachment(1, -1);
 
         // Update scene
-        m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+        switch (m_SceneState)
+        {
+        //case SceneState::Edit://编辑模式
+        {
+            if (m_ViewportFocused)
+                m_CameraController.OnUpdate(ts);
 
+            m_EditorCamera.OnUpdate(ts);//可以更新编辑器相机
+
+            m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+            break;
+        }
+        case SceneState::Play:
+        {
+            m_ActiveScene->OnUpdateRuntime(ts);
+            break;
+        }
+        }
+        //鼠标位置的实体id，传给着色器
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
         glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
         my = viewportSize.y - my;
-        int mouseX = (int)mx;
+        int mouseX = (int)mx;//鼠标对于左下角的位置
         int mouseY = (int)my;
 
         if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
@@ -315,10 +334,41 @@ namespace Hazel {
 
         ImGui::End();
         ImGui::PopStyleVar();
-
+        //
+        UI_Toolbar();
+        //
         ImGui::End();
     }
-
+    //
+    void EditorLayer::UI_Toolbar()
+    {
+        //按钮风格
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        auto& colors = ImGui::GetStyle().Colors;
+        const auto& buttonHovered = colors[ImGuiCol_ButtonHovered];//悬停颜色
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(buttonHovered.x, buttonHovered.y, buttonHovered.z, 0.5f));
+        const auto& buttonActive = colors[ImGuiCol_ButtonActive];//激活颜色
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x, buttonActive.y, buttonActive.z, 0.5f));
+        //面板
+        ImGui::Begin("##toolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);//无装饰,无滚动条,不使用鼠标滚动
+        //切换按钮图标，和点击按钮的状态
+        float size = ImGui::GetWindowHeight() - 4.0f;
+        Ref<Texture2D> icon = m_SceneState == SceneState::Edit ? m_IconPlay : m_IconStop;//当前停止图标为播放，播放时图标为停止
+        ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));//设置为中间位置，正方形大小的一半
+        if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size)))
+        {   //当前点击图标，状态停止就播放，播放就停止
+            if (m_SceneState == SceneState::Edit)
+                OnScenePlay();//切换状态
+            else if (m_SceneState == SceneState::Play)
+                OnSceneStop();
+        }
+        ImGui::PopStyleVar(2);
+        ImGui::PopStyleColor(3);
+        ImGui::End();
+    }
+    //
     void EditorLayer::OnEvent(Event& e)
     {
         m_CameraController.OnEvent(e);
@@ -435,5 +485,16 @@ namespace Hazel {
             serializer.Serialize(filepath);
         }
     }
+    //
+    void EditorLayer::OnScenePlay()
+    {
+        m_SceneState = SceneState::Play;
+    }
+
+    void EditorLayer::OnSceneStop()
+    {
+        m_SceneState = SceneState::Edit;
+    }
+
 
 }
