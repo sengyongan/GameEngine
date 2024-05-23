@@ -9,7 +9,30 @@
 #include <yaml-cpp/yaml.h>
 
 namespace YAML {
+    //vec2
+    template<>
+    struct convert<glm::vec2>
+    {
+        static Node encode(const glm::vec2& rhs)
+        {
+            Node node;
+            node.push_back(rhs.x);
+            node.push_back(rhs.y);
+            node.SetStyle(EmitterStyle::Flow);
+            return node;
+        }
 
+        static bool decode(const Node& node, glm::vec2& rhs)
+        {
+            if (!node.IsSequence() || node.size() != 2)
+                return false;
+
+            rhs.x = node[0].as<float>();
+            rhs.y = node[1].as<float>();
+            return true;
+        }
+    };
+    //vec3
     template<>
     struct convert<glm::vec3>
     {   //vec3
@@ -63,6 +86,13 @@ namespace YAML {
 }
 namespace Hazel {
 
+    YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)//重载《《，输出vec2
+    {
+        out << YAML::Flow;
+        out << YAML::BeginSeq << v.x << v.y << YAML::EndSeq;
+        return out;
+    }
+
     YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)//重载《《，输出vec3
     {
         out << YAML::Flow;
@@ -76,7 +106,30 @@ namespace Hazel {
         out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
         return out;
     }
+    ///TypeTo///TypeFrom///////////////////////////////////////
+    static std::string RigidBody2DBodyTypeToString(Rigidbody2DComponent::BodyType bodyType)//RigidBody2DBodyType
+    {
+        switch (bodyType)
+        {
+        case Rigidbody2DComponent::BodyType::Static:    return "Static";
+        case Rigidbody2DComponent::BodyType::Dynamic:   return "Dynamic";
+        case Rigidbody2DComponent::BodyType::Kinematic: return "Kinematic";
+        }
 
+        HZ_CORE_ASSERT(false, "Unknown body type");
+        return {};
+    }
+
+    static Rigidbody2DComponent::BodyType RigidBody2DBodyTypeFromString(const std::string& bodyTypeString)
+    {
+        if (bodyTypeString == "Static")    return Rigidbody2DComponent::BodyType::Static;
+        if (bodyTypeString == "Dynamic")   return Rigidbody2DComponent::BodyType::Dynamic;
+        if (bodyTypeString == "Kinematic") return Rigidbody2DComponent::BodyType::Kinematic;
+
+        HZ_CORE_ASSERT(false, "Unknown body type");
+        return Rigidbody2DComponent::BodyType::Static;
+    }
+    ////////////////////////////////////////////////////////////
     SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
         : m_Scene(scene)
     {
@@ -143,7 +196,33 @@ namespace Hazel {
 
             out << YAML::EndMap; // SpriteRendererComponent
         }
+        if (entity.HasComponent<Rigidbody2DComponent>())
+        {
+            out << YAML::Key << "Rigidbody2DComponent";
+            out << YAML::BeginMap; // Rigidbody2DComponent
 
+            auto& rb2dComponent = entity.GetComponent<Rigidbody2DComponent>();
+            out << YAML::Key << "BodyType" << YAML::Value << RigidBody2DBodyTypeToString(rb2dComponent.Type);
+            out << YAML::Key << "FixedRotation" << YAML::Value << rb2dComponent.FixedRotation;
+
+            out << YAML::EndMap; // Rigidbody2DComponent
+        }
+        //physicsi
+        if (entity.HasComponent<BoxCollider2DComponent>())
+        {
+            out << YAML::Key << "BoxCollider2DComponent";
+            out << YAML::BeginMap; // BoxCollider2DComponent
+
+            auto& bc2dComponent = entity.GetComponent<BoxCollider2DComponent>();
+            out << YAML::Key << "Offset" << YAML::Value << bc2dComponent.Offset;
+            out << YAML::Key << "Size" << YAML::Value << bc2dComponent.Size;
+            out << YAML::Key << "Density" << YAML::Value << bc2dComponent.Density;
+            out << YAML::Key << "Friction" << YAML::Value << bc2dComponent.Friction;
+            out << YAML::Key << "Restitution" << YAML::Value << bc2dComponent.Restitution;
+            out << YAML::Key << "RestitutionThreshold" << YAML::Value << bc2dComponent.RestitutionThreshold;
+
+            out << YAML::EndMap; // BoxCollider2DComponent
+        }
         out << YAML::EndMap; // Entity
     }
 
@@ -180,7 +259,16 @@ namespace Hazel {
         std::stringstream strStream;//字符串流strStream对象
         strStream << stream.rdbuf();//将文件流的内容读取到字符串流中，获取文件流的缓冲区指针
 
-        YAML::Node data = YAML::Load(strStream.str());//将字符串流中的内容加载为YAML节点对象data。
+        YAML::Node data;
+        try
+        {
+            data = YAML::LoadFile(filepath);
+        }
+        catch (YAML::ParserException e)
+        {
+            return false;
+        }
+
         if (!data["Scene"])//中是否存在名为"Scene"的键
             return false;
 
@@ -238,6 +326,26 @@ namespace Hazel {
                 {
                     auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
                     src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
+                }
+                //physicsi
+                auto rigidbody2DComponent = entity["Rigidbody2DComponent"];
+                if (rigidbody2DComponent)
+                {
+                    auto& rb2d = deserializedEntity.AddComponent<Rigidbody2DComponent>();
+                    rb2d.Type = RigidBody2DBodyTypeFromString(rigidbody2DComponent["BodyType"].as<std::string>());
+                    rb2d.FixedRotation = rigidbody2DComponent["FixedRotation"].as<bool>();
+                }
+
+                auto boxCollider2DComponent = entity["BoxCollider2DComponent"];
+                if (boxCollider2DComponent)
+                {
+                    auto& bc2d = deserializedEntity.AddComponent<BoxCollider2DComponent>();
+                    bc2d.Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
+                    bc2d.Size = boxCollider2DComponent["Size"].as<glm::vec2>();
+                    bc2d.Density = boxCollider2DComponent["Density"].as<float>();
+                    bc2d.Friction = boxCollider2DComponent["Friction"].as<float>();
+                    bc2d.Restitution = boxCollider2DComponent["Restitution"].as<float>();
+                    bc2d.RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
                 }
             }
         }

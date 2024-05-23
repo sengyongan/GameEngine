@@ -119,12 +119,6 @@ namespace Hazel {
             m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
 
-        // Update
-        if (m_ViewportFocused)
-            m_CameraController.OnUpdate(ts);
-
-        m_EditorCamera.OnUpdate(ts);
-
         // Render
         Renderer2D::ResetStats();
         m_Framebuffer->Bind();
@@ -137,21 +131,21 @@ namespace Hazel {
         // Update scene
         switch (m_SceneState)
         {
-        //case SceneState::Edit://编辑模式
-        {
-            if (m_ViewportFocused)
-                m_CameraController.OnUpdate(ts);
+            case SceneState::Edit://编辑模式
+            {
+                if (m_ViewportFocused)
+                    m_CameraController.OnUpdate(ts);
 
-            m_EditorCamera.OnUpdate(ts);//可以更新编辑器相机
+                m_EditorCamera.OnUpdate(ts);//可以更新编辑器相机
 
-            m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
-            break;
-        }
-        case SceneState::Play:
-        {
-            m_ActiveScene->OnUpdateRuntime(ts);
-            break;
-        }
+                m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+                break;
+            }
+            case SceneState::Play://播放模式仅执行的 
+            {
+                m_ActiveScene->OnUpdateRuntime(ts);
+                break;
+            }
         }
         //鼠标位置的实体id，传给着色器
         auto [mx, my] = ImGui::GetMousePos();
@@ -468,12 +462,20 @@ namespace Hazel {
 
     void EditorLayer::OpenScene(const std::filesystem::path& path)
     {
-            m_ActiveScene = CreateRef<Scene>();
+        if (path.extension().string() != ".hazel")
+        {
+            HZ_CLIENT_WARN("Could not load {0} - not a scene file", path.filename().string());
+            return;
+        }
+
+        Ref<Scene> newScene = CreateRef<Scene>();
+        SceneSerializer serializer(newScene);
+        if (serializer.Deserialize(path.string()))
+        {
+            m_ActiveScene = newScene;
             m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-
-            SceneSerializer serializer(m_ActiveScene);
-            serializer.Deserialize(path.string());
+        }
     }
 
     void EditorLayer::SaveSceneAs()
@@ -489,11 +491,13 @@ namespace Hazel {
     void EditorLayer::OnScenePlay()
     {
         m_SceneState = SceneState::Play;
+        m_ActiveScene->OnRuntimeStart();
     }
 
     void EditorLayer::OnSceneStop()
     {
         m_SceneState = SceneState::Edit;
+        m_ActiveScene->OnRuntimeStop();
     }
 
 

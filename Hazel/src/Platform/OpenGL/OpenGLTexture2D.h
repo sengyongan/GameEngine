@@ -18,11 +18,14 @@ namespace Hazel {
 
         virtual void Bind(uint32_t slot = 0) const override;
 
+        virtual bool IsLoaded() const override { return m_IsLoaded; }
+
         virtual bool operator== (const Texture& other)const override { //==比较两个对象的m_RendererID
             return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID;//参数other转换为OpenGLTexture2D类型，并获取其m_RendererID成员变量
         };
     private:
         std::string m_Path;
+        bool m_IsLoaded = false;
         uint32_t m_Width, m_Height;
         uint32_t m_RendererID;
         GLenum m_InternalFormat, m_DataFormat;

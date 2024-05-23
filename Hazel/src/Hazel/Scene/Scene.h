@@ -1,8 +1,10 @@
 #pragma once
-
+//管理整个场景的 实体/ 组件 的 创建/销毁/更新
 #include "entt.hpp"
 #include "Hazel/Core/Timestep.h"
 #include "Hazel/Renderer/EditorCamera.h"
+
+class b2World;
 
 namespace Hazel {
 
@@ -17,6 +19,9 @@ namespace Hazel {
         Entity CreateEntity(const std::string& name = std::string());
         void DestroyEntity(Entity entity);
 
+        void OnRuntimeStart();//创建销毁2d刚体
+        void OnRuntimeStop();
+
         void OnUpdateEditor(Timestep ts,EditorCamera& camera);
         void OnUpdateRuntime(Timestep ts);
         void OnViewportResize(uint32_t width, uint32_t height);
@@ -28,6 +33,8 @@ namespace Hazel {
     private:
         entt::registry m_Registry;
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+
+        b2World* m_PhysicsWorld = nullptr;//物理世界
 
         friend class Entity;
         friend class SceneSerializer;

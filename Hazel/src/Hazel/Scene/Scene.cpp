@@ -4,8 +4,27 @@
 #include"Hazel/Renderer/Renderer2D.h"
 #include"Entity.h"
 #include<glm/glm.hpp>
+
+#include"box2d/b2_world.h"
+#include "box2d/b2_body.h"
+#include "box2d/b2_fixture.h"//固定设备
+#include "box2d/b2_polygon_shape.h"//多边形
+
 namespace Hazel {
 
+    static b2BodyType Rigidbody2DTypeToBox2DBody(Rigidbody2DComponent::BodyType bodyType)//刚体转化为碰撞体
+    {
+        switch (bodyType)
+        {
+            case Rigidbody2DComponent::BodyType::Static:    return b2_staticBody;
+            case Rigidbody2DComponent::BodyType::Dynamic:   return b2_dynamicBody;
+            case Rigidbody2DComponent::BodyType::Kinematic: return b2_kinematicBody;
+        }
+
+        HZ_CORE_ASSERT(false, "Unknown body type");
+        return b2_staticBody;
+    }
+    /////////////////////////////
     Scene::Scene()
     {
     }
@@ -24,6 +43,49 @@ namespace Hazel {
     {
         m_Registry.destroy(entity);
     }
+    ///PhysicsWorld/////////////////////////////////////////////////////
+    void Scene::OnRuntimeStart()
+    {
+        m_PhysicsWorld = new b2World({ 0.0f, -9.8f });//gravity，创建物理世界
+        auto view = m_Registry.view<Rigidbody2DComponent>();//检查每个带刚体的实体
+        for (auto e : view)
+        {
+            Entity entity = { e, this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+            auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+
+            b2BodyDef bodyDef;//设置刚体属性为自身组件的属性
+            bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2d.Type);
+            bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
+            bodyDef.angle = transform.Rotation.z;
+            //创建刚体
+            b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);//属性传递给刚体
+            body->SetFixedRotation(rb2d.FixedRotation);
+            rb2d.RuntimeBody = body;
+            //如果存在碰撞体组件
+            if (entity.HasComponent<BoxCollider2DComponent>())
+            {
+                auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
+                //碰撞体形状
+                b2PolygonShape boxShape;
+                boxShape.SetAsBox(bc2d.Size.x * transform.Scale.x, bc2d.Size.y * transform.Scale.y);
+                //碰撞体
+                b2FixtureDef fixtureDef;
+                fixtureDef.shape = &boxShape;
+                fixtureDef.density = bc2d.Density;
+                fixtureDef.friction = bc2d.Friction;
+                fixtureDef.restitution = bc2d.Restitution;
+                fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
+                body->CreateFixture(&fixtureDef);
+            }
+        }
+    }
+    void Scene::OnRuntimeStop()
+    {
+        delete m_PhysicsWorld;
+        m_PhysicsWorld = nullptr;
+    }
+    ////////////////////////////////////////////////////////////////////
     void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
     {
         Renderer2D::BeginScene(camera);//将cameraTransform传入着色器
@@ -36,6 +98,7 @@ namespace Hazel {
         Renderer2D::EndScene();
 
     }
+    //场景更新
     void Scene::OnUpdateRuntime(Timestep ts)
     {
         {
@@ -51,6 +114,27 @@ namespace Hazel {
                     nsc.Instance->OnUpdate(ts);//统一的接口调用
                 }
             );
+        }
+        // Physics
+        {
+            const int32_t velocityIterations = 6;//速度迭代
+            const int32_t positionIterations = 2;//位置迭代
+            m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);//模拟物理世界
+
+            // Retrieve transform from Box2D
+            auto view = m_Registry.view<Rigidbody2DComponent>();//检查每个带刚体的实体
+            for (auto e : view)
+            {
+                Entity entity = { e, this };
+                auto& transform = entity.GetComponent<TransformComponent>();
+                auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+
+                b2Body* body = (b2Body*)rb2d.RuntimeBody;//获取创建的刚体
+                const auto& position = body->GetPosition();
+                transform.Translation.x = position.x;
+                transform.Translation.y = position.y;
+                transform.Rotation.z = body->GetAngle();
+            }
         }
 
         //找到具有组件的实体
@@ -124,6 +208,10 @@ namespace Hazel {
     void Scene::OnComponentAdded<TagComponent>(Entity enitty, TagComponent& component) {}
     template<>
     void Scene::OnComponentAdded<NativeScriptComponent>(Entity enitty, NativeScriptComponent& component) {}
+    template<>
+    void Scene::OnComponentAdded<Rigidbody2DComponent>(Entity entity, Rigidbody2DComponent& component) {}
+    template<>
+    void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity entity, BoxCollider2DComponent& component) {}
 
 
 }

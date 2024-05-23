@@ -10,7 +10,7 @@
 class Sandbox : public Hazel::Application
 {
 public:
-	Sandbox()
+	Sandbox(Hazel::ApplicationCommandLineArgs args)
 	{
         //pushlayer(new ExampleLayer());//创建示例层
         pushlayer(new Sandbox2D());//2d渲染层
@@ -23,7 +23,7 @@ public:
 };
 
 //返回客户端
-Hazel::Application* Hazel::CreatApplication()
+Hazel::Application* Hazel::CreateApplication(Hazel::ApplicationCommandLineArgs args)
 {
-	return new Sandbox();
+    return new Sandbox(args);
 }

@@ -70,4 +70,36 @@ namespace Hazel {
             DestoryScript = [](NativeScriptComponent* nsc) {delete nsc->Instance; nsc->Instance = nullptr;};//删除基类指针
         }
     };
+    
+    //Physics
+    struct Rigidbody2DComponent//刚体2D组件
+    {
+        enum class BodyType { Static = 0, Dynamic, Kinematic };//刚体类型（静态，动态，运动学）
+        BodyType Type = BodyType::Static;//默认静态
+        bool FixedRotation = false;//是否固定旋转
+
+        // Storage for runtime
+        void* RuntimeBody = nullptr;//运行时存储
+
+        Rigidbody2DComponent() = default;
+        Rigidbody2DComponent(const Rigidbody2DComponent&) = default;
+    };
+
+    struct BoxCollider2DComponent//碰撞器
+    {
+        glm::vec2 Offset = { 0.0f, 0.0f };//偏移量和大小
+        glm::vec2 Size = { 0.5f, 0.5f };
+
+        // TODO(Yan): move into physics material in the future maybe
+        float Density = 1.0f;//密度
+        float Friction = 0.5f;//摩擦力
+        float Restitution = 0.0f;//归还
+        float RestitutionThreshold = 0.5f;//恢复原状阈值
+
+        // Storage for runtime
+        void* RuntimeFixture = nullptr;
+
+        BoxCollider2DComponent() = default;
+        BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+    };
 }

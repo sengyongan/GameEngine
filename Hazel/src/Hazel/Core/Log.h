@@ -1,8 +1,12 @@
 #pragma once
 //日志库更改接口
 #include "Base.h"
-#include"spdlog/spdlog.h"
-#include "spdlog/fmt/ostr.h"
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/string_cast.hpp"
+
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 namespace Hazel {
 	class  Log
 	{

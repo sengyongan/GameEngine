@@ -14,37 +14,43 @@ namespace Hazel {
         stbi_uc* data = nullptr;
         {
             HZ_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&");
-            data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+            data = stbi_load(path.c_str(), &width, &height, &channels, 0);//可以用来读取图像文件并将其解码为像素数据。
         }
         HZ_CORE_ASSERT(data, "Failed to load image!");
-        m_Width = width;
-        m_Height = height;
-        //
-        GLenum internalFormat = 0, dataFormat = 0;//Format格式
-        if (channels == 4) {//图片有透明通道
-            internalFormat = GL_RGBA8;//内部格式
-            dataFormat = GL_RGBA;//数据格式
-        }
-        else if (channels == 3) {
-            internalFormat = GL_RGB8;
-            dataFormat = GL_RGB;
-        }
-        m_InternalFormat = internalFormat;
-        m_DataFormat = dataFormat;
-        HZ_CORE_ASSERT(internalFormat & dataFormat, "Format not supported");
-        //OpenGL创建一个新的纹理对象，并为其分配存储空间，纹理对象的标识符存储在m_RendererID
-        glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-        glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
-        //设置纹理的过滤方式
-        glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-        glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        //将图像数据上传到OpenGL纹理对象中
-        glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
-        //释放了之前加载的图像数据所占用的内存
-        stbi_image_free(data);
+        if (data)//数据存在，创建纹理
+        {
+            m_IsLoaded = true;
+
+            m_Width = width;
+            m_Height = height;
+            //channels
+            GLenum internalFormat = 0, dataFormat = 0;//Format格式
+            if (channels == 4) {//图片有透明通道
+                internalFormat = GL_RGBA8;//内部格式
+                dataFormat = GL_RGBA;//数据格式
+            }
+            else if (channels == 3) {
+                internalFormat = GL_RGB8;
+                dataFormat = GL_RGB;
+            }
+            m_InternalFormat = internalFormat;
+            m_DataFormat = dataFormat;
+            HZ_CORE_ASSERT(internalFormat & dataFormat, "Format not supported");
+            //OpenGL创建一个新的纹理对象，并为其分配存储空间，纹理对象的标识符存储在m_RendererID
+            glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+            glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
+            //设置纹理的过滤方式
+            glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+            glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            //将图像数据上传到OpenGL纹理对象中
+            glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
+            //释放了之前加载的图像数据所占用的内存
+            stbi_image_free(data);
+        }
     }
     OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
         :m_Width(width), m_Height(height)
