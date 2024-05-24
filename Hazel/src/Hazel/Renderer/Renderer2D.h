@@ -20,6 +20,7 @@ namespace Hazel {
         static void Flush();//绘制
 
         //绘制接口
+        //quad
         static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
         static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
         static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float TextureFactor = 1.0f, const glm::vec4& color = glm::vec4(1.0f));
@@ -33,8 +34,12 @@ namespace Hazel {
         static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
         static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float TextureFactor = 1.0f, const glm::vec4& color = glm::vec4(1.0f));
         static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float TextureFactor = 1.0f, const glm::vec4& color = glm::vec4(1.0f));
+        
+        //circle(thickness厚度,fade脱色)
+        static void DrawCircle(const glm::mat4 & transform, const glm::vec4 & color, float thickness = 1.0f, float fade = 0.005f, int entityID = -1);
         //eitytiID
         static void DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID);
+
         //stats
         struct Statistics {//统计数据
             uint32_t DrawCalls = 0;

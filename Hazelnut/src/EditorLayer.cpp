@@ -249,7 +249,7 @@ namespace Hazel {
         ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 
         ImGui::End();
-
+        ////Viewport////////////////////////////////////////////////////////////////////////////////////////////////////////
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");
         auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
@@ -384,53 +384,65 @@ namespace Hazel {
 
         switch (e.GetKeyCode())
         {
-        case Key::N:
-        {
-            if (control)
-                NewScene();
+            case Key::N:
+            {
+                if (control)
+                    NewScene();
 
-            break;
-        }
-        case Key::O:
-        {
-            if (control)
-                OpenScene();
+                break;
+            }
+            case Key::O:
+            {
+                if (control)
+                    OpenScene();
 
-            break;
-        }
-        case Key::S:
-        {
-            if (control && shift)
-                SaveSceneAs();
+                break;
+            }
+            case Key::S:
+            {
+                if (control)
+                {
+                    if (shift)
+                        SaveSceneAs();
+                    else
+                        SaveScene();
+                }
 
-            break;
-        }
+                break;
+            }
+            // Scene Commands
+            case Key::D:
+            {
+                if (control)
+                    OnDuplicateEntity();
 
-        // Gizmos
-        case Key::Q:
-        {
-            if (!ImGuizmo::IsUsing())
-                m_GizmoType = -1;
-            break;
-        }
-        case Key::W:
-        {
-            if (!ImGuizmo::IsUsing())
-                m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-            break;
-        }
-        case Key::E:
-        {
-            if (!ImGuizmo::IsUsing())
-                m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-            break;
-        }
-        case Key::R:
-        {
-            if (!ImGuizmo::IsUsing())
-                m_GizmoType = ImGuizmo::OPERATION::SCALE;
-            break;
-        }
+                break;
+            }
+            // Gizmos
+            case Key::Q:
+            {
+                if (!ImGuizmo::IsUsing())
+                    m_GizmoType = -1;
+                break;
+            }
+            case Key::W:
+            {
+                if (!ImGuizmo::IsUsing())
+                    m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                break;
+            }
+            case Key::E:
+            {
+                if (!ImGuizmo::IsUsing())
+                    m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+                break;
+            }
+            case Key::R:
+            {
+                if (!ImGuizmo::IsUsing())
+                    m_GizmoType = ImGuizmo::OPERATION::SCALE;
+                break;
+            }
         }
     }
 
@@ -449,6 +461,8 @@ namespace Hazel {
         m_ActiveScene = CreateRef<Scene>();
         m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+        m_EditorScenePath = std::filesystem::path();
     }
 
     void EditorLayer::OpenScene()
@@ -462,43 +476,74 @@ namespace Hazel {
 
     void EditorLayer::OpenScene(const std::filesystem::path& path)
     {
+        if (m_SceneState != SceneState::Edit) {//非编辑模式,就切换到编辑模式
+            OnSceneStop();
+        }
         if (path.extension().string() != ".hazel")
         {
             HZ_CLIENT_WARN("Could not load {0} - not a scene file", path.filename().string());
             return;
         }
 
-        Ref<Scene> newScene = CreateRef<Scene>();
+        Ref<Scene> newScene = CreateRef<Scene>();//创建空场景并序列化
         SceneSerializer serializer(newScene);
-        if (serializer.Deserialize(path.string()))
+        if (serializer.Deserialize(path.string()))//反序列化，文件资源选择的路径
         {
-            m_ActiveScene = newScene;
-            m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+            m_EditorScene = newScene;
+            m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_SceneHierarchyPanel.SetContext(m_EditorScene);
+
+            m_ActiveScene = m_EditorScene;
+            m_EditorScenePath = path;
         }
+    }
+    void EditorLayer::SaveScene()
+    {
+        if (!m_EditorScenePath.empty())//当前场景的路径，不为空
+            SerializeScene(m_ActiveScene, m_EditorScenePath);//序列化场景
+        else//否则需要另存场景路径
+            SaveSceneAs();
     }
 
     void EditorLayer::SaveSceneAs()
     {
-        std::string filepath = FileDialogs::SaveFile("Hazel Scene (*.hazel)\0*.hazel\0");
+        std::string filepath = FileDialogs::SaveFile("Hazel Scene (*.hazel)\0*.hazel\0");//打开文件资源，创建/选择已有的
         if (!filepath.empty())
         {
-            SceneSerializer serializer(m_ActiveScene);
-            serializer.Serialize(filepath);
+            SerializeScene(m_ActiveScene, filepath);
+            m_EditorScenePath = filepath;
         }
     }
-    //
-    void EditorLayer::OnScenePlay()
+
+    void EditorLayer::SerializeScene(Ref<Scene> scene, const std::filesystem::path& path)//序列化当前场景，到路径
+    {
+        SceneSerializer serializer(scene);
+        serializer.Serialize(path.string());
+    }
+    //点击按钮时执行
+    void EditorLayer::OnScenePlay() 
     {
         m_SceneState = SceneState::Play;
+        m_RunTimeScene = Scene::Copy(m_EditorScene);
         m_ActiveScene->OnRuntimeStart();
+        m_SceneHierarchyPanel.SetContext(m_ActiveScene);
     }
 
     void EditorLayer::OnSceneStop()
     {
         m_SceneState = SceneState::Edit;
-        m_ActiveScene->OnRuntimeStop();
+        m_ActiveScene->OnRuntimeStop();//
+        m_ActiveScene = m_EditorScene;
+        m_SceneHierarchyPanel.SetContext(m_ActiveScene);
     }
 
+    void EditorLayer::OnDuplicateEntity()
+    {
+        if (m_SceneState != SceneState::Edit)//需要为编辑模式
+            return;
 
+        Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+        if (selectedEntity)//如果当前选择了实体
+            m_EditorScene->DuplicateEntity(selectedEntity);
+    }
 }

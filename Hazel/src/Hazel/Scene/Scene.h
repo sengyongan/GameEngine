@@ -3,6 +3,7 @@
 #include "entt.hpp"
 #include "Hazel/Core/Timestep.h"
 #include "Hazel/Renderer/EditorCamera.h"
+#include "Hazel/Core/UUID.h"
 
 class b2World;
 
@@ -16,7 +17,10 @@ namespace Hazel {
         Scene();
         ~Scene();
 
+        static Ref<Scene> Copy(Ref<Scene> other);//拷贝场景
+
         Entity CreateEntity(const std::string& name = std::string());
+        Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
         void DestroyEntity(Entity entity);
 
         void OnRuntimeStart();//创建销毁2d刚体
@@ -25,6 +29,8 @@ namespace Hazel {
         void OnUpdateEditor(Timestep ts,EditorCamera& camera);
         void OnUpdateRuntime(Timestep ts);
         void OnViewportResize(uint32_t width, uint32_t height);
+
+        void DuplicateEntity(Entity entity);//拷贝实体
 
         Entity GetPrimaryCameraEntity();//找到主摄像机
     private:

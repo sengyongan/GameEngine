@@ -18,10 +18,10 @@ namespace Hazel {
 
 }
 
-namespace std {
+namespace std {//std命名空间
 
     template<>
-    struct hash<Hazel::UUID>
+    struct hash<Hazel::UUID>//创建模板结构体，为Hazel::UUID类实例化，重载（）
     {
         std::size_t operator()(const Hazel::UUID& uuid) const
         {
