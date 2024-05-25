@@ -33,6 +33,12 @@ namespace Hazel {
         void DuplicateEntity(Entity entity);//拷贝实体
 
         Entity GetPrimaryCameraEntity();//找到主摄像机
+
+        template<typename... Components>
+        auto GetAllEntitiesWith()//获取所有具有组件的实体
+        {
+            return m_Registry.view<Components...>();
+        }
     private:
         template<typename T>
         void OnComponentAdded(Entity entity, T& component);

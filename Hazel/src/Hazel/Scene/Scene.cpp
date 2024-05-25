@@ -5,11 +5,12 @@
 #include"Hazel/Renderer/Renderer2D.h"
 #include"Entity.h"
 #include<glm/glm.hpp>
-
+//Physics
 #include"box2d/b2_world.h"
 #include "box2d/b2_body.h"
 #include "box2d/b2_fixture.h"//固定设备
 #include "box2d/b2_polygon_shape.h"//多边形
+#include "box2d/b2_circle_shape.h"
 
 namespace Hazel {
 
@@ -84,6 +85,7 @@ namespace Hazel {
         CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<Rigidbody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
         CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
 
         return newScene;
     }
@@ -107,9 +109,9 @@ namespace Hazel {
         m_Registry.destroy(entity);
     }
     ///PhysicsWorld/////////////////////////////////////////////////////
-    void Scene::OnRuntimeStart()
+    void Scene::OnRuntimeStart()//调用在点击按钮播放时
     {
-        m_PhysicsWorld = new b2World({ 0.0f, -9.8f });//gravity，创建物理世界
+        m_PhysicsWorld = new b2World({ 0.0f, -9.8f });//gravity重力，创建物理世界
         auto view = m_Registry.view<Rigidbody2DComponent>();//检查每个带刚体的实体
         for (auto e : view)
         {
@@ -141,6 +143,22 @@ namespace Hazel {
                 fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
                 body->CreateFixture(&fixtureDef);
             }
+            if (entity.HasComponent<CircleCollider2DComponent>())
+            {
+                auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
+
+                b2CircleShape circleShape;
+                circleShape.m_p.Set(cc2d.Offset.x, cc2d.Offset.y);
+                circleShape.m_radius = transform.Scale.x * cc2d.Radius;
+
+                b2FixtureDef fixtureDef;
+                fixtureDef.shape = &circleShape;
+                fixtureDef.density = cc2d.Density;
+                fixtureDef.friction = cc2d.Friction;
+                fixtureDef.restitution = cc2d.Restitution;
+                fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
+                body->CreateFixture(&fixtureDef);
+            }
         }
     }
     void Scene::OnRuntimeStop()
@@ -157,8 +175,8 @@ namespace Hazel {
             auto group = m_Registry.group< TransformComponent>(entt::get< SpriteRendererComponent>);//所有具有组件（两个）的实体的组
             for (auto entity : group) {
                 auto [transform, sprite] = group.get< TransformComponent, SpriteRendererComponent>(entity);
-                Renderer2D::DrawRect(transform.GetTransform(), glm::vec4(1.0f), (int)entity);
-                //Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+                //Renderer2D::DrawRect(transform.GetTransform(), glm::vec4(1.0f), (int)entity);
+                Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
             }
         }
         // Draw circles
@@ -170,8 +188,8 @@ namespace Hazel {
                 Renderer2D::DrawCircle(transform.GetTransform(), circle.Color, circle.Thickness, circle.Fade, (int)entity);
             }
         }
-        Renderer2D::DrawLine(glm::vec3(0.0f),glm::vec3(5.0f),glm::vec4(1,0,1,1));
-        Renderer2D::DrawRect(glm::vec3(0.0f),glm::vec3(1.0f),glm::vec4(1,1,1,1));
+        //Renderer2D::DrawLine(glm::vec3(0.0f),glm::vec3(5.0f),glm::vec4(1,0,1,1));
+        //Renderer2D::DrawRect(glm::vec3(0.0f),glm::vec3(1.0f),glm::vec4(1,1,1,1));
 
         Renderer2D::EndScene();
 
@@ -280,6 +298,7 @@ namespace Hazel {
         CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
         CopyComponentIfExists<Rigidbody2DComponent>(newEntity, entity);
         CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
+        CopyComponentIfExists<CircleCollider2DComponent>(newEntity, entity);
     }
 
     Entity Scene::GetPrimaryCameraEntity()
@@ -321,7 +340,8 @@ namespace Hazel {
     void Scene::OnComponentAdded<Rigidbody2DComponent>(Entity entity, Rigidbody2DComponent& component) {}
     template<>
     void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity entity, BoxCollider2DComponent& component) {}
-
+    template<>
+    void Scene::OnComponentAdded<CircleCollider2DComponent>(Entity entity, CircleCollider2DComponent& component) {}
 
 
 }

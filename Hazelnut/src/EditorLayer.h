@@ -23,6 +23,7 @@ namespace Hazel {
         bool OnKeyPressed(KeyPressedEvent& e);
         bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
         //
+        void OnOverlayRender();//绘制碰撞体可视化
         void NewScene();
         void OpenScene();
         void OpenScene(const std::filesystem::path& path);
@@ -68,6 +69,8 @@ namespace Hazel {
         glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
         //GizmoType
         int m_GizmoType = -1;//平移0，旋转1，缩放2
+        ///是否展示物理碰撞
+        bool m_ShowPhysicsColliders = false;
         //面板
         SceneHierarchyPanel m_SceneHierarchyPanel;
         ContentBrowserPanel m_ContentBrowserPanel;
