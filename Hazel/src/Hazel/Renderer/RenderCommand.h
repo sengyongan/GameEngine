@@ -19,8 +19,18 @@ namespace Hazel {
             s_RendererAPI->Clear();
         }
 
-        inline static void DrawIndexed(const Ref<VertexArray>& vertexArray,uint32_t count = 0) {
-            s_RendererAPI->DrawIndexed(vertexArray,count);//调用OpenGLRendererAPI中DrawIndexed
+        inline static void DrawIndexed(const Ref<VertexArray>& vertexArray,uint32_t indexCount = 0) {
+            s_RendererAPI->DrawIndexed(vertexArray, indexCount);//调用OpenGLRendererAPI中DrawIndexed
+        }
+
+        static void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t vertexCount)
+        {
+            s_RendererAPI->DrawLines(vertexArray, vertexCount);
+        }
+
+        static void SetLineWidth(float width)
+        {
+            s_RendererAPI->SetLineWidth(width);
         }
     private:
         static RendererAPI* s_RendererAPI;

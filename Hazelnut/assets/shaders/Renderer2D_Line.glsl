@@ -16,7 +16,7 @@ layout(std140, binding = 0) uniform Camera
 };
 
 struct VertexOutput
-{
+{ 
 	vec4 Color;
 };
 
