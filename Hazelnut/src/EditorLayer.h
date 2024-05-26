@@ -33,6 +33,7 @@ namespace Hazel {
         void SerializeScene(Ref<Scene> scene, const std::filesystem::path& path);
         //
         void OnScenePlay();
+        void OnSceneSimulate();
         void OnSceneStop();
         //
         void OnDuplicateEntity();//拷贝实体
@@ -47,7 +48,6 @@ namespace Hazel {
         Ref<Texture2D>m_Texture;
         //ecs
         Ref<Scene> m_ActiveScene;//包含实体的场景
-        Ref<Scene> m_RunTimeScene;//包含实体的场景
         Ref<Scene> m_EditorScene;//当前编辑的场景
         std::filesystem::path m_EditorScenePath;//编辑场景的路径
         
@@ -76,12 +76,12 @@ namespace Hazel {
         ContentBrowserPanel m_ContentBrowserPanel;
         //场景状态
         enum class SceneState {//编辑模式
-            Edit = 0, Play = 1
+            Edit = 0, Play = 1, Simulate = 2
         };
         SceneState m_SceneState = SceneState::Edit;
 
-        // Editor resources开始停止图标
-        Ref<Texture2D> m_IconPlay, m_IconStop;
+        // Editor physics resources开始停止图标
+        Ref<Texture2D> m_IconPlay, m_IconSimulate, m_IconStop;
     };
 
 }

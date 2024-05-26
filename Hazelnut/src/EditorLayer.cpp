@@ -26,6 +26,7 @@ namespace Hazel {
         m_Texture = Texture2D::Create("assets/textures/Checkerboard.png");
         m_IconPlay = Texture2D::Create("Resources/Icons/ContentBrowser/PlayButton.png");
         m_IconStop = Texture2D::Create("Resources/Icons/ContentBrowser/StopButton.png");
+        m_IconSimulate = Texture2D::Create("Resources/Icons/ContentBrowser/SimulateButton.png");
         //
         FramebufferSpecification fbSpec;
         fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
@@ -33,7 +34,8 @@ namespace Hazel {
         fbSpec.Height = 720;
         m_Framebuffer = Framebuffer::Create(fbSpec);
 
-        m_ActiveScene = CreateRef<Scene>();
+        m_EditorScene = CreateRef<Scene>();
+        m_ActiveScene = m_EditorScene;
 
         auto commandLineArgs = Application::Get().GetCommandLineArgs();
         if (commandLineArgs.Count > 1)
@@ -139,6 +141,13 @@ namespace Hazel {
                 m_EditorCamera.OnUpdate(ts);//可以更新编辑器相机
 
                 m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+                break;
+            }
+            case SceneState::Simulate:
+            {
+                m_EditorCamera.OnUpdate(ts);
+
+                m_ActiveScene->OnUpdateSimulation(ts, m_EditorCamera);
                 break;
             }
             case SceneState::Play://播放模式仅执行的 
@@ -353,17 +362,39 @@ namespace Hazel {
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x, buttonActive.y, buttonActive.z, 0.5f));
         //面板
         ImGui::Begin("##toolBar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);//无装饰,无滚动条,不使用鼠标滚动
-        //切换按钮图标，和点击按钮的状态
+
+        bool toolbarEnabled = (bool)m_ActiveScene;//工具栏已启用：场景是否存在
+
+        ImVec4 tintColor = ImVec4(1, 1, 1, 1);//工具栏颜色
+        if (!toolbarEnabled)
+            tintColor.w = 0.5f;
+
+        //图标大小
         float size = ImGui::GetWindowHeight() - 4.0f;
-        Ref<Texture2D> icon = m_SceneState == SceneState::Edit ? m_IconPlay : m_IconStop;//当前停止图标为播放，播放时图标为停止
-        ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));//设置为中间位置，正方形大小的一半
-        if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size)))
-        {   //当前点击图标，状态停止就播放，播放就停止
-            if (m_SceneState == SceneState::Edit)
-                OnScenePlay();//切换状态
-            else if (m_SceneState == SceneState::Play)
-                OnSceneStop();
+        //编辑模式&&（播放 || 物理）
+        {
+            Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate) ? m_IconPlay : m_IconStop;
+            ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
+            if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
+            {    
+                if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate)//点击播放按钮
+                    OnScenePlay();
+                else if (m_SceneState == SceneState::Play)//会显示停止按钮，停止
+                    OnSceneStop();
+            }
         }
+        ImGui::SameLine();
+        {
+            Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play) ? m_IconSimulate : m_IconStop;		//ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
+            if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
+            {   
+                if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play)//物理按钮 
+                    OnSceneSimulate();
+                else if (m_SceneState == SceneState::Simulate)// 停止
+                    OnSceneStop();
+            }
+        }
+        //
         ImGui::PopStyleVar(2);
         ImGui::PopStyleColor(3);
         ImGui::End();
@@ -467,13 +498,15 @@ namespace Hazel {
         if (m_SceneState == SceneState::Play)
         {
             Entity camera = m_ActiveScene->GetPrimaryCameraEntity();
+            if (!camera)//播放模式下没有主相机，不绘制摄像机，不进行物理碰撞体可视化
+                return;
             Renderer2D::BeginScene(camera.GetComponent<CameraComponent>().Camera, camera.GetComponent<TransformComponent>().GetTransform());
         }
-        else
+        else//有编辑器相机，绘制摄像机
         {
             Renderer2D::BeginScene(m_EditorCamera);
         }
-
+        //物理碰撞体可视化
         if (m_ShowPhysicsColliders)
         {
             // Box Colliders
@@ -535,7 +568,7 @@ namespace Hazel {
 
     void EditorLayer::OpenScene(const std::filesystem::path& path)
     {
-        if (m_SceneState != SceneState::Edit) {//非编辑模式,就切换到编辑模式
+        if (m_SceneState != SceneState::Edit) {//非编辑模式,就切换到编辑模式，以销毁播放/physics的物理世界指针，否则创建新场景，原本的指针没有释放
             OnSceneStop();
         }
         if (path.extension().string() != ".hazel")
@@ -582,14 +615,37 @@ namespace Hazel {
     //点击按钮时执行
     void EditorLayer::OnScenePlay() 
     {
+        if (m_SceneState == SceneState::Simulate)//销毁指针
+            OnSceneStop();
+
         m_SceneState = SceneState::Play;
-        m_RunTimeScene = Scene::Copy(m_EditorScene);
-        m_ActiveScene->OnRuntimeStart();
+
+        m_ActiveScene = Scene::Copy(m_EditorScene);//新的场景
+        m_ActiveScene->OnRuntimeStart();//开始物理的属性设置
+
         m_SceneHierarchyPanel.SetContext(m_ActiveScene);
     }
+    void EditorLayer::OnSceneSimulate()
+    {
+        if (m_SceneState == SceneState::Play)
+            OnSceneStop();
 
+        m_SceneState = SceneState::Simulate;
+
+        m_ActiveScene = Scene::Copy(m_EditorScene);
+        m_ActiveScene->OnSimulationStart();
+
+        m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+    }
     void EditorLayer::OnSceneStop()
     {
+        HZ_CORE_ASSERT(m_SceneState == SceneState::Play || m_SceneState == SceneState::Simulate);
+
+        if (m_SceneState == SceneState::Play)//销毁指针
+            m_ActiveScene->OnRuntimeStop();
+        else if (m_SceneState == SceneState::Simulate)
+            m_ActiveScene->OnSimulationStop();
+
         m_SceneState = SceneState::Edit;
         m_ActiveScene->OnRuntimeStop();//
         m_ActiveScene = m_EditorScene;
