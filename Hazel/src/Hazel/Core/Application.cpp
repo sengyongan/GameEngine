@@ -2,7 +2,10 @@
 #include "Application.h"
 #include"Hazel/Core/Input.h"
 #include"Window.h"
+
 #include"Hazel/Renderer/Renderer.h"
+#include "Hazel/Scripting/ScriptEngine.h"
+
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 namespace Hazel {
@@ -11,17 +14,22 @@ namespace Hazel {
 
     Application* Application::s_Instance = nullptr;//类静态成员s_Instance 初始为null
         //在sandboxapp创建类对象
-    Application::Application(const std::string& name, ApplicationCommandLineArgs args)
-        : m_CommandLineArgs(args)
+    Application::Application(const ApplicationSpecification& specification)
+        : m_Specification(specification)
     {
         HZ_PROFILE_FUNCTION();
         //HZ_CORE_ASSERT(s_Instance, "Application already exists");//TODO:???
         s_Instance = this;
         //指针=window类型，调用函数的指针
-        m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(name)));//创建窗口（调用Init）
+        // Set working directory here
+        if (!m_Specification.WorkingDirectory.empty())
+            std::filesystem::current_path(m_Specification.WorkingDirectory);
+
+        m_Window = Window::Create(WindowProps(m_Specification.Name));
         m_Window->SetEventCallback(BIND_ENENT_FN(OnEvent));//m_Window-》EventCallback = std::bind(OnEvent, this, std::placeholders::_1)
 
         Renderer::Init();//渲染初始化————混合
+        ScriptEngine::Init();
 
         m_ImGuiLayer = new imGuiLayer;
         pushOverlayer(m_ImGuiLayer);
@@ -32,7 +40,7 @@ namespace Hazel {
     Application::~Application()
     {
         HZ_PROFILE_FUNCTION();
-
+        ScriptEngine::Shutdown();
     }
 
     void Application::pushlayer(Layer* layer)

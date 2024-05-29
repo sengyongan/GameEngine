@@ -20,15 +20,21 @@ namespace Hazel {
             return Args[index];
         }
     };
+    struct ApplicationSpecification//应用层规范
+    {
+        std::string Name = "Hazel Application";
+        std::string WorkingDirectory;//工作目录
+        ApplicationCommandLineArgs CommandLineArgs;//应用程序命令行参数 
+    };
 
 	class  Application//默认空
 	{
 	public:
-        Application(const std::string& name = "Hazel App", ApplicationCommandLineArgs args = ApplicationCommandLineArgs());
-		virtual ~Application();
-        ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
-
-		void Run();//实时运行
+        Application(const ApplicationSpecification& specification);
+        virtual ~Application();
+        const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+		//
+        void Run();//实时运行
         void OnEvent(Event& e);//循环所有事件
 
         void pushlayer(Layer* layer);//添加层
@@ -44,7 +50,7 @@ namespace Hazel {
         bool OnWindowResize(WindowResizeEvent& e);
     private:
         //
-        ApplicationCommandLineArgs m_CommandLineArgs;
+        ApplicationSpecification m_Specification;
         //
         std::unique_ptr<Window> m_Window;//Window类对象
 

@@ -18,11 +18,6 @@ namespace Hazel {
         HZ_CORE_ERROR("GLFW  Error  ({0}) : {1}", error, description);
     }
 
-	Window* Window::Create(const WindowProps& props)
-	{
-		return new WindowsWindow(props);//创建新的窗口，并传入props数据
-	}
-
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
         HZ_PROFILE_FUNCTION();
@@ -111,7 +106,7 @@ namespace Hazel {
                         }
                         case GLFW_REPEAT://重复
                         {
-                            KeyPressedEvent event(key,1);
+                            KeyPressedEvent event(key, true);
                             data.EventCallback(event);
                             break;
                         }

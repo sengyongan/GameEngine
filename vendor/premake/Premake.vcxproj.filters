@@ -25,6 +25,9 @@
     <Filter Include="..\Hazel\vendor\yaml-cpp">
       <UniqueIdentifier>{D35154DB-BF76-A35B-E8C1-88EBD445A279}</UniqueIdentifier>
     </Filter>
+    <Filter Include="..\Hazel-ScriptCore">
+      <UniqueIdentifier>{0F90FBDB-7BF1-D8E9-045F-1F9C70BF0FA9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="..\Hazelnut">
       <UniqueIdentifier>{1B351CC0-87EA-94B5-10DF-8E8C7C938BB9}</UniqueIdentifier>
     </Filter>
@@ -33,6 +36,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\Hazel-ScriptCore\premake5.lua">
+      <Filter>..\Hazel-ScriptCore</Filter>
+    </None>
     <None Include="..\..\Hazel\premake5.lua">
       <Filter>..\Hazel</Filter>
     </None>

@@ -10,7 +10,8 @@
 class Sandbox : public Hazel::Application
 {
 public:
-	Sandbox(Hazel::ApplicationCommandLineArgs args)
+    Sandbox(const Hazel::ApplicationSpecification& specification)
+        : Hazel::Application(specification)
 	{
         //pushlayer(new ExampleLayer());//创建示例层
         pushlayer(new Sandbox2D());//2d渲染层
@@ -23,7 +24,13 @@ public:
 };
 
 //返回客户端
-Hazel::Application* Hazel::CreateApplication(Hazel::ApplicationCommandLineArgs args)
+Hazel::Application* Hazel::CreateApplication(Hazel::ApplicationCommandLineArgs args) 
 {
-    return new Sandbox(args);
+    //应用规范
+    ApplicationSpecification spec;
+    spec.Name = "Sandbox";
+    spec.WorkingDirectory = "../Hazelnut";
+    spec.CommandLineArgs = args;
+    //
+    return new Sandbox(spec);
 }

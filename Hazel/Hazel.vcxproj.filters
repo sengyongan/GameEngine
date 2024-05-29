@@ -67,6 +67,9 @@
     <Filter Include="vendor\stb_image">
       <UniqueIdentifier>{0DA0BA59-F998-D9AB-22CB-BE300E23B9B7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Hazel\Scripting">
+      <UniqueIdentifier>{6e857503-5a70-4987-b0e1-775575d9fb12}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Hazel.h">
@@ -1491,6 +1494,12 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="src\Hazel\Scripting\ScriptEngine.h">
+      <Filter>src\Hazel\Scripting</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hazel\Scripting\ScriptGlue.h">
+      <Filter>src\Hazel\Scripting</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Hazel\Core\Application.cpp">
@@ -1506,6 +1515,9 @@
       <Filter>src\Hazel\Core</Filter>
     </ClCompile>
     <ClCompile Include="src\Hazel\Core\UUID.cpp">
+      <Filter>src\Hazel\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hazel\Core\Window.cpp">
       <Filter>src\Hazel\Core</Filter>
     </ClCompile>
     <ClCompile Include="src\Hazel\Math\Math.cpp">
@@ -1612,6 +1624,12 @@
     </ClCompile>
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hazel\Scripting\ScriptEngine.cpp">
+      <Filter>src\Hazel\Scripting</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Hazel\Scripting\ScriptGlue.cpp">
+      <Filter>src\Hazel\Scripting</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

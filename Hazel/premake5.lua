@@ -41,6 +41,7 @@ project "Hazel"
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}",
         "%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.mono}",
         "%{IncludeDir.VulkanSDK}"
     }
 
@@ -51,6 +52,7 @@ project "Hazel"
 		"Glad",
 		"ImGui",
 		"yaml-cpp",
+		"%{Library.mono}",
 		"opengl32.lib"
 	}
     filter "files:vendor/ImGuizmo/**.cpp"
@@ -63,9 +65,17 @@ project "Hazel"
 		{
             "HZ_PLATFROM_WINDOWS",
 		    "HZ_BUILD_DLL",
-            -- "HZ_ENABLE_ASSERTS"--ÒÑ¾­±»define¶¨Òå
+            -- "HZ_ENABLE_ASSERTS"--ï¿½Ñ¾ï¿½ï¿½ï¿½defineï¿½ï¿½ï¿½ï¿½
             "GLFW_INCLUDE_NONE",
             "HZ_BIND_EVENT_FN"
+		}
+		
+		links
+		{
+			"%{Library.WinSock}",
+			"%{Library.WinMM}",
+			"%{Library.WinVersion}",
+			"%{Library.BCrypt}",
 		}
 
 	filter "configurations:Debug"

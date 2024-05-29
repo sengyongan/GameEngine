@@ -31,7 +31,7 @@ namespace Hazel {
         //获取本地窗口m_Window
 		virtual void* GetNativeWindow() const = 0;
         //静态：接受窗口数据，创建窗口
-		static Window* Create(const WindowProps& props = WindowProps());
-	};
+        static Scope<Window> Create(const WindowProps& props = WindowProps());
+    };
 
 }

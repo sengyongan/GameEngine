@@ -21,22 +21,24 @@ namespace Hazel {
     {   
         //Hierarchy层级面板////////////////////////////////////////////////////////////////////////
         ImGui::Begin("Scene Hierarchy");
-
-        m_Context->m_Registry.each(
-            [&](auto entityID) {
-                Entity entity{ entityID, m_Context.get() };//m_Context.get()返回场景指针
-                DrawEntityNode(entity);
+        if (m_Context)
+        {
+            m_Context->m_Registry.each(
+                [&](auto entityID) {
+                    Entity entity{ entityID, m_Context.get() };//m_Context.get()返回场景指针
+                    DrawEntityNode(entity);
+                }
+            );
+            if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {//点击空白，
+                m_SelectionContext = {};//没有选中实体
             }
-        );
-        if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered()) {//点击空白，
-            m_SelectionContext = {};//没有选中实体
-        }
-        //创建实体菜单
-        if (ImGui::BeginPopupContextWindow(0,1,false)) {//0是ID 1是右键
-            if (ImGui::MenuItem("create Empty Entity")) {
-                m_Context->CreateEntity("Empty Entity");
+            //创建实体菜单
+            if (ImGui::BeginPopupContextWindow(0, 1, false)) {//0是ID 1是右键
+                if (ImGui::MenuItem("create Empty Entity")) {
+                    m_Context->CreateEntity("Empty Entity");
+                }
+                ImGui::EndPopup();//当前帧结束块后，下一帧重新创建
             }
-            ImGui::EndPopup();//当前帧结束块后，下一帧重新创建
         }
 
         ImGui::End();

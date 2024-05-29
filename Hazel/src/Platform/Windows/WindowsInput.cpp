@@ -9,7 +9,7 @@ namespace Hazel {
     {   //Application实例--window类对象--m_Window窗口实例
         auto Window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());//获取窗口
         auto state = glfwGetKey(Window, keycode);//glfw库 —— return 状态//获取按键keycode状态
-        return state == GLFW_PRESS || state == GLFW_REPEAT;//按下/重复--其中一个成立返回真
+        return state == GLFW_PRESS;//按下成立返回真
     }
     bool Input::IsMouseButtonPressed(int button)
     {
