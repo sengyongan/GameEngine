@@ -650,10 +650,10 @@
     <ClCompile Include="src\Hazel\Scene\Scene.cpp" />
     <ClCompile Include="src\Hazel\Scene\SceneCamera.cpp" />
     <ClCompile Include="src\Hazel\Scene\SceneSerializer.cpp" />
-    <ClCompile Include="src\Hazel\imGui\ImGuiBuild.cpp" />
-    <ClCompile Include="src\Hazel\imGui\imGuiLayer.cpp" />
     <ClCompile Include="src\Hazel\Scripting\ScriptEngine.cpp" />
     <ClCompile Include="src\Hazel\Scripting\ScriptGlue.cpp" />
+    <ClCompile Include="src\Hazel\imGui\ImGuiBuild.cpp" />
+    <ClCompile Include="src\Hazel\imGui\imGuiLayer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpeGLFramebuffer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp" />

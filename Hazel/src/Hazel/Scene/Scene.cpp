@@ -4,6 +4,8 @@
 #include "ScriptableEntity.h"
 #include"Hazel/Renderer/Renderer2D.h"
 #include"Entity.h"
+#include "Hazel/Scripting/ScriptEngine.h"
+
 #include<glm/glm.hpp>
 //Physics
 #include"box2d/b2_world.h"
@@ -34,29 +36,45 @@ namespace Hazel {
     {
         delete m_PhysicsWorld;
     }
-    ////////////////////////////////
-    template<typename Component>//复制组件
+    //Copy///////////////////////
+    template<typename... Component>//复制组件
     static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
     {
-        auto view = src.view<Component>();//找到具有，模板参数，的所有实体
-        for (auto e : view)
+        ([&]()
         {
-            UUID uuid = src.get<IDComponent>(e).ID;//获取id
-            HZ_CORE_ASSERT(enttMap.find(uuid) != enttMap.end());
-            entt::entity dstEnttID = enttMap.at(uuid);//从哈希表获取新场景实体
+            auto view = src.view<Component>();//找到具有，模板参数，的所有实体
+            for (auto e : view)
+            {
+                UUID uuid = src.get<IDComponent>(e).ID;//获取id
+                HZ_CORE_ASSERT(enttMap.find(uuid) != enttMap.end());
+                entt::entity dstEnttID = enttMap.at(uuid);//从哈希表获取新场景实体
 
-            auto& component = src.get<Component>(e);//获取组件
-            dst.emplace_or_replace<Component>(dstEnttID, component);//放置或替换
-        }
+                auto& component = src.get<Component>(e);//获取组件
+                dst.emplace_or_replace<Component>(dstEnttID, component);//放置或替换
+            }
+        }(), ...);
+    }
+    template<typename... Component>
+    static void CopyComponent(ComponentGroup<Component...>, entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
+    {
+        CopyComponent<Component...>(dst, src, enttMap);
     }
 
-    template<typename Component>
+    template<typename... Component>
     static void CopyComponentIfExists(Entity dst, Entity src)//复制组件如果存在
     {
-        if (src.HasComponent<Component>())
-            dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());//为当前实体，替换组件
-    }
 
+        ([&]()
+        {
+            if (src.HasComponent<Component>())
+                dst.AddOrReplaceComponent<Component>(src.GetComponent<Component>());//为当前实体，替换组件
+        }(), ...);
+    }
+    template<typename... Component>
+    static void CopyComponentIfExists(ComponentGroup<Component...>, Entity dst, Entity src)
+    {
+        CopyComponentIfExists<Component...>(dst, src);
+    }
     Ref<Scene> Scene::Copy(Ref<Scene> other)//拷贝（原场景）
     {
         Ref<Scene> newScene = CreateRef<Scene>();//新场景
@@ -79,18 +97,11 @@ namespace Hazel {
         }
 
         // Copy components (except IDComponent and TagComponent)拷贝组件
-        CopyComponent<TransformComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-        CopyComponent<SpriteRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-        CopyComponent<CircleRendererComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-        CopyComponent<CameraComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-        CopyComponent<NativeScriptComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-        CopyComponent<Rigidbody2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-        CopyComponent<BoxCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
-        CopyComponent<CircleCollider2DComponent>(dstSceneRegistry, srcSceneRegistry, enttMap);
+        CopyComponent(AllComponents{}, dstSceneRegistry, srcSceneRegistry, enttMap);
 
         return newScene;
     }
-    /////////////////////////////////////////////////////////
+    ////Create / Destroy Entity/////////////////////////////////////////
     Entity Scene::CreateEntity(const std::string& name)//因为都是在一个场景调用创建方法，实体都在一个注册表
     {
         return CreateEntityWithUUID(UUID(), name);//返回随机值，名字
@@ -102,21 +113,40 @@ namespace Hazel {
         entity.AddComponent< TransformComponent>();//为实体添加组件
         auto& tag = entity.AddComponent< TagComponent>();
         tag.Tag = name.empty() ? "Entity" : name;//传入组件的成员
+
+        m_EntityMap[uuid] = entity;//存储到哈希
+
         return entity;//返回实体类
 
     }
     void Scene::DestroyEntity(Entity entity)
     {
         m_Registry.destroy(entity);
+        m_EntityMap.erase(entity.GetUUID());
     }
     ///PhysicsWorld/////////////////////////////////////////////////////
     void Scene::OnRuntimeStart()//调用在点击按钮播放时
     {
         OnPhysics2DStart();
+
+        // Scripting
+        {
+            ScriptEngine::OnRuntimeStart(this);//在脚本引擎传入，场景上下文
+            // Instantiate all script entities实例化所有脚本实体
+
+            auto view = m_Registry.view<ScriptComponent>();//获取到每个具有c#脚本的实体
+            for (auto e : view)
+            {
+                Entity entity = { e, this };
+                ScriptEngine::OnCreateEntity(entity);//调用实体的OnCreate
+            }
+        }
     }
     void Scene::OnRuntimeStop()
     {
         OnPhysics2DStop();
+
+        ScriptEngine::OnRuntimeStop();//销毁脚本引擎类的指针
     }
     void Scene::OnSimulationStart()
     {
@@ -126,13 +156,13 @@ namespace Hazel {
     {
         OnPhysics2DStop();
     }
-    ////////////////////////////////////////////////////////////////////
-    void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
+    ///OnUpdate////////////////////////////////////////////////////////
+    void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)//Physics
     {   
         // Render
         RenderScene(camera);
     }
-    void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)
+    void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)//Physics
     {        
         // Physics
         {
@@ -161,7 +191,16 @@ namespace Hazel {
     //场景更新
     void Scene::OnUpdateRuntime(Timestep ts)
     {
+        // Update scripts
         {
+            // C# Entity OnUpdate
+            auto view = m_Registry.view<ScriptComponent>();
+            for (auto e : view)
+            {
+                Entity entity = { e, this };
+                ScriptEngine::OnUpdateEntity(entity, ts);//找到具有c#脚本的实体，调用更新
+            }
+            //
             m_Registry.view<NativeScriptComponent>().each
             (
                 [=](auto entity, auto& nsc) {//nsc->缩写NativeScriptComponent
@@ -238,6 +277,7 @@ namespace Hazel {
             Renderer2D::EndScene();
         }
     }
+    ////////////////////////////////////////////////////////////////////////////////////////
     void Scene::OnViewportResize(uint32_t width, uint32_t height)
     {
         m_ViewportWidth = width;
@@ -250,7 +290,7 @@ namespace Hazel {
             }
         }
     }
-    void Scene::DuplicateEntity(Entity entity)
+    void Scene::DuplicateEntity(Entity entity)//拷贝实体
     {
         std::string name = entity.GetName();
         Entity newEntity = CreateEntity(name);
@@ -276,7 +316,17 @@ namespace Hazel {
         }
         return {};
     }
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    Entity Scene::GetEntityByUUID(UUID uuid)
+    {
+        // TODO(Yan): Maybe should be assert
+        if (m_EntityMap.find(uuid) != m_EntityMap.end())
+            return { m_EntityMap.at(uuid), this };
 
+        return {};
+    }
+
+    ///Physics////////////////////////////////////////////////////////////////////////////
     void Scene::OnPhysics2DStart()
     {
         m_PhysicsWorld = new b2World({ 0.0f, -9.8f });//gravity重力，创建物理世界
@@ -365,7 +415,7 @@ namespace Hazel {
         Renderer2D::EndScene();
     }
 
-    //OnComponentAdded在添加组件时执行的
+    //OnComponentAdded在添加组件时执行的/////////////////////////////////////////////////////////
     template<typename T>
     void Scene::OnComponentAdded(Entity enitty, T& component)
     {
@@ -386,6 +436,8 @@ namespace Hazel {
     void Scene::OnComponentAdded<CircleRendererComponent>(Entity entity, CircleRendererComponent& component) {}
     template<>
     void Scene::OnComponentAdded<TagComponent>(Entity enitty, TagComponent& component) {}
+    template<>
+    void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component) {}
     template<>
     void Scene::OnComponentAdded<NativeScriptComponent>(Entity enitty, NativeScriptComponent& component) {}
     template<>

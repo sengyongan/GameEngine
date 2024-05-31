@@ -1,5 +1,6 @@
 #include "hzpch.h"
 #include "ContentBrowserPanel.h"
+
 #include <imgui/imgui.h>
 
 namespace Hazel {
