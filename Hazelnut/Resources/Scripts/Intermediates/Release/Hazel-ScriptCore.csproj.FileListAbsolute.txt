@@ -1,0 +1,6 @@
+D:\VisualStudio_myengine\Hazel\Hazelnut\Resources\Scripts\Intermediates\Release\Hazel-ScriptCore.csproj.AssemblyReference.cache
+D:\VisualStudio_myengine\Hazel\Hazelnut\Resources\Scripts\Intermediates\Release\Hazel-ScriptCore.csproj.CoreCompileInputs.cache
+D:\VisualStudio_myengine\Hazel\Hazelnut\Resources\Scripts\Intermediates\Release\Hazel-ScriptCore.dll
+D:\VisualStudio_myengine\Hazel\Hazelnut\Resources\Scripts\Intermediates\Release\Hazel-ScriptCore.pdb
+D:\VisualStudio_myengine\Hazel\Hazelnut\Resources\Scripts\Hazel-ScriptCore.dll
+D:\VisualStudio_myengine\Hazel\Hazelnut\Resources\Scripts\Hazel-ScriptCore.pdb

@@ -84,6 +84,7 @@
     <None Include="..\..\Hazel\vendor\Glad\premake5.lua" />
     <None Include="..\..\Hazel\vendor\imgui\premake5.lua" />
     <None Include="..\..\Hazel\vendor\yaml-cpp\premake5.lua" />
+    <None Include="..\..\Hazelnut\SandboxProject\Assets\Scripts\premake5.lua" />
     <None Include="..\..\Hazelnut\premake5.lua" />
     <None Include="..\..\Sandbox\premake5.lua" />
     <None Include="..\..\premake5.lua" />

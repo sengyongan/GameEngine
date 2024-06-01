@@ -31,6 +31,15 @@
     <Filter Include="..\Hazelnut">
       <UniqueIdentifier>{1B351CC0-87EA-94B5-10DF-8E8C7C938BB9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="..\Hazelnut\SandboxProject">
+      <UniqueIdentifier>{D0D6D97F-BCE6-8550-25A0-EA6E11CF74E9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\Hazelnut\SandboxProject\Assets">
+      <UniqueIdentifier>{B2531CD1-1EC2-7150-67AB-2C50D35867EC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\Hazelnut\SandboxProject\Assets\Scripts">
+      <UniqueIdentifier>{E9CCB6C8-55E7-196A-9E09-2AFE0A634171}</UniqueIdentifier>
+    </Filter>
     <Filter Include="..\Sandbox">
       <UniqueIdentifier>{3F7B6B1D-2B33-AD6A-943A-86C68011485B}</UniqueIdentifier>
     </Filter>
@@ -56,6 +65,9 @@
     </None>
     <None Include="..\..\Hazel\vendor\yaml-cpp\premake5.lua">
       <Filter>..\Hazel\vendor\yaml-cpp</Filter>
+    </None>
+    <None Include="..\..\Hazelnut\SandboxProject\Assets\Scripts\premake5.lua">
+      <Filter>..\Hazelnut\SandboxProject\Assets\Scripts</Filter>
     </None>
     <None Include="..\..\Hazelnut\premake5.lua">
       <Filter>..\Hazelnut</Filter>

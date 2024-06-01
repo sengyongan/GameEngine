@@ -4,10 +4,32 @@
 #include "mono/jit/jit.h"
 #include "mono/metadata/assembly.h"
 #include "mono/metadata/object.h"
+#include "mono/metadata/tabledefs.h"
 
 #include "ScriptGlue.h"
 
 namespace Hazel {
+    //脚本字段映射
+    static std::unordered_map<std::string, ScriptFieldType> s_ScriptFieldTypeMap =
+    {
+        { "System.Single", ScriptFieldType::Float },
+        { "System.Double", ScriptFieldType::Double },
+        { "System.Boolean", ScriptFieldType::Bool },
+        { "System.Char", ScriptFieldType::Char },
+        { "System.Int16", ScriptFieldType::Short },
+        { "System.Int32", ScriptFieldType::Int },
+        { "System.Int64", ScriptFieldType::Long },
+        { "System.Byte", ScriptFieldType::Byte },
+        { "System.UInt16", ScriptFieldType::UShort },
+        { "System.UInt32", ScriptFieldType::UInt },
+        { "System.UInt64", ScriptFieldType::ULong },
+
+        { "Hazel.Vector2", ScriptFieldType::Vector2 },
+        { "Hazel.Vector3", ScriptFieldType::Vector3 },
+        { "Hazel.Vector4", ScriptFieldType::Vector4 },
+
+        { "Hazel.Entity", ScriptFieldType::Entity },
+    };
     namespace Utils {
         char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)//返回文件内容的指针，将文件大小传递给outSize
         {
@@ -78,7 +100,44 @@ namespace Hazel {
                 HZ_CORE_TRACE("{}.{}", nameSpace, name);
             }
         }
+        //
+        ScriptFieldType MonoTypeToScriptFieldType(MonoType* monoType)
+        {
+            std::string typeName = mono_type_get_name(monoType);
 
+            auto it = s_ScriptFieldTypeMap.find(typeName);
+            if (it == s_ScriptFieldTypeMap.end())//如果在/脚本字段映射没有找到
+            {
+                HZ_CORE_ERROR("Unknown type: {}", typeName);
+                return ScriptFieldType::None;
+            }
+
+            return it->second;//找到就返回ScriptFieldType
+        }
+
+        const char* ScriptFieldTypeToString(ScriptFieldType type)//字段转化为字符串
+        {
+            switch (type)
+            {
+            case ScriptFieldType::Float:   return "Float";
+            case ScriptFieldType::Double:  return "Double";
+            case ScriptFieldType::Bool:    return "Bool";
+            case ScriptFieldType::Char:    return "Char";
+            case ScriptFieldType::Byte:    return "Byte";
+            case ScriptFieldType::Short:   return "Short";
+            case ScriptFieldType::Int:     return "Int";
+            case ScriptFieldType::Long:    return "Long";
+            case ScriptFieldType::UByte:   return "UByte";
+            case ScriptFieldType::UShort:  return "UShort";
+            case ScriptFieldType::UInt:    return "UInt";
+            case ScriptFieldType::ULong:   return "ULong";
+            case ScriptFieldType::Vector2: return "Vector2";
+            case ScriptFieldType::Vector3: return "Vector3";
+            case ScriptFieldType::Vector4: return "Vector4";
+            case ScriptFieldType::Entity:  return "Entity";
+            }
+            return "<Invalid>";
+        }
     }
     struct ScriptEngineData
     {
@@ -88,10 +147,14 @@ namespace Hazel {
         MonoAssembly* CoreAssembly = nullptr;//c#程序域
         MonoImage* CoreAssemblyImage = nullptr;//二进制文件
 
+        MonoAssembly* AppAssembly = nullptr;//app库
+        MonoImage* AppAssemblyImage = nullptr;
+
         ScriptClass EntityClass;//c#程序域中基类，名为entity的类，唯一的一份
 
-        std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;//c#基类（包含方法）集合
-        std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;//实体脚本
+        std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;//c#基类（包含方法）集合，（LoadAssemblyClasses）
+        std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;//实体脚本(调用creat时）
+        std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
 
         //Runtime
         Scene* SceneContext = nullptr;//场景上下文
@@ -105,15 +168,17 @@ namespace Hazel {
 
         InitMono();//创建根域RootDomain
         LoadAssembly("Resources/Scripts/Hazel-ScriptCore.dll");//创建应用程序AppDomain，CoreAssemblyc#程序域，二进制映像CoreAssemblyImage
+        LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll");//加载app库
         Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
-        LoadAssemblyClasses(s_Data->CoreAssembly);//加载assembly.dll中的所有继承Entity的子类，存储在EntityClasses
+
+        LoadAssemblyClasses();//加载assembly.dll中的所有继承Entity的子类，存储在EntityClasses
 
         //ScriptGlue--Register
         ScriptGlue::RegisterComponents();
         ScriptGlue::RegisterFunctions();
         //
         //获取c#程序域中名为"Hazel"的命名空间和名为"Entity"的类
-        s_Data->EntityClass = ScriptClass("Hazel", "Entity");//EntityClass = ScriptClass
+        s_Data->EntityClass = ScriptClass("Hazel", "Entity", true);//EntityClass = ScriptClass
 
     }
 
@@ -137,6 +202,16 @@ namespace Hazel {
         s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
         s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);//获取image二进制映像
         // Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
+    }
+
+    void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
+    {
+        // Move this maybe
+        s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath);
+        auto assemb = s_Data->AppAssembly;
+        s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
+        auto assembi = s_Data->AppAssemblyImage;
+        // Utils::PrintAssemblyTypes(s_Data->AppAssembly);
     }
 
     void ScriptEngine::Shutdown()
@@ -197,6 +272,15 @@ namespace Hazel {
         return s_Data->SceneContext;
     }
 
+    Ref<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityID)
+    {
+        auto it = s_Data->EntityInstances.find(entityID);//
+        if (it == s_Data->EntityInstances.end())//不能在EntityInstances找到id
+            return nullptr;
+
+        return it->second;//否则返回ScriptInstance
+    }
+
     void ScriptEngine::OnRuntimeStop()
     {
         s_Data->SceneContext = nullptr;
@@ -209,38 +293,63 @@ namespace Hazel {
         return s_Data->EntityClasses;
     }
 
-    void ScriptEngine::LoadAssemblyClasses(MonoAssembly* assembly)//加载（assembly.dll）中的所有继承Entity的子类，存储在s_Data->EntityClasses
+    void ScriptEngine::LoadAssemblyClasses()//加载（assembly.dll）中的所有继承Entity的子类，存储在s_Data->EntityClasses
     {
         s_Data->EntityClasses.clear();//清空
 
-        MonoImage* image = mono_assembly_get_image(assembly);//创建二进制文件
-        const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);//类型定义表
+        const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(s_Data->AppAssemblyImage, MONO_TABLE_TYPEDEF);//类型定义表
         int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);//获取所有类型数量
-        MonoClass* entityClass = mono_class_from_name(image, "Hazel", "Entity");//获取到Hazel.Entity类
+        MonoClass* entityClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Hazel", "Entity");//获取到Hazel.Entity类
 
-        for (int32_t i = 0; i < numTypes; i++)
+        for (int32_t i = 0; i < numTypes; i++)//循环所有子类的个数
         {
             uint32_t cols[MONO_TYPEDEF_SIZE];
             mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);//解码
 
-            const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);//获取命名空间和类
-            const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
+            const char* nameSpace = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);//获取命名空间和类
+            const char* className = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
 
             std::string fullName;
             if (strlen(nameSpace) != 0)
-                fullName = fmt::format("{}.{}", nameSpace, name);//生成完整的类名
+                fullName = fmt::format("{}.{}", nameSpace, className);//生成完整的类名
             else
-                fullName = name;
+                fullName = className;
 
-            MonoClass* monoClass = mono_class_from_name(image, nameSpace, name);//获取对应的Mono类
+            MonoClass* monoClass = mono_class_from_name(s_Data->AppAssemblyImage, nameSpace, className);//获取对应的Mono类
 
             if (monoClass == entityClass)//如果当前 == Hazel.Entity类
                 continue;//则跳过
 
             bool isEntity = mono_class_is_subclass_of(monoClass, entityClass, false);///是否是实体类的子类（继承的）
-            if (isEntity)//是子类，就添加
-                s_Data->EntityClasses[fullName] = CreateRef<ScriptClass>(nameSpace, name);//全名（namespace.class)形式，monoclass强制转化为ScriptClass
+
+            if (!isEntity)//不是子类
+                continue;
+
+            Ref<ScriptClass> scriptClass = CreateRef<ScriptClass>(nameSpace, className);//全名（namespace.class)形式，monoclass强制转化为ScriptClass
+            
+            s_Data->EntityClasses[fullName] = scriptClass;
+
+            // 这个例程是一个迭代器例程，用于检索类中的字段。// 必须传递一个指向 0 的 gpointer，并将其视为一个不透明句柄。
+            // 遍历所有元素。当没有更多可用值时，返回值为 NULL。
+
+            int fieldCount = mono_class_num_fields(monoClass);//当前子类字段的数量
+            HZ_CORE_WARN("{} has {} fields:", className, fieldCount);
+            void* iterator = nullptr;
+            while (MonoClassField* field = mono_class_get_fields(monoClass, &iterator))//找到字段，当存在时
+            {
+                const char* fieldName = mono_field_get_name(field);//字段名
+                uint32_t flags = mono_field_get_flags(field);
+                if (flags & FIELD_ATTRIBUTE_PUBLIC)//如果字段的标志为，公共属性public字段
+                {
+                    MonoType* type = mono_field_get_type(field);//获取类型
+                    ScriptFieldType fieldType = Utils::MonoTypeToScriptFieldType(type);//转化为ScriptFieldType类型
+                    HZ_CORE_WARN("  {} ({})", fieldName, Utils::ScriptFieldTypeToString(fieldType));//转化为string类型
+
+                    scriptClass->m_Fields[fieldName] = { fieldType, fieldName, field };//存入字段哈希中
+                }
+            }
         }
+        auto& entityClasses = s_Data->EntityClasses;
     }
 
     MonoImage* ScriptEngine::GetCoreAssemblyImage()
@@ -250,10 +359,10 @@ namespace Hazel {
 
     ////////////////////////////////////////////////////////////////////////////
 
-    ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className)
+    ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, bool isCore)
         : m_ClassNamespace(classNamespace), m_ClassName(className)
     {
-        m_MonoClass = mono_class_from_name(s_Data->CoreAssemblyImage, classNamespace.c_str(), className.c_str());//从二进制文件找到类
+        m_MonoClass = mono_class_from_name(isCore ? s_Data->CoreAssemblyImage : s_Data->AppAssemblyImage, classNamespace.c_str(), className.c_str());//从二进制文件找到类
     }
 
     MonoObject* ScriptClass::Instantiate()//实例化类
@@ -303,4 +412,29 @@ namespace Hazel {
             m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
         }
     }
+    ///////////////////////////////////////////////////////////////////////////
+    bool ScriptInstance::GetFieldValueInternal(const std::string& name, void* buffer)
+    {
+        const auto& fields = m_ScriptClass->GetFields();//从当前脚本，获取哈希字段
+        auto it = fields.find(name);//在哈希找到名称
+        if (it == fields.end())
+            return false;
+
+        const ScriptField& field = it->second;//返回
+        mono_field_get_value(m_Instance, field.ClassField, buffer);//获取字段值的对象，//要获取值的字段
+        return true;
+    }
+
+    bool ScriptInstance::SetFieldValueInternal(const std::string& name, const void* value)
+    {
+        const auto& fields = m_ScriptClass->GetFields();
+        auto it = fields.find(name);
+        if (it == fields.end())
+            return false;
+
+        const ScriptField& field = it->second;
+        mono_field_set_value(m_Instance, field.ClassField, (void*)value);
+        return true;
+    }
+
 }

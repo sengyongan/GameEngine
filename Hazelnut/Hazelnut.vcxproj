@@ -153,6 +153,10 @@
       <Project>{99294D0D-053E-75BE-CEBF-181E3A9371EF}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="SandboxProject\Assets\Scripts\Source\Camera.cs" />
+    <None Include="SandboxProject\Assets\Scripts\Source\Player.cs" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

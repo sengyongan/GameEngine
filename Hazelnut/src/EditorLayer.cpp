@@ -444,7 +444,7 @@ namespace Hazel {
         }
         return false;
     }
-    //
+    //ŒÔ¿Ì≈ˆ◊≤ÃÂ
     void EditorLayer::OnOverlayRender()
     {
         if (m_SceneState == SceneState::Play)
@@ -495,6 +495,13 @@ namespace Hazel {
                     Renderer2D::DrawCircle(transform, glm::vec4(0, 1, 0, 1), 0.01f);
                 }
             }
+        }
+
+        // Draw selected entity outline 
+        if (Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity())
+        {
+            const TransformComponent& transform = selectedEntity.GetComponent<TransformComponent>();
+            Renderer2D::DrawRect(transform.GetTransform(), glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
         }
 
         Renderer2D::EndScene();
