@@ -20,6 +20,7 @@ project "Hazelnut"
 		"%{wks.location}/Hazel/vendor",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.entt}",
+		"%{IncludeDir.filewatch}",
         "%{IncludeDir.ImGuizmo}"
     }
     defines

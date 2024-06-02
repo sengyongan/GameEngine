@@ -10,6 +10,10 @@
 #include "ImGuizmo.h"
 //
 #include "Hazel/Math/Math.h"
+//
+#include "Hazel/Scripting/ScriptEngine.h"
+///
+#include "Hazel/Scripting/ScriptEngine.h"
 
 namespace Hazel {
     extern const std::filesystem::path g_AssetPath;
@@ -27,6 +31,8 @@ namespace Hazel {
         m_IconPlay = Texture2D::Create("Resources/Icons/ContentBrowser/PlayButton.png");
         m_IconStop = Texture2D::Create("Resources/Icons/ContentBrowser/StopButton.png");
         m_IconSimulate = Texture2D::Create("Resources/Icons/ContentBrowser/SimulateButton.png");
+        m_IconPause = Texture2D::Create("Resources/Icons/ContentBrowser/PauseButton.png");
+        m_IconStep = Texture2D::Create("Resources/Icons/ContentBrowser/StepButton.png");
         //
         FramebufferSpecification fbSpec;
         fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
@@ -60,6 +66,8 @@ namespace Hazel {
     {
         HZ_PROFILE_FUNCTION();
 
+        m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+
         // Resize
         if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
             m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
@@ -68,7 +76,7 @@ namespace Hazel {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
             m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
-            m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            //m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
         }
 
         // Render
@@ -188,7 +196,17 @@ namespace Hazel {
                 if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
                     SaveSceneAs();
 
-                if (ImGui::MenuItem("Exit")) Application::Get().Close();
+                if (ImGui::MenuItem("Exit"))
+                    Application::Get().Close();
+                
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Script"))
+            {
+                if (ImGui::MenuItem("Reload assembly", "Ctrl+R"))
+                    ScriptEngine::ReloadAssembly();
+
                 ImGui::EndMenu();
             }
 
@@ -324,10 +342,17 @@ namespace Hazel {
 
         //图标大小
         float size = ImGui::GetWindowHeight() - 4.0f;
-        //编辑模式&&（播放 || 物理）
+
+        ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
+        //
+        bool hasPlayButton = m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play;
+        bool hasSimulateButton = m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate;
+        bool hasPauseButton = m_SceneState != SceneState::Edit;
+        //
+
+        if (hasPlayButton)//(Edit || Play)&& (Edit || Simulate)->m_IconPlay编辑模式下 ,else->m_IconStop播放模式下
         {
             Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate) ? m_IconPlay : m_IconStop;
-            ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
             if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
             {    
                 if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate)//点击播放按钮
@@ -336,8 +361,10 @@ namespace Hazel {
                     OnSceneStop();
             }
         }
-        ImGui::SameLine();
+        if (hasSimulateButton)//编辑模式，else物理模式
         {
+            if (hasPlayButton)
+                ImGui::SameLine();
             Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play) ? m_IconSimulate : m_IconStop;		//ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
             if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
             {   
@@ -345,6 +372,30 @@ namespace Hazel {
                     OnSceneSimulate();
                 else if (m_SceneState == SceneState::Simulate)// 停止
                     OnSceneStop();
+            }
+        }
+        if (hasPauseButton) {//不处于编辑模式时
+            bool isPaused = m_ActiveScene->IsPaused();//获取场景是否暂停
+            ImGui::SameLine();
+            {
+                Ref<Texture2D> icon = m_IconPause;//绘制暂停按钮
+                if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
+                {
+                    m_ActiveScene->SetPaused(!isPaused);//点击暂停（m_IsPaused取反操作）
+                }
+            }
+            // Step button
+            if (isPaused)//如果暂停状态
+            {
+                ImGui::SameLine();
+                {
+                    Ref<Texture2D> icon = m_IconStep;//就绘制进程按钮
+                    bool isPaused = m_ActiveScene->IsPaused();//获取场景暂停
+                    if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
+                    {   //点击按钮，就设置为1，更新1帧后，又不满足条件
+                        m_ActiveScene->Step();//m_StepFrames = 1
+                    }
+                }
             }
         }
         //
@@ -429,8 +480,15 @@ namespace Hazel {
             }
             case Key::R:
             {
-                if (!ImGuizmo::IsUsing())
-                    m_GizmoType = ImGuizmo::OPERATION::SCALE;
+                if (control)
+                {
+                    ScriptEngine::ReloadAssembly();
+                }
+                else
+                {
+                    if (!ImGuizmo::IsUsing())
+                        m_GizmoType = ImGuizmo::OPERATION::SCALE;
+                }
                 break;
             }
         }

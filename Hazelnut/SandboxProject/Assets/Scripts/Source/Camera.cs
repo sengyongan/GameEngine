@@ -12,8 +12,20 @@ namespace Sandbox
     {
         public Entity OtherEntity;
 
+        public float DistanceFromPlayer = 5.0f;//与玩家的距离
+
+        private Entity m_Player;//玩家
+
+        void OnCreate()
+        {
+            m_Player = FindEntityByName("Player");//找到tag = player的实体id
+        }
+
         void OnUpdate(float ts)
         {
+            if (m_Player != null)//找到玩家，位置为玩家的位置，z距离为DistanceFromPlayer
+                Translation = new Vector3(m_Player.Translation.XY, DistanceFromPlayer);
+            //更新位置
             float speed = 1.0f;
             Vector3 velocity = Vector3.Zero;
 

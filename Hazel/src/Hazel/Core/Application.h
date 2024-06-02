@@ -33,6 +33,8 @@ namespace Hazel {
         Application(const ApplicationSpecification& specification);
         virtual ~Application();
         const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+
+        void SubmitToMainThread(const std::function<void()>& function);// 提交到主线程
 		//
         void Run();//实时运行
         void OnEvent(Event& e);//循环所有事件
@@ -48,6 +50,8 @@ namespace Hazel {
     private:
         bool OnWindowClose(WindowCloseEvent& e);
         bool OnWindowResize(WindowResizeEvent& e);
+
+        void ExecuteMainThreadQueue();//执行主线程队列
     private:
         //
         ApplicationSpecification m_Specification;
@@ -62,6 +66,9 @@ namespace Hazel {
         LayerStack m_Layerstack;//总层类对象
 
         float m_LastFrameTime = 0.0f;//上一帧时间
+
+        std::vector<std::function<void()>> m_MainThreadQueue;//主线程队列《void func》
+        std::mutex m_MainThreadQueueMutex;//静态主线程
     private:
         static Application* s_Instance;//Application类对象
 	};

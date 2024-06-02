@@ -119,6 +119,8 @@ namespace Hazel
             static_assert(sizeof(T) <= 16, "Type too large!");
             SetFieldValueInternal(name, &value);
         }
+
+        MonoObject* GetManagedObject() { return m_Instance; }
     private:
         bool GetFieldValueInternal(const std::string& name, void* buffer);
         bool SetFieldValueInternal(const std::string& name, const	void* value);
@@ -126,10 +128,10 @@ namespace Hazel
     private:
         Ref<ScriptClass> m_ScriptClass;//脚本中的类
 
-        MonoObject* m_Instance = nullptr;///实例对象
-        MonoMethod* m_Constructor = nullptr;//构造函数
-        MonoMethod* m_OnCreateMethod = nullptr;//创建方法
-        MonoMethod* m_OnUpdateMethod = nullptr;//更新方法
+        MonoObject* m_Instance = nullptr;///"Hazel", "Entity"基类
+        MonoMethod* m_Constructor = nullptr;//基类的构造函数
+        MonoMethod* m_OnCreateMethod = nullptr;//当前脚本scriptClass的OnCreate方法
+        MonoMethod* m_OnUpdateMethod = nullptr;//当前脚本scriptClass的OnUpdateM方法
 
         inline static char s_FieldValueBuffer[16];//脚本字段缓冲
 
@@ -147,6 +149,8 @@ namespace Hazel
         static void LoadAssembly(const std::filesystem::path& filepath);
         static void LoadAppAssembly(const std::filesystem::path& filepath);
 
+        static void ReloadAssembly();//加载程序域（把所有load都放在这）
+
         static void OnRuntimeStart(Scene* scene);//场景
         static void OnRuntimeStop();
 
@@ -162,6 +166,8 @@ namespace Hazel
         static ScriptFieldMap& GetScriptFieldMap(Entity entity);//获取实体对应的EntityScriptFields 哈希值
 
         static MonoImage* GetCoreAssemblyImage();//二进制映像
+
+        static MonoObject* GetManagedInstance(UUID uuid);//通过id获取基类
     private:
         static void InitMono();
         static void ShutdownMono();

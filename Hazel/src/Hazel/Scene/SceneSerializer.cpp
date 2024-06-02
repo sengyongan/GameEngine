@@ -212,9 +212,9 @@ namespace Hazel {
             out << YAML::Key << "PerspectiveFOV" << YAML::Value << camera.GetPerspectiveVerticalFOV();
             out << YAML::Key << "PerspectiveNear" << YAML::Value << camera.GetPerspectiveNearClip();
             out << YAML::Key << "PerspectiveFar" << YAML::Value << camera.GetPerspectiveFarClip();
-            out << YAML::Key << "OrthographicSize" << YAML::Value << camera.GetOrthopraghicSize();
-            out << YAML::Key << "OrthographicNear" << YAML::Value << camera.GetOrthopraghicNearClip();
-            out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetOrthopraghicFarClip();
+            out << YAML::Key << "OrthographicSize" << YAML::Value << camera.GetOrthographicSize();
+            out << YAML::Key << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
+            out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetOrthographicFarClip();
             out << YAML::EndMap; // Camera
 
             out << YAML::Key << "Primary" << YAML::Value << cameraComponent.Primary;
@@ -438,9 +438,9 @@ namespace Hazel {
                     cc.Camera.SetPerspectiveNearClip(cameraProps["PerspectiveNear"].as<float>());
                     cc.Camera.SetPerspectiveFarClip(cameraProps["PerspectiveFar"].as<float>());
 
-                    cc.Camera.SetOrthopraghicSize(cameraProps["OrthographicSize"].as<float>());
-                    cc.Camera.SetOrthopraghicNearClip(cameraProps["OrthographicNear"].as<float>());
-                    cc.Camera.SetOrthopraghicFarClip(cameraProps["OrthographicFar"].as<float>());
+                    cc.Camera.SetOrthographicSize(cameraProps["OrthographicSize"].as<float>());
+                    cc.Camera.SetOrthographicNearClip(cameraProps["OrthographicNear"].as<float>());
+                    cc.Camera.SetOrthographicFarClip(cameraProps["OrthographicFar"].as<float>());
 
                     cc.Primary = cameraComponent["Primary"].as<bool>();
                     cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();

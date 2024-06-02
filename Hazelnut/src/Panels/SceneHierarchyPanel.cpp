@@ -302,19 +302,19 @@ namespace Hazel {
                 }
 
                 if (camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic) {//正交
-                    float orthoSize = camera.GetOrthopraghicSize();
+                    float orthoSize = camera.GetOrthographicSize();
                     if (ImGui::DragFloat("Size", &orthoSize)) {
-                        camera.SetOrthopraghicSize(orthoSize);
+                        camera.SetOrthographicSize(orthoSize);
                     }
 
-                    float orthoNear = camera.GetOrthopraghicNearClip();
+                    float orthoNear = camera.GetOrthographicNearClip();
                     if (ImGui::DragFloat("Near", &orthoNear)) {
-                        camera.SetOrthopraghicNearClip(orthoNear);
+                        camera.SetOrthographicNearClip(orthoNear);
                     }
 
-                    float orthoFar = camera.GetOrthopraghicFarClip();
+                    float orthoFar = camera.GetOrthographicFarClip();
                     if (ImGui::DragFloat("Far", &orthoFar)) {
-                        camera.SetOrthopraghicFarClip(orthoFar);
+                        camera.SetOrthographicFarClip(orthoFar);
                     }
                     ImGui::Checkbox("Fixed Aspect Ratio", &component.FixedAspectRatio);
                 }

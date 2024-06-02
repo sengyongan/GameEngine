@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-
+//本地调用： 注册c++的函数到c#
 namespace Hazel
 {
 	public static class InternalCalls
@@ -10,8 +10,14 @@ namespace Hazel
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal extern static void TransformComponent_GetTranslation(ulong entityID, out Vector3 translation);
+        
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static ulong Entity_FindEntityByName(string name);
 
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static object GetScriptInstance(ulong entityID);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal extern static void TransformComponent_SetTranslation(ulong entityID, ref Vector3 translation);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]

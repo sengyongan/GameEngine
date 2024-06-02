@@ -63,6 +63,14 @@ namespace Hazel {
     {
         m_Running = false;
     }
+
+    void Application::SubmitToMainThread(const std::function<void()>& function)
+    {
+        std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);//锁定互斥量，避免多线程冲突
+
+        m_MainThreadQueue.emplace_back(function);//线程队列添加函数
+    }
+
     //
     void Application::OnEvent(Event& e)//如果当前e与 <WindowCloseEvent> / <WindowResizeEvent>等一致，就转化为这个类型
     {
@@ -93,6 +101,8 @@ namespace Hazel {
             float time = (float)glfwGetTime();//当前时间
             Timestep timestep = time - m_LastFrameTime;//时差
             m_LastFrameTime = time;//滚动
+
+            ExecuteMainThreadQueue();
 
             //如果没有隐藏窗口，就渲染每一层
             if (!m_Minimized)
@@ -139,5 +149,13 @@ namespace Hazel {
         return false;
     }
 
+    void Application::ExecuteMainThreadQueue()
+    {
+        std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
 
+        for (auto& func : m_MainThreadQueue)//循环线程中每个函数，调用它
+            func();
+
+        m_MainThreadQueue.clear();//全部执行完清理，不会在重复执行
+    }
 }

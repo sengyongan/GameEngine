@@ -41,7 +41,18 @@ namespace Sandbox
                 velocity.X = -1.0f;
             else if (Input.IsKeyDown(KeyCode.D))
                 velocity.X = 1.0f;
-
+            //
+            Entity cameraEntity = FindEntityByName("Camera");////找到tag = Camera的实体id
+            if (cameraEntity != null)
+            {
+                Camera camera = cameraEntity.As<Camera>();
+                //调整距离玩家的距离
+                if (Input.IsKeyDown(KeyCode.Q))
+                    camera.DistanceFromPlayer += speed * 2.0f * ts;
+                else if (Input.IsKeyDown(KeyCode.E))
+                    camera.DistanceFromPlayer -= speed * 2.0f * ts;
+            }
+            //
             velocity *= speed * ts;
 
             m_Rigidbody.ApplyLinearImpulse(velocity.XY, true);

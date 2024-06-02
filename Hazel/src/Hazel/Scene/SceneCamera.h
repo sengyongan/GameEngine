@@ -24,12 +24,12 @@ namespace Hazel {
         void SetPerspectiveFarClip(float farClip) { m_PerspectiveFar = farClip; RecalculateProjection(); }   
 
         //Orthographic
-        float GetOrthopraghicSize() const { return m_OrthographicSize; }//获取摄像机缩放
-        void SetOrthopraghicSize(float size) {m_OrthographicSize = size; RecalculateProjection();}
-        float GetOrthopraghicNearClip() const { return m_OrthographicNear; }
-        float GetOrthopraghicFarClip() const { return m_OrthographicFar; }
-        void SetOrthopraghicNearClip(float nearClip) { m_OrthographicNear = nearClip; RecalculateProjection(); }
-        void SetOrthopraghicFarClip(float farClip) { m_OrthographicFar = farClip;RecalculateProjection();}
+        float GetOrthographicSize() const { return m_OrthographicSize; }//获取摄像机缩放
+        void SetOrthographicSize(float size) {m_OrthographicSize = size; RecalculateProjection();}
+        float GetOrthographicNearClip() const { return m_OrthographicNear; }
+        float GetOrthographicFarClip() const { return m_OrthographicFar; }
+        void SetOrthographicNearClip(float nearClip) { m_OrthographicNear = nearClip; RecalculateProjection(); }
+        void SetOrthographicFarClip(float farClip) { m_OrthographicFar = farClip;RecalculateProjection();}
 
         //
         ProjectionType GetProjectionType() const { return m_ProjectionType; }

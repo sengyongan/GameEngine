@@ -1,12 +1,18 @@
 #include "hzpch.h"
 #include "ScriptEngine.h"
 
+#include "ScriptGlue.h"
+
+#include "FileWatch.h"
+#include "Hazel/Core/Application.h"
+#include "Hazel/Core/Timer.h"
+
 #include "mono/jit/jit.h"
 #include "mono/metadata/assembly.h"
 #include "mono/metadata/object.h"
 #include "mono/metadata/tabledefs.h"
-
-#include "ScriptGlue.h"
+#include "mono/metadata/mono-debug.h"
+#include "mono/metadata/threads.h"
 
 namespace Hazel {
     //脚本字段映射
@@ -31,7 +37,7 @@ namespace Hazel {
         { "Hazel.Entity", ScriptFieldType::Entity },
     };
     namespace Utils {
-        char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)//返回文件内容的指针，将文件大小传递给outSize
+        static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)//返回文件内容的指针，将文件大小传递给outSize
         {
             std::ifstream stream(filepath, std::ios::binary | std::ios::ate);//创建流，以二进制模式和文件末尾位置打开文件
 
@@ -58,7 +64,7 @@ namespace Hazel {
             *outSize = size;//大小赋值给outSize指针所指向的变量
             return buffer;//返回包含文件内容的buffer
         }
-        MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath)//从路径加载程序集
+        static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath, bool loadPDB = false)//从路径加载程序集
         {
             uint32_t fileSize = 0;//用于存储文件大小
             char* fileData = ReadBytes(assemblyPath, &fileSize);//从路径读取到字符数组，并将大小传入fileData中
@@ -73,6 +79,22 @@ namespace Hazel {
                 // Log some error message using the errorMessage data
                 return nullptr;
             }
+
+            if (loadPDB)//加载PDB文件
+            {
+                std::filesystem::path pdbPath = assemblyPath;//程序集路径
+                pdbPath.replace_extension(".pdb");//扩展名替换为“.pdb”
+
+                if (std::filesystem::exists(pdbPath))
+                {
+                    uint32_t pdbFileSize = 0;
+                    char* pdbFileData = ReadBytes(pdbPath, &pdbFileSize);//如果存在，它会读取PDB文件的内容
+                    mono_debug_open_image_from_memory(image, (const mono_byte*)pdbFileData, pdbFileSize);//将PDB文件的内容加载到内存
+                    HZ_CORE_INFO("Loaded PDB {}", pdbPath);
+                    delete[] pdbFileData;
+                }
+            }
+
             std::string pathString = assemblyPath.string();
             MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);//二进制映像，加载程序集
             mono_image_close(image);//关闭图像对象image
@@ -126,32 +148,57 @@ namespace Hazel {
         MonoAssembly* AppAssembly = nullptr;//app库
         MonoImage* AppAssemblyImage = nullptr;
 
+        std::filesystem::path CoreAssemblyFilepath;//核心层dll
+        std::filesystem::path AppAssemblyFilepath;//应用层dll
+
         ScriptClass EntityClass;//c#程序域中基类，名为entity的类，唯一的一份
 
         std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;//c#基类（包含方法）集合，（LoadAssemblyClasses）
         std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;//实体脚本(调用creat时）
         std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
 
+        Scope<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;//dll程序集文件监视
+        bool AssemblyReloadPending = false;//程序集重载
+
         //Runtime
         Scene* SceneContext = nullptr;//场景上下文
+        //
+        bool EnableDebugging = true;//启用调试
     };
 
     static ScriptEngineData* s_Data = nullptr;
+    //自定义函数（作为回调函数）
+    static void OnAppAssemblyFileSystemEvent(const std::string& path, const filewatch::Event change_type)
+    {
+        if (!s_Data->AssemblyReloadPending && change_type == filewatch::Event::modified)
+        {
+            s_Data->AssemblyReloadPending = true;
+
+            Application::Get().SubmitToMainThread(//像主线程添加函数
+                []()
+                {
+                    s_Data->AppAssemblyFileWatcher.reset();//重置
+                    ScriptEngine::ReloadAssembly();//添加重载dll
+                }
+            );
+        }
+    }
 
     void ScriptEngine::Init()
     {
         s_Data = new ScriptEngineData();
 
         InitMono();//创建根域RootDomain
+        ScriptGlue::RegisterFunctions();
+
         LoadAssembly("Resources/Scripts/Hazel-ScriptCore.dll");//创建应用程序AppDomain，CoreAssemblyc#程序域，二进制映像CoreAssemblyImage
         LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll");//加载app库
         Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
 
         LoadAssemblyClasses();//加载assembly.dll中的所有继承Entity的子类，存储在EntityClasses
 
-        //ScriptGlue--Register
+        //ScriptGlresetue--Register
         ScriptGlue::RegisterComponents();
-        ScriptGlue::RegisterFunctions();
         //
         //获取c#程序域中名为"Hazel"的命名空间和名为"Entity"的类
         s_Data->EntityClass = ScriptClass("Hazel", "Entity", true);//EntityClass = ScriptClass
@@ -161,12 +208,28 @@ namespace Hazel {
     void ScriptEngine::InitMono()//调用c#程序域的函数
     {
         mono_set_assemblies_path("mono/lib");
+        //
+        if (s_Data->EnableDebugging)
+        {
+            const char* argv[2] = {
+                "--debugger-agent=transport=dt_socket,address=127.0.0.1:2550,server=y,suspend=n,loglevel=3,logfile=MonoDebugger.log",
+                "--soft-breakpoints"
+            };
 
+            mono_jit_parse_options(2, (char**)argv);
+            mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+        }
+        //
         MonoDomain* rootDomain = mono_jit_init("HazelJITRuntime");//创建一个根域
         HZ_CORE_ASSERT(rootDomain);
 
         //存储根域指针到s_Data
         s_Data->RootDomain = rootDomain;
+        //
+        if (s_Data->EnableDebugging)
+            mono_debug_domain_create(s_Data->RootDomain);
+
+        mono_thread_set_main(mono_thread_current());
     }
     void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)//加载应用程序域
     {
@@ -175,7 +238,8 @@ namespace Hazel {
         mono_domain_set(s_Data->AppDomain, true);//设置为当前域
 
         //获取c#程序域
-        s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
+        s_Data->CoreAssemblyFilepath = filepath;
+        s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
         s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);//获取image二进制映像
         // Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
     }
@@ -183,11 +247,15 @@ namespace Hazel {
     void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
     {
         // Move this maybe
-        s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath);
+        s_Data->AppAssemblyFilepath = filepath;
+        s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
         auto assemb = s_Data->AppAssembly;
         s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
         auto assembi = s_Data->AppAssemblyImage;
         // Utils::PrintAssemblyTypes(s_Data->AppAssembly);
+        //CreateScope是一个模板指针内存分配，参数为回调函数，当FileWatch文件监视发生更改
+        s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
+        s_Data->AssemblyReloadPending = false;
     }
 
     void ScriptEngine::Shutdown()
@@ -197,22 +265,40 @@ namespace Hazel {
     }
     void ScriptEngine::ShutdownMono()
     {
+        mono_domain_set(mono_get_root_domain(), false);
         // NOTE(Yan): mono is a little confusing to shutdown, so maybe come back to this
-
+        mono_domain_unload(s_Data->AppDomain);
         // mono_domain_unload(s_Data->AppDomain);
         s_Data->AppDomain = nullptr;
 
         // mono_jit_cleanup(s_Data->RootDomain);
+        mono_jit_cleanup(s_Data->RootDomain);
         s_Data->RootDomain = nullptr;
     }
-    MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)//基类object，"Hazel", "Entity"
+    MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)//返回基类object，"Hazel", "Entity"
     {
         MonoObject* instance = mono_object_new(s_Data->AppDomain, monoClass);
-        mono_runtime_object_init(instance);//（并调用构造函数）
+        mono_runtime_object_init(instance);//（并调用基类构造函数）
         return instance;
     }
 
     //////////////////////////////////////////////////////////////////
+    void ScriptEngine::ReloadAssembly()
+    {
+        mono_domain_set(mono_get_root_domain(), false);
+
+        mono_domain_unload(s_Data->AppDomain);
+
+        LoadAssembly(s_Data->CoreAssemblyFilepath);
+        LoadAppAssembly(s_Data->AppAssemblyFilepath);
+        LoadAssemblyClasses();
+
+        ScriptGlue::RegisterComponents();
+
+        // Retrieve and instantiate class
+        s_Data->EntityClass = ScriptClass("Hazel", "Entity", true);
+    }
+
     void ScriptEngine::OnRuntimeStart(Scene* scene)//传入场景（用于ScriptGlue）
     {
         s_Data->SceneContext = scene;
@@ -359,11 +445,17 @@ namespace Hazel {
         return s_Data->CoreAssemblyImage;
     }
 
+    MonoObject* ScriptEngine::GetManagedInstance(UUID uuid)//通过id找到ScriptInstance，再获取m_Instance
+    {
+        HZ_CORE_ASSERT(s_Data->EntityInstances.find(uuid) != s_Data->EntityInstances.end());
+        return s_Data->EntityInstances.at(uuid)->GetManagedObject();
+    }
+
     ////////////////////////////////////////////////////////////////////////////
 
     ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, bool isCore)
         : m_ClassNamespace(classNamespace), m_ClassName(className)
-    {
+    {//从dll，为classNamespace，className的类
         m_MonoClass = mono_class_from_name(isCore ? s_Data->CoreAssemblyImage : s_Data->AppAssemblyImage, classNamespace.c_str(), className.c_str());//从二进制文件找到类
     }
 
@@ -379,14 +471,15 @@ namespace Hazel {
 
     MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params)//调用方法
     {
-        return mono_runtime_invoke(method, instance, params, nullptr);
+        MonoObject* exception = nullptr;
+        return mono_runtime_invoke(method, instance, params, &exception);
     }
     ///ScriptInstance/////////////////////////////////////////////////////////////////
 
     ScriptInstance::ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity)
         : m_ScriptClass(scriptClass)
     {
-        m_Instance = scriptClass->Instantiate();//从dll中返回m_MonoClass类"Hazel", "Entity"
+        m_Instance = scriptClass->Instantiate();//从dll中返回"Hazel", "Entity"基类
         //3个方法
         m_Constructor = s_Data->EntityClass.GetMethod(".ctor", 1);//entity类中的构造
         m_OnCreateMethod = scriptClass->GetMethod("OnCreate", 0);//OnCreate函数名，参数数量

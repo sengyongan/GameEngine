@@ -167,26 +167,29 @@ namespace Hazel {
         RenderScene(camera);
     }
     void Scene::OnUpdateSimulation(Timestep ts, EditorCamera& camera)//Physics
-    {        
-        // Physics
+    {
+        if (!m_IsPaused || m_StepFrames-- > 0)
         {
-            const int32_t velocityIterations = 6;//速度迭代
-            const int32_t positionIterations = 2;//位置迭代
-            m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);//模拟物理世界
-
-            // Retrieve transform from Box2D
-            auto view = m_Registry.view<Rigidbody2DComponent>();//检查每个带刚体的实体
-            for (auto e : view)
+            // Physics
             {
-                Entity entity = { e, this };
-                auto& transform = entity.GetComponent<TransformComponent>();
-                auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+                const int32_t velocityIterations = 6;//速度迭代
+                const int32_t positionIterations = 2;//位置迭代
+                m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);//模拟物理世界
 
-                b2Body* body = (b2Body*)rb2d.RuntimeBody;//获取创建的刚体
-                const auto& position = body->GetPosition();
-                transform.Translation.x = position.x;
-                transform.Translation.y = position.y;
-                transform.Rotation.z = body->GetAngle();
+                // Retrieve transform from Box2D
+                auto view = m_Registry.view<Rigidbody2DComponent>();//检查每个带刚体的实体
+                for (auto e : view)
+                {
+                    Entity entity = { e, this };
+                    auto& transform = entity.GetComponent<TransformComponent>();
+                    auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+
+                    b2Body* body = (b2Body*)rb2d.RuntimeBody;//获取创建的刚体
+                    const auto& position = body->GetPosition();
+                    transform.Translation.x = position.x;
+                    transform.Translation.y = position.y;
+                    transform.Rotation.z = body->GetAngle();
+                }
             }
         }
         // Render
@@ -195,51 +198,54 @@ namespace Hazel {
     //场景更新
     void Scene::OnUpdateRuntime(Timestep ts)
     {
-        // Update scripts
+        if (!m_IsPaused || m_StepFrames-- > 0)//没有暂停 / ？？ 就可以更新脚本和物理
         {
-            // C# Entity OnUpdate
-            auto view = m_Registry.view<ScriptComponent>();
-            for (auto e : view)
+            // Update scripts
             {
-                Entity entity = { e, this };
-                ScriptEngine::OnUpdateEntity(entity, ts);//找到具有c#脚本的实体，调用更新
-            }
-            //
-            m_Registry.view<NativeScriptComponent>().each
-            (
-                [=](auto entity, auto& nsc) {//nsc->缩写NativeScriptComponent
-                    if (!nsc.Instance) //指针初始为空指针
-                    {
-                        nsc.Instance = nsc.InstantiateScript();//
-                        nsc.Instance->m_Entity = Entity{ entity, this };//基类的变量初始为entity类
-                        nsc.Instance->OnCreate();//统一的接口调用
-                    }
-                    nsc.Instance->OnUpdate(ts);//统一的接口调用
+                // C# Entity OnUpdate
+                auto view = m_Registry.view<ScriptComponent>();
+                for (auto e : view)
+                {
+                    Entity entity = { e, this };
+                    ScriptEngine::OnUpdateEntity(entity, ts);//找到具有c#脚本的实体，调用更新
                 }
-            );
-        }
-        // Physics
-        {
-            const int32_t velocityIterations = 6;//速度迭代
-            const int32_t positionIterations = 2;//位置迭代
-            m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);//模拟物理世界
-
-            // Retrieve transform from Box2D
-            auto view = m_Registry.view<Rigidbody2DComponent>();//检查每个带刚体的实体
-            for (auto e : view)
-            {
-                Entity entity = { e, this };
-                auto& transform = entity.GetComponent<TransformComponent>();
-                auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
-
-                b2Body* body = (b2Body*)rb2d.RuntimeBody;//获取创建的刚体
-                const auto& position = body->GetPosition();
-                transform.Translation.x = position.x;
-                transform.Translation.y = position.y;
-                transform.Rotation.z = body->GetAngle();
+                //
+                m_Registry.view<NativeScriptComponent>().each
+                (
+                    [=](auto entity, auto& nsc) {//nsc->缩写NativeScriptComponent
+                        if (!nsc.Instance) //指针初始为空指针
+                        {
+                            nsc.Instance = nsc.InstantiateScript();//
+                            nsc.Instance->m_Entity = Entity{ entity, this };//基类的变量初始为entity类
+                            nsc.Instance->OnCreate();//统一的接口调用
+                        }
+                        nsc.Instance->OnUpdate(ts);//统一的接口调用
+                    }
+                );
             }
-        }
+            // Physics
+            {
+                const int32_t velocityIterations = 6;//速度迭代
+                const int32_t positionIterations = 2;//位置迭代
+                m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);//模拟物理世界
 
+                // Retrieve transform from Box2D
+                auto view = m_Registry.view<Rigidbody2DComponent>();//检查每个带刚体的实体
+                for (auto e : view)
+                {
+                    Entity entity = { e, this };
+                    auto& transform = entity.GetComponent<TransformComponent>();
+                    auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+
+                    b2Body* body = (b2Body*)rb2d.RuntimeBody;//获取创建的刚体
+                    const auto& position = body->GetPosition();
+                    transform.Translation.x = position.x;
+                    transform.Translation.y = position.y;
+                    transform.Rotation.z = body->GetAngle();
+                }
+            }
+
+        }
         //找到具有组件的实体
         Camera* mainCamera = nullptr;
         glm::mat4* cameraTransform = nullptr;
@@ -284,6 +290,9 @@ namespace Hazel {
     ////////////////////////////////////////////////////////////////////////////////////////
     void Scene::OnViewportResize(uint32_t width, uint32_t height)
     {
+        if (m_ViewportWidth == width && m_ViewportHeight == height)
+            return;
+
         m_ViewportWidth = width;
         m_ViewportHeight = height;
         auto view = m_Registry.view<CameraComponent>();
@@ -294,6 +303,12 @@ namespace Hazel {
             }
         }
     }
+
+    void Scene::Step(int frames)
+    {
+        m_StepFrames = frames;
+    }
+
     void Scene::DuplicateEntity(Entity entity)//拷贝实体
     {
         std::string name = entity.GetName();
@@ -321,6 +336,18 @@ namespace Hazel {
         return {};
     }
     ////////////////////////////////////////////////////////////////////////////////////////////
+    Entity Scene::FindEntityByName(std::string_view name)
+    {
+        auto view = m_Registry.view<TagComponent>();
+        for (auto entity : view)//循环每个有tag的实体
+        {
+            const TagComponent& tc = view.get<TagComponent>(entity);//获取到当前实体的TagComponent
+            if (tc.Tag == name)//找到了要获取的name的对应实体，返回实体
+                return Entity{ entity, this };
+        }
+        return {};
+    }
+
     Entity Scene::GetEntityByUUID(UUID uuid)
     {
         // TODO(Yan): Maybe should be assert

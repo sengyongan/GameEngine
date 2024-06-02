@@ -38,11 +38,17 @@ namespace Hazel {
 
         void DuplicateEntity(Entity entity);//拷贝实体
 
+        Entity FindEntityByName(std::string_view name);//通过name获取实体
         Entity GetEntityByUUID(UUID uuid);//通过id获取实体
 
         Entity GetPrimaryCameraEntity();//找到主摄像机
 
         bool IsRunning() const { return m_IsRunning; }
+        bool IsPaused() const { return m_IsPaused; }
+
+        void SetPaused(bool paused) { m_IsPaused = paused; }//设置暂停
+
+        void Step(int frames = 1);//进程
 
         template<typename... Components>
         auto GetAllEntitiesWith()//获取所有具有组件的实体
@@ -60,7 +66,10 @@ namespace Hazel {
     private:
         entt::registry m_Registry;
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
-        bool m_IsRunning = false;
+        //
+        bool m_IsRunning = false;//是否正在运行
+        bool m_IsPaused = false;//是否暂停
+        int m_StepFrames = 0;//进程帧
 
         b2World* m_PhysicsWorld = nullptr;//物理世界
 

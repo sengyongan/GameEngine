@@ -35,6 +35,7 @@ namespace Hazel {
         void OnScenePlay();
         void OnSceneSimulate();
         void OnSceneStop();
+        void OnScenePause();
         //
         void OnDuplicateEntity();//拷贝实体
         //
@@ -81,7 +82,7 @@ namespace Hazel {
         SceneState m_SceneState = SceneState::Edit;
 
         // Editor physics resources开始停止图标
-        Ref<Texture2D> m_IconPlay, m_IconSimulate, m_IconStop;
+        Ref<Texture2D> m_IconPlay, m_IconPause, m_IconStep, m_IconSimulate, m_IconStop;
     };
 
 }

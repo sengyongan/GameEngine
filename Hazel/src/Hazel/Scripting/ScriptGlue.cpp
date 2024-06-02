@@ -41,6 +41,11 @@ namespace Hazel {
         return glm::dot(*parameter, *parameter);//计算两个向量的点积
     }
     ///////////////////////////////////////////////////////////////////////////
+    static MonoObject* GetScriptInstance(UUID entityID)////通过id获取基类
+    {
+        return ScriptEngine::GetManagedInstance(entityID);
+    }
+
     static bool Entity_HasComponent(UUID entityID, MonoReflectionType* componentType)//实体是否有组件（唯一标识符id，组件类型）
     {
         //获取到场景和实体
@@ -52,6 +57,21 @@ namespace Hazel {
         MonoType* managedType = mono_reflection_type_get_type(componentType);//找到哈希中的componentType
         HZ_CORE_ASSERT(s_EntityHasComponentFuncs.find(managedType) != s_EntityHasComponentFuncs.end());
         return s_EntityHasComponentFuncs.at(managedType)(entity);//将 entity 作为参数传递[](Entity entity) { return entity.HasComponent<Component>(); }
+    }
+
+    static uint64_t Entity_FindEntityByName(MonoString* name)
+    {
+        char* nameCStr = mono_string_to_utf8(name);
+
+        Scene* scene = ScriptEngine::GetSceneContext();
+        HZ_CORE_ASSERT(scene);
+        Entity entity = scene->FindEntityByName(nameCStr);//通过name找到实体
+        mono_free(nameCStr);
+
+        if (!entity)
+            return 0;
+
+        return entity.GetUUID();//返回id
     }
 
     static void TransformComponent_GetTranslation(UUID entityID, glm::vec3* outTranslation)//获取Translation
@@ -136,6 +156,7 @@ namespace Hazel {
     }
     void ScriptGlue::RegisterComponents()
     {
+        s_EntityHasComponentFuncs.clear();
         RegisterComponent(AllComponents{});//全部组件类型的元组
     }
 
@@ -147,7 +168,11 @@ namespace Hazel {
         HZ_ADD_INTERNAL_CALL(NativeLog_Vector);
         HZ_ADD_INTERNAL_CALL(NativeLog_VectorDot);
         //Component
+        HZ_ADD_INTERNAL_CALL(GetScriptInstance);
+
         HZ_ADD_INTERNAL_CALL(Entity_HasComponent);
+        HZ_ADD_INTERNAL_CALL(Entity_FindEntityByName);
+
         HZ_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
         HZ_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);
 
