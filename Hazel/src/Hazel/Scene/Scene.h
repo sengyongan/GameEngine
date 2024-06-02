@@ -42,6 +42,8 @@ namespace Hazel {
 
         Entity GetPrimaryCameraEntity();//找到主摄像机
 
+        bool IsRunning() const { return m_IsRunning; }
+
         template<typename... Components>
         auto GetAllEntitiesWith()//获取所有具有组件的实体
         {
@@ -58,6 +60,7 @@ namespace Hazel {
     private:
         entt::registry m_Registry;
         uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+        bool m_IsRunning = false;
 
         b2World* m_PhysicsWorld = nullptr;//物理世界
 

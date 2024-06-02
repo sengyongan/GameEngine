@@ -3,6 +3,8 @@
 
 #include "Entity.h"
 #include "Components.h"
+#include "Hazel/Scripting/ScriptEngine.h"
+#include "Hazel/Core/UUID.h"
 
 #include <fstream>
 
@@ -82,10 +84,41 @@ namespace YAML {
             return true;
         }
     };
+    //
+    template<>
+    struct convert<Hazel::UUID>
+    {
+        static Node encode(const Hazel::UUID& uuid)
+        {
+            Node node;
+            node.push_back((uint64_t)uuid);
+            return node;
+        }
+
+        static bool decode(const Node& node, Hazel::UUID& uuid)
+        {
+            uuid = node.as<uint64_t>();
+            return true;
+        }
+    };
 
 }
 namespace Hazel {
-
+    //写入脚本字段 && 读取脚本字段
+    //WRITE_SCRIPT_FIELD(Float, float);-》case ScriptFieldType::Float  out << scriptField.GetValue<float>();
+    #define WRITE_SCRIPT_FIELD(FieldType, Type)   \
+    	case ScriptFieldType::FieldType:          \
+    		out << scriptField.GetValue<Type>();  \
+    		break
+    //READ_SCRIPT_FIELD(Float, float);-》case ScriptFieldType::Float:  Type data = scriptField["Data"].as<float>(); fieldInstance.SetValue(data);
+    #define READ_SCRIPT_FIELD(FieldType, Type)             \
+    	case ScriptFieldType::FieldType:                   \
+    	{                                                  \
+    		Type data = scriptField["Data"].as<Type>();    \
+    		fieldInstance.SetValue(data);                  \
+    		break;                                         \
+    	}
+    //
     YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)//重载《《，输出vec2
     {
         out << YAML::Flow;
@@ -190,13 +223,57 @@ namespace Hazel {
             out << YAML::EndMap; // CameraComponent
         }
 
-        if (entity.HasComponent<ScriptComponent>())
+        if (entity.HasComponent<ScriptComponent>())//当前实体
         {
             auto& scriptComponent = entity.GetComponent<ScriptComponent>();
 
             out << YAML::Key << "ScriptComponent";
             out << YAML::BeginMap; // ScriptComponent
             out << YAML::Key << "ClassName" << YAML::Value << scriptComponent.ClassName;
+
+            // Fields
+            Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(scriptComponent.ClassName);//获取实体上脚本组件对应的ScriptClass
+            const auto& fields = entityClass->GetFields();//获取Fields哈希
+            if (fields.size() > 0)
+            {
+                out << YAML::Key << "ScriptFields" << YAML::Value;//node
+                auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);//获取实体的ScriptFieldMap哈希
+                out << YAML::BeginSeq;
+                for (const auto& [name, field] : fields)//循环Fields哈希
+                {
+                    if (entityFields.find(name) == entityFields.end())
+                        continue;
+
+                    out << YAML::BeginMap; // ScriptField
+                    out << YAML::Key << "Name" << YAML::Value << name;
+                    out << YAML::Key << "Type" << YAML::Value << Utils::ScriptFieldTypeToString(field.Type);
+
+                    out << YAML::Key << "Data" << YAML::Value;//out <<
+                    ScriptFieldInstance& scriptField = entityFields.at(name);//ScriptFieldMap哈希获取对应name的，数据存储的值
+
+                    switch (field.Type)//捕获当前类型
+                    {
+                        WRITE_SCRIPT_FIELD(Float, float);//out << scriptField.GetValue<Type>();
+                        WRITE_SCRIPT_FIELD(Double, double);
+                        WRITE_SCRIPT_FIELD(Bool, bool);
+                        WRITE_SCRIPT_FIELD(Char, char);
+                        WRITE_SCRIPT_FIELD(Byte, int8_t);
+                        WRITE_SCRIPT_FIELD(Short, int16_t);
+                        WRITE_SCRIPT_FIELD(Int, int32_t);
+                        WRITE_SCRIPT_FIELD(Long, int64_t);
+                        WRITE_SCRIPT_FIELD(UByte, uint8_t);
+                        WRITE_SCRIPT_FIELD(UShort, uint16_t);
+                        WRITE_SCRIPT_FIELD(UInt, uint32_t);
+                        WRITE_SCRIPT_FIELD(ULong, uint64_t);
+                        WRITE_SCRIPT_FIELD(Vector2, glm::vec2);
+                        WRITE_SCRIPT_FIELD(Vector3, glm::vec3);
+                        WRITE_SCRIPT_FIELD(Vector4, glm::vec4);
+                        WRITE_SCRIPT_FIELD(Entity, UUID);
+                    }
+                    out << YAML::EndMap; // ScriptFields
+                }
+                out << YAML::EndSeq;
+            }
             out << YAML::EndMap; // ScriptComponent
         }
 
@@ -373,7 +450,53 @@ namespace Hazel {
                 if (scriptComponent)
                 {
                     auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
-                    sc.ClassName = scriptComponent["ClassName"].as<std::string>();
+                    sc.ClassName = scriptComponent["ClassName"].as<std::string>();//scriptComponent.ClassName
+                    //field
+                    auto scriptFields = scriptComponent["ScriptFields"];//ScriptFieldMap
+                    if (scriptFields)
+                    {
+                        Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(sc.ClassName);//ScriptClass
+                        HZ_CORE_ASSERT(entityClass);
+                        const auto& fields = entityClass->GetFields();//Fields哈希
+                        auto& entityFields = ScriptEngine::GetScriptFieldMap(deserializedEntity);//ScriptFieldMap
+
+                        for (auto scriptField : scriptFields)//循环每个-》["ScriptFields"]node
+                        {
+                            std::string name = scriptField["Name"].as<std::string>();
+                            std::string typeString = scriptField["Type"].as<std::string>();
+                            ScriptFieldType type = Utils::ScriptFieldTypeFromString(typeString);
+
+                            ScriptFieldInstance& fieldInstance = entityFields[name];//数据存储的值
+
+                            // TODO(Yan): turn this assert into Hazelnut log warning
+                            HZ_CORE_ASSERT(fields.find(name) != fields.end());
+
+                            if (fields.find(name) == fields.end())
+                                continue;
+
+                            fieldInstance.Field = fields.at(name);//ScriptField（字段数据）
+
+                            switch (type)
+                            {
+                                READ_SCRIPT_FIELD(Float, float);
+                                READ_SCRIPT_FIELD(Double, double);
+                                READ_SCRIPT_FIELD(Bool, bool);
+                                READ_SCRIPT_FIELD(Char, char);
+                                READ_SCRIPT_FIELD(Byte, int8_t);
+                                READ_SCRIPT_FIELD(Short, int16_t);
+                                READ_SCRIPT_FIELD(Int, int32_t);
+                                READ_SCRIPT_FIELD(Long, int64_t);
+                                READ_SCRIPT_FIELD(UByte, uint8_t);
+                                READ_SCRIPT_FIELD(UShort, uint16_t);
+                                READ_SCRIPT_FIELD(UInt, uint32_t);
+                                READ_SCRIPT_FIELD(ULong, uint64_t);
+                                READ_SCRIPT_FIELD(Vector2, glm::vec2);
+                                READ_SCRIPT_FIELD(Vector3, glm::vec3);
+                                READ_SCRIPT_FIELD(Vector4, glm::vec4);
+                                READ_SCRIPT_FIELD(Entity, UUID);
+                            }
+                        }
+                    }
                 }
                 //
                 auto spriteRendererComponent = entity["SpriteRendererComponent"];

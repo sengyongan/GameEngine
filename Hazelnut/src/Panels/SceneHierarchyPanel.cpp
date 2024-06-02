@@ -226,7 +226,7 @@ namespace Hazel {
 
             char buffer[256];
             memset(buffer, 0, sizeof(buffer));//buffer数组的所有元素都设置为0。
-            strcpy_s(buffer, sizeof(buffer), tag.c_str());//将tag字符串复制到buffer数组中。
+            strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));//将tag字符串复制到buffer数组中。
 
             if (ImGui::InputText("##Tag", buffer, sizeof(buffer))) {//如果输入文本(##表示注释掉）
                 tag = std::string(buffer);//将输入的文本给标签
@@ -321,39 +321,81 @@ namespace Hazel {
             }
         );
         //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        DrawComponent<ScriptComponent>("Script", entity, [entity](auto& component) mutable
+        DrawComponent<ScriptComponent>("Script", entity, [entity, scene = m_Context](auto& component) mutable
             {
-                bool scriptClassExists = ScriptEngine::EntityClassExists(component.ClassName);
+                bool scriptClassExists = ScriptEngine::EntityClassExists(component.ClassName);//ScriptComponent组件的名称，是一个entity子类
 
                 static char buffer[64];
-                strcpy(buffer, component.ClassName.c_str());
+                strcpy_s(buffer, sizeof(buffer), component.ClassName.c_str());
 
-                if (!scriptClassExists)
+                if (!scriptClassExists)//不是子类，颜色为红色（异常）
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
 
-                if (ImGui::InputText("Class", buffer, sizeof(buffer)))
+                if (ImGui::InputText("Class", buffer, sizeof(buffer)))//创建文本可以设置组件的值
                     component.ClassName = buffer;
 
                 // Fields
-                Ref<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
-                if (scriptInstance)
+                bool sceneRunning = scene->IsRunning();
+                if (sceneRunning)
                 {
-                    const auto& fields = scriptInstance->GetScriptClass()->GetFields();
-
-                    for (const auto& [name, field] : fields)
+                    Ref<ScriptInstance> scriptInstance = ScriptEngine::GetEntityScriptInstance(entity.GetUUID());
+                    if (scriptInstance)
                     {
-                        if (field.Type == ScriptFieldType::Float)
+                        const auto& fields = scriptInstance->GetScriptClass()->GetFields();
+
+                        for (const auto& [name, field] : fields)
                         {
-                            float data = scriptInstance->GetFieldValue<float>(name);//T模板
-                            if (ImGui::DragFloat(name.c_str(), &data))
+                            if (field.Type == ScriptFieldType::Float)
                             {
-                                scriptInstance->SetFieldValue(name, data);
+                                float data = scriptInstance->GetFieldValue<float>(name);//T模板
+                                if (ImGui::DragFloat(name.c_str(), &data))
+                                {
+                                    scriptInstance->SetFieldValue(name, data);//面板上设置字段
+                                }
+                            }
+                        }
+                    }
+
+                }
+                else {//没有运行，但是脚本输入名称是子类
+                    if (scriptClassExists) {
+                        Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(component.ClassName);//获取到对应的ScriptClass
+                        const auto& fields = entityClass->GetFields();//获取到fields哈希
+                        auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);//获取实体对应的ScriptFieldMap
+                        
+                        for (const auto& [name, field] : fields)//循环每个字段
+                        {
+                            // 字段已在编辑器中设置
+                            if (entityFields.find(name) != entityFields.end())//能在ScriptFieldMap找到
+                            {
+                                ScriptFieldInstance& scriptField = entityFields.at(name);//获取到ScriptFieldInstance
+
+                                // 显示控制，也许可以设置
+                                if (field.Type == ScriptFieldType::Float)
+                                {
+                                    float data = scriptField.GetValue<float>();//m_Buffer
+                                    if (ImGui::DragFloat(name.c_str(), &data))
+                                        scriptField.SetValue(data);
+                                }
+                            }
+                            else//没有设置
+                            {
+                                //显示控制，也许可以设置
+                                if (field.Type == ScriptFieldType::Float)
+                                {
+                                    float data = 0.0f;//创建新的值
+                                    if (ImGui::DragFloat(name.c_str(), &data))
+                                    {
+                                        ScriptFieldInstance& fieldInstance = entityFields[name];//在ScriptFieldMap存放
+                                        fieldInstance.Field = field;
+                                        fieldInstance.SetValue(data);//初始为0
+                                    }
+                                }
                             }
                         }
                     }
                 }
-
-                if (!scriptClassExists)
+                if (!scriptClassExists)//不是子类
                     ImGui::PopStyleColor();
             });
 

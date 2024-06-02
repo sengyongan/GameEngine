@@ -114,30 +114,6 @@ namespace Hazel {
 
             return it->second;//找到就返回ScriptFieldType
         }
-
-        const char* ScriptFieldTypeToString(ScriptFieldType type)//字段转化为字符串
-        {
-            switch (type)
-            {
-            case ScriptFieldType::Float:   return "Float";
-            case ScriptFieldType::Double:  return "Double";
-            case ScriptFieldType::Bool:    return "Bool";
-            case ScriptFieldType::Char:    return "Char";
-            case ScriptFieldType::Byte:    return "Byte";
-            case ScriptFieldType::Short:   return "Short";
-            case ScriptFieldType::Int:     return "Int";
-            case ScriptFieldType::Long:    return "Long";
-            case ScriptFieldType::UByte:   return "UByte";
-            case ScriptFieldType::UShort:  return "UShort";
-            case ScriptFieldType::UInt:    return "UInt";
-            case ScriptFieldType::ULong:   return "ULong";
-            case ScriptFieldType::Vector2: return "Vector2";
-            case ScriptFieldType::Vector3: return "Vector3";
-            case ScriptFieldType::Vector4: return "Vector4";
-            case ScriptFieldType::Entity:  return "Entity";
-            }
-            return "<Invalid>";
-        }
     }
     struct ScriptEngineData
     {
@@ -253,7 +229,17 @@ namespace Hazel {
         if (ScriptEngine::EntityClassExists(sc.ClassName))//ClassName为全名，在EntityClasses如果找到了（为entity的派生）
         {
             Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName], entity);//脚本类，实体
-            s_Data->EntityInstances[entity.GetUUID()] = instance;//EntityInstances存储：实体id-》脚本
+            
+            UUID entityID = entity.GetUUID();
+            s_Data->EntityInstances[entityID] = instance;//EntityInstances存储：实体id-》脚本
+            //在运行时，如果在非运行中更改，将存储到EntityScriptFields中，让值设置为编非运行中的值
+            // Copy field values
+            if (s_Data->EntityScriptFields.find(entityID) != s_Data->EntityScriptFields.end())
+            {
+                const ScriptFieldMap& fieldMap = s_Data->EntityScriptFields.at(entityID);//获取到实体的ScriptFieldMap
+                for (const auto& [name, fieldInstance] : fieldMap)//std::string, ScriptFieldInstance
+                    instance->SetFieldValueInternal(name, fieldInstance.m_Buffer);
+            }
             instance->InvokeOnCreate();//调用方法
         }
     }
@@ -281,6 +267,14 @@ namespace Hazel {
         return it->second;//否则返回ScriptInstance
     }
 
+    Ref<ScriptClass> ScriptEngine::GetEntityClass(const std::string& name)
+    {
+        if (s_Data->EntityClasses.find(name) == s_Data->EntityClasses.end())
+            return nullptr;
+
+        return s_Data->EntityClasses.at(name);
+    }
+
     void ScriptEngine::OnRuntimeStop()
     {
         s_Data->SceneContext = nullptr;
@@ -291,6 +285,14 @@ namespace Hazel {
     std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
     {
         return s_Data->EntityClasses;
+    }
+
+    ScriptFieldMap& ScriptEngine::GetScriptFieldMap(Entity entity)
+    {
+        HZ_CORE_ASSERT(entity);
+
+        UUID entityID = entity.GetUUID();
+        return s_Data->EntityScriptFields[entityID];
     }
 
     void ScriptEngine::LoadAssemblyClasses()//加载（assembly.dll）中的所有继承Entity的子类，存储在s_Data->EntityClasses

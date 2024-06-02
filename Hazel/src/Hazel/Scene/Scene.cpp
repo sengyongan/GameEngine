@@ -127,6 +127,8 @@ namespace Hazel {
     ///PhysicsWorld/////////////////////////////////////////////////////
     void Scene::OnRuntimeStart()//调用在点击按钮播放时
     {
+        m_IsRunning = true;
+
         OnPhysics2DStart();
 
         // Scripting
@@ -144,6 +146,8 @@ namespace Hazel {
     }
     void Scene::OnRuntimeStop()
     {
+        m_IsRunning = false;
+
         OnPhysics2DStop();
 
         ScriptEngine::OnRuntimeStop();//销毁脚本引擎类的指针

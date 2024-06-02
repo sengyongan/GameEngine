@@ -34,8 +34,9 @@ namespace Hazel
 
         MonoClassField* ClassField;
     };
+
     // ScriptField + data storage
-    struct ScriptFieldInstance//脚本字段实例
+    struct ScriptFieldInstance//脚本字段实例（存储设置的字段值）
     {
         ScriptField Field;
 
@@ -47,24 +48,26 @@ namespace Hazel
         template<typename T>
         T GetValue()
         {
-            static_assert(sizeof(T) <= 8, "Type too large!");
+            static_assert(sizeof(T) <= 16, "Type too large!");
             return *(T*)m_Buffer;
         }
 
         template<typename T>
         void SetValue(T value)
         {
-            static_assert(sizeof(T) <= 8, "Type too large!");//如果》8字节，报错
+            static_assert(sizeof(T) <= 16, "Type too large!");//如果》8字节，报错
             memcpy(m_Buffer, &value, sizeof(T));
         }
     private:
-        uint8_t m_Buffer[8];
+        uint8_t m_Buffer[16];
 
         friend class ScriptEngine;
         friend class ScriptInstance;
     };
 
-    using ScriptFieldMap = std::unordered_map<std::string, ScriptFieldInstance>;
+    using ScriptFieldMap = std::unordered_map<std::string, ScriptFieldInstance>;//脚本字段映射
+
+
     //c#中的"Hazel", "Entity"的 子类，底层操作
     class ScriptClass
     {
@@ -102,7 +105,7 @@ namespace Hazel
         template<typename T>
         T GetFieldValue(const std::string& name)//获取脚本字段
         {
-            static_assert(sizeof(T) <= 8, "Type too large!");
+            static_assert(sizeof(T) <= 16, "Type too large!");
             bool success = GetFieldValueInternal(name, s_FieldValueBuffer);//名字能在，脚本实例获取值//s_FieldValueBuffer[8]
             if (!success)
                 return T();
@@ -113,7 +116,7 @@ namespace Hazel
         template<typename T>
         void SetFieldValue(const std::string& name, const T& value)//设置字段
         {
-            static_assert(sizeof(T) <= 8, "Type too large!");
+            static_assert(sizeof(T) <= 16, "Type too large!");
             SetFieldValueInternal(name, &value);
         }
     private:
@@ -128,7 +131,7 @@ namespace Hazel
         MonoMethod* m_OnCreateMethod = nullptr;//创建方法
         MonoMethod* m_OnUpdateMethod = nullptr;//更新方法
 
-        inline static char s_FieldValueBuffer[8];//脚本字段缓冲
+        inline static char s_FieldValueBuffer[16];//脚本字段缓冲
 
         friend class ScriptEngine;
         friend struct ScriptFieldInstance;
@@ -154,9 +157,9 @@ namespace Hazel
         static Scene* GetSceneContext();
         static Ref<ScriptInstance> GetEntityScriptInstance(UUID entityID);//获取实体脚本实例
 
-        static Ref<ScriptClass> GetEntityClass(const std::string& name);//获取实体在EntityInstances对应的脚本类
+        static Ref<ScriptClass> GetEntityClass(const std::string& name);//获取实体在EntityInstances对应的 脚本类
         static std::unordered_map<std::string, Ref<ScriptClass>> GetEntityClasses();//获取EntityInstances哈希
-        static ScriptFieldMap& GetScriptFieldMap(Entity entity);//获取EntityScriptFields哈希
+        static ScriptFieldMap& GetScriptFieldMap(Entity entity);//获取实体对应的EntityScriptFields 哈希值
 
         static MonoImage* GetCoreAssemblyImage();//二进制映像
     private:
@@ -169,5 +172,57 @@ namespace Hazel
         friend class ScriptClass;
         friend class ScriptGlue;
     };
+    namespace Utils {
 
+        inline const char* ScriptFieldTypeToString(ScriptFieldType fieldType)
+        {
+            switch (fieldType)
+            {
+            case ScriptFieldType::None:    return "None";
+            case ScriptFieldType::Float:   return "Float";
+            case ScriptFieldType::Double:  return "Double";
+            case ScriptFieldType::Bool:    return "Bool";
+            case ScriptFieldType::Char:    return "Char";
+            case ScriptFieldType::Byte:    return "Byte";
+            case ScriptFieldType::Short:   return "Short";
+            case ScriptFieldType::Int:     return "Int";
+            case ScriptFieldType::Long:    return "Long";
+            case ScriptFieldType::UByte:   return "UByte";
+            case ScriptFieldType::UShort:  return "UShort";
+            case ScriptFieldType::UInt:    return "UInt";
+            case ScriptFieldType::ULong:   return "ULong";
+            case ScriptFieldType::Vector2: return "Vector2";
+            case ScriptFieldType::Vector3: return "Vector3";
+            case ScriptFieldType::Vector4: return "Vector4";
+            case ScriptFieldType::Entity:  return "Entity";
+            }
+            HZ_CORE_ASSERT(false, "Unknown ScriptFieldType");
+            return "None";
+        }
+
+        inline ScriptFieldType ScriptFieldTypeFromString(std::string_view fieldType)
+        {
+            if (fieldType == "None")    return ScriptFieldType::None;
+            if (fieldType == "Float")   return ScriptFieldType::Float;
+            if (fieldType == "Double")  return ScriptFieldType::Double;
+            if (fieldType == "Bool")    return ScriptFieldType::Bool;
+            if (fieldType == "Char")    return ScriptFieldType::Char;
+            if (fieldType == "Byte")    return ScriptFieldType::Byte;
+            if (fieldType == "Short")   return ScriptFieldType::Short;
+            if (fieldType == "Int")     return ScriptFieldType::Int;
+            if (fieldType == "Long")    return ScriptFieldType::Long;
+            if (fieldType == "UByte")   return ScriptFieldType::UByte;
+            if (fieldType == "UShort")  return ScriptFieldType::UShort;
+            if (fieldType == "UInt")    return ScriptFieldType::UInt;
+            if (fieldType == "ULong")   return ScriptFieldType::ULong;
+            if (fieldType == "Vector2") return ScriptFieldType::Vector2;
+            if (fieldType == "Vector3") return ScriptFieldType::Vector3;
+            if (fieldType == "Vector4") return ScriptFieldType::Vector4;
+            if (fieldType == "Entity")  return ScriptFieldType::Entity;
+
+            HZ_CORE_ASSERT(false, "Unknown ScriptFieldType");
+            return ScriptFieldType::None;
+        }
+
+    }
 }
