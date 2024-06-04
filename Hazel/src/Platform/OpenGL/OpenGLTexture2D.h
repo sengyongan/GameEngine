@@ -4,12 +4,15 @@
 #include<glad/glad.h>
 
 namespace Hazel {
-    class OpenGLTexture2D : public Texture2D 
+    class OpenGLTexture2D : public Texture2D
     {
     public:
         OpenGLTexture2D(const std::string& path);
-        OpenGLTexture2D(uint32_t width, uint32_t height);
+        OpenGLTexture2D(const TextureSpecification& specification);
         virtual ~OpenGLTexture2D() ;
+
+        virtual const TextureSpecification& GetSpecification() const override { return m_Specification; }
+
         virtual uint32_t GetWidth() const override { return m_Width; }
         virtual uint32_t GetHeight() const override { return m_Height; }
         virtual uint32_t GetRendererID() const override {return m_RendererID;}
@@ -26,6 +29,8 @@ namespace Hazel {
             return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID;//参数other转换为OpenGLTexture2D类型，并获取其m_RendererID成员变量
         };
     private:
+        TextureSpecification m_Specification;
+
         std::string m_Path;
         bool m_IsLoaded = false;
         uint32_t m_Width, m_Height;
