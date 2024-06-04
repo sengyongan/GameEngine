@@ -6,6 +6,7 @@
 #include"Hazel/Renderer/Camera.h"
 #include "Hazel/Renderer/EditorCamera.h"
 #include "Hazel/Scene/Components.h"
+#include "Hazel/Renderer/Font.h"
 
 namespace Hazel {
     class Renderer2D {
@@ -42,6 +43,9 @@ namespace Hazel {
         static void DrawRect(const glm::mat4& transform, const glm::vec4& color, int entityID = -1);
         //eitytiID
         static void DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID);
+        //String
+        static void DrawString(const std::string& string, Ref<Font> font, const glm::mat4& transform, const glm::vec4& color);
+        
         //
         static float GetLineWidth();
         static void SetLineWidth(float width);

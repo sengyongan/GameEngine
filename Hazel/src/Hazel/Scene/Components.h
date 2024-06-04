@@ -3,6 +3,7 @@
 #include"SceneCamera.h"
 #include "Hazel/Core/UUID.h"
 #include "Hazel/Renderer/Texture.h"
+#include "Hazel/Renderer/Font.h"
 //四元数
 #define GLM_ENABLE_EXPERIMENTAL
 #include<glm/gtx/quaternion.hpp>
@@ -144,6 +145,14 @@ namespace Hazel {
         CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
     };
 
+    struct TextComponent//文本组件
+    {
+        std::string TextString;
+        Ref<Font> FontAsset = Font::GetDefault();
+        glm::vec4 Color{ 1.0f };
+        float Kerning = 0.0f;
+        float LineSpacing = 0.0f;
+    };
     //所有组件类型别名AllComponents
     template<typename... Component>
     struct ComponentGroup
@@ -153,7 +162,8 @@ namespace Hazel {
     using AllComponents =
         ComponentGroup<
         TransformComponent, SpriteRendererComponent, CircleRendererComponent, CameraComponent, ScriptComponent,
-        NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent, CircleCollider2DComponent
+        NativeScriptComponent, Rigidbody2DComponent, BoxCollider2DComponent, CircleCollider2DComponent, TextComponent
         >;
+        
 
 }

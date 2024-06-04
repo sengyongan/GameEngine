@@ -1,4 +1,4 @@
-#include "hzpch.h"
+	#include "hzpch.h"
 #include "Font.h"
 
 #undef INFINITE
@@ -6,13 +6,10 @@
 #include "FontGeometry.h"
 #include "GlyphGeometry.h"
 
+#include "MSDFData.h"
+
 namespace Hazel {
 
-    struct MSDFData
-    {
-        std::vector<msdf_atlas::GlyphGeometry> Glyphs;//存储图案几何信息
-        msdf_atlas::FontGeometry FontGeometry;//字体几何信息
-    };
     //创建和缓存 使用msdfgen库生成字形纹理图集，存储到Texture2D对象 (字体名称,字体大小,图案几何信息,字体几何信息,宽度,高度）
     template<typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
     static Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName, 
@@ -98,6 +95,32 @@ namespace Hazel {
         atlasPacker.getDimensions(width, height);
         emSize = atlasPacker.getScale();
 
+        ///使用MSDF///对字形进行边缘着色//////////////////////////////////////////
+        #define DEFAULT_ANGLE_THRESHOLD 3.0
+        #define LCG_MULTIPLIER 6364136223846793005ull
+        #define LCG_INCREMENT 1442695040888963407ull
+        #define THREAD_COUNT 8
+        // if MSDF || MTSDF
+
+        uint64_t coloringSeed = 0;
+        bool expensiveColoring = false;
+        if (expensiveColoring)
+        {
+            msdf_atlas::Workload([&glyphs = m_Data->Glyphs, &coloringSeed](int i, int threadNo) -> bool {
+                unsigned long long glyphSeed = (LCG_MULTIPLIER * (coloringSeed ^ i) + LCG_INCREMENT) * !!coloringSeed;
+                glyphs[i].edgeColoring(msdfgen::edgeColoringInkTrap, DEFAULT_ANGLE_THRESHOLD, glyphSeed);
+                return true;
+                }, m_Data->Glyphs.size()).finish(THREAD_COUNT);
+        }
+        else {
+            unsigned long long glyphSeed = coloringSeed;
+            for (msdf_atlas::GlyphGeometry& glyph : m_Data->Glyphs)
+            {
+                glyphSeed *= LCG_MULTIPLIER;
+                glyph.edgeColoring(msdfgen::edgeColoringInkTrap, DEFAULT_ANGLE_THRESHOLD, glyphSeed);
+            }
+        }
+
         //创建并缓存纹理图,存储到m_AtlasTexture
         m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 3, msdf_atlas::msdfGenerator>("Test",
             (float)emSize, m_Data->Glyphs, m_Data->FontGeometry, width, height);
@@ -125,4 +148,15 @@ namespace Hazel {
     {
         delete m_Data;
     }
+
+
+    Ref<Font> Font::GetDefault()
+    {
+        static Ref<Font> DefaultFont;
+        if (!DefaultFont)
+            DefaultFont = CreateRef<Font>("assets/fonts/opensans/OpenSans-Regular.ttf");
+
+        return DefaultFont;
+    }
+
 }
