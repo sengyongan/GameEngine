@@ -10,6 +10,7 @@
 #include <glad/glad.h>
 
 #include "ImGuizmo.h"
+#include <imgui_internal.h>
 
 namespace Hazel {
     imGuiLayer::imGuiLayer() :Layer("ImGuiLayer")//成员初始化列表:将 Layer 的参数设置为 "ImGuiLayer"
@@ -131,4 +132,9 @@ namespace Hazel {
         colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
         colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
     }
+    uint32_t imGuiLayer::GetActiveWidgetID() const
+    {
+        return GImGui->ActiveId;
+    }
+
 }

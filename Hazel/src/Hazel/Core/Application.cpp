@@ -29,7 +29,6 @@ namespace Hazel {
         m_Window->SetEventCallback(BIND_ENENT_FN(OnEvent));//m_Window-¡·EventCallback = std::bind(OnEvent, this, std::placeholders::_1)
 
         Renderer::Init();//äÖÈ¾³õÊ¼»¯¡ª¡ª¡ª¡ª»ìºÏ
-        ScriptEngine::Init();
 
         m_ImGuiLayer = new imGuiLayer;
         pushOverlayer(m_ImGuiLayer);

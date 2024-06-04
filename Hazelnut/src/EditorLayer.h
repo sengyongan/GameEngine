@@ -24,6 +24,12 @@ namespace Hazel {
         bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
         //
         void OnOverlayRender();//绘制碰撞体可视化
+        //
+        void NewProject();
+        bool OpenProject();
+        void OpenProject(const std::filesystem::path& path);
+        void SaveProject();
+        //
         void NewScene();
         void OpenScene();
         void OpenScene(const std::filesystem::path& path);
@@ -74,7 +80,7 @@ namespace Hazel {
         bool m_ShowPhysicsColliders = false;
         //面板
         SceneHierarchyPanel m_SceneHierarchyPanel;
-        ContentBrowserPanel m_ContentBrowserPanel;
+        Scope<ContentBrowserPanel> m_ContentBrowserPanel;
         //场景状态
         enum class SceneState {//编辑模式
             Edit = 0, Play = 1, Simulate = 2

@@ -14,13 +14,15 @@
 #include "Hazel/Scripting/ScriptEngine.h"
 ///
 #include "Hazel/Scripting/ScriptEngine.h"
+//
+#include "Hazel/Renderer/Font.h"
 
 namespace Hazel {
-    extern const std::filesystem::path g_AssetPath;
-
+    //extern const std::filesystem::path g_AssetPath;
     EditorLayer::EditorLayer()
         : Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f), m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
     {
+        //Font font("assets/fonts/opensans/OpenSans-Regular.ttf");
     }
 
     void EditorLayer::OnAttach()
@@ -42,19 +44,30 @@ namespace Hazel {
 
         m_EditorScene = CreateRef<Scene>();
         m_ActiveScene = m_EditorScene;
-
+        //命令行参数
         auto commandLineArgs = Application::Get().GetSpecification().CommandLineArgs;
         if (commandLineArgs.Count > 1)
         {
-            auto sceneFilePath = commandLineArgs[1];
+            auto sceneFilePath = commandLineArgs[1];//找到命令行参数作为path
             SceneSerializer serializer(m_ActiveScene);
             serializer.Deserialize(sceneFilePath);
-            OpenScene(sceneFilePath);
+            OpenProject(sceneFilePath);
+        }
+        else
+        {
+            // If no project is opened, close Hazelnut
+            // NOTE: this is while we don't have a new project path
+            if (!OpenProject())//执行OpenProject
+                Application::Get().Close();
         }
 
+        //
         m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 
         Renderer2D::SetLineWidth(4.0f);
+
+
+
     }
 
     void EditorLayer::OnDetach()
@@ -184,21 +197,24 @@ namespace Hazel {
         {
             if (ImGui::BeginMenu("File"))
             {
+                if (ImGui::MenuItem("Open Project...", "Ctrl+O"))
+                    OpenProject();
+
+                ImGui::Separator();
+
                 if (ImGui::MenuItem("New", "Ctrl+N"))
                     NewScene();
-
-                if (ImGui::MenuItem("Open...", "Ctrl+O"))
-                    OpenScene();
                 
                 if (ImGui::MenuItem("Save", "Ctrl+S"))
                     SaveScene();
 
-                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+                if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
                     SaveSceneAs();
+
+                ImGui::Separator();
 
                 if (ImGui::MenuItem("Exit"))
                     Application::Get().Close();
-                
                 ImGui::EndMenu();
             }
 
@@ -214,15 +230,15 @@ namespace Hazel {
         }
 
         m_SceneHierarchyPanel.OnImGuiRender();
-        m_ContentBrowserPanel.OnImGuiRender();
+        m_ContentBrowserPanel->OnImGuiRender();
         ////Stats////////////////////////////////////////////////////////////////////////////////////////////////////////
         ImGui::Begin("Stats");
-
+#if 0
         std::string name = "None";
         if (m_HoveredEntity)
             name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
         ImGui::Text("Hovered Entity: %s", name.c_str());
-
+#endif
         auto stats = Renderer2D::GetStats();
         ImGui::Text("Renderer2D Stats:");
         ImGui::Text("Draw Calls: %d", stats.DrawCalls);
@@ -257,7 +273,7 @@ namespace Hazel {
         if (ImGui::BeginDragDropTarget()) {//开始拖放目标
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")) {//有效载荷
                 const wchar_t* path = (const wchar_t*)payload->Data;//获取相对目录名
-                OpenScene(std::filesystem::path(g_AssetPath) / path);//完整路径
+                OpenScene(path);//完整路径
             }
             ImGui::EndDragDropTarget();
         }
@@ -353,8 +369,8 @@ namespace Hazel {
         if (hasPlayButton)//(Edit || Play)&& (Edit || Simulate)->m_IconPlay编辑模式下 ,else->m_IconStop播放模式下
         {
             Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate) ? m_IconPlay : m_IconStop;
-            if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
-            {    
+            if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled) 
+            {
                 if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Simulate)//点击播放按钮
                     OnScenePlay();
                 else if (m_SceneState == SceneState::Play)//会显示停止按钮，停止
@@ -366,8 +382,8 @@ namespace Hazel {
             if (hasPlayButton)
                 ImGui::SameLine();
             Ref<Texture2D> icon = (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play) ? m_IconSimulate : m_IconStop;		//ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
-            if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
-            {   
+            if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
+            {
                 if (m_SceneState == SceneState::Edit || m_SceneState == SceneState::Play)//物理按钮 
                     OnSceneSimulate();
                 else if (m_SceneState == SceneState::Simulate)// 停止
@@ -379,7 +395,7 @@ namespace Hazel {
             ImGui::SameLine();
             {
                 Ref<Texture2D> icon = m_IconPause;//绘制暂停按钮
-                if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
+                if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
                 {
                     m_ActiveScene->SetPaused(!isPaused);//点击暂停（m_IsPaused取反操作）
                 }
@@ -391,7 +407,7 @@ namespace Hazel {
                 {
                     Ref<Texture2D> icon = m_IconStep;//就绘制进程按钮
                     bool isPaused = m_ActiveScene->IsPaused();//获取场景暂停
-                    if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
+                    if (ImGui::ImageButton((ImTextureID)(uint64_t)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0, ImVec4(0.0f, 0.0f, 0.0f, 0.0f), tintColor) && toolbarEnabled)
                     {   //点击按钮，就设置为1，更新1帧后，又不满足条件
                         m_ActiveScene->Step();//m_StepFrames = 1
                     }
@@ -435,7 +451,7 @@ namespace Hazel {
             case Key::O:
             {
                 if (control)
-                    OpenScene();
+                    OpenProject();
 
                 break;
             }
@@ -491,7 +507,21 @@ namespace Hazel {
                 }
                 break;
             }
+            case Key::Delete:
+            {
+                if (Application::Get().GetImGuiLayer()->GetActiveWidgetID() == 0)//获取活动部件 ID
+                {
+                    Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();//获取到当前选择的实体
+                    if (selectedEntity)
+                    {
+                        m_SceneHierarchyPanel.SetSelectedEntity({});//层级面板设为空
+                        m_ActiveScene->DestroyEntity(selectedEntity);//销毁实体
+                    }
+                }
+                break;
+            }
         }
+        return false;
     }
 
     bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
@@ -564,6 +594,38 @@ namespace Hazel {
         }
 
         Renderer2D::EndScene();
+    }
+    //
+    void EditorLayer::NewProject()
+    {
+        Project::New();
+    }
+
+
+    void EditorLayer::OpenProject(const std::filesystem::path& path)
+    {
+        if (Project::Load(path))//s_ActiveProject，m_ProjectDirectory-》path
+        {
+            auto startScenePath = Project::GetAssetFileSystemPath(Project::GetActive()->GetConfig().StartScene);////场景路径
+            OpenScene(startScenePath);//打开场景
+            m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();//创建资源管理面板
+        }
+    }
+    bool EditorLayer::OpenProject()
+    {
+        ScriptEngine::Init();
+
+        std::string filepath = FileDialogs::OpenFile("Hazel Project (*.hproj)\0*.hproj\0");
+        if (filepath.empty())
+            return false;
+
+        OpenProject(filepath);
+        return true;
+    }
+
+    void EditorLayer::SaveProject()
+    {
+        // Project::SaveActive();
     }
     //
     void EditorLayer::NewScene()
@@ -677,6 +739,9 @@ namespace Hazel {
 
         Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
         if (selectedEntity)//如果当前选择了实体
-            m_EditorScene->DuplicateEntity(selectedEntity);
+        {
+            Entity newEntity = m_EditorScene->DuplicateEntity(selectedEntity);
+            m_SceneHierarchyPanel.SetSelectedEntity(newEntity);//设置为新拷贝的实体
+        }
     }
 }

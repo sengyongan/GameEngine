@@ -36,7 +36,7 @@ namespace Hazel {
         void OnUpdateRuntime(Timestep ts);
         void OnViewportResize(uint32_t width, uint32_t height);
 
-        void DuplicateEntity(Entity entity);//拷贝实体
+        Entity  DuplicateEntity(Entity entity);//拷贝实体
 
         Entity FindEntityByName(std::string_view name);//通过name获取实体
         Entity GetEntityByUUID(UUID uuid);//通过id获取实体

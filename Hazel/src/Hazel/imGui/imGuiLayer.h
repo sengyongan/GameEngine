@@ -21,6 +21,8 @@ namespace Hazel {
         void BlockEvents(bool block) { m_BlockEvents = block; }//是否被阻止
 
         void SetDarkThemeColors();
+
+        uint32_t GetActiveWidgetID() const;//获取活动部件 ID
     private:
         bool m_BlockEvents = true;
         float m_Time = 0.0f;

@@ -20,7 +20,7 @@ namespace Hazel {
     Application* CreateApplication(ApplicationCommandLineArgs args)
     {
         ApplicationSpecification spec;
-        spec.Name = "Hazelnut";
+        spec.Name = "senLongAn_Engine_Demo";
         spec.CommandLineArgs = args;
 
         return new Hazelnut(spec);

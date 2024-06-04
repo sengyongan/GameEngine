@@ -14,6 +14,10 @@
 #include "mono/metadata/mono-debug.h"
 #include "mono/metadata/threads.h"
 
+#include "Hazel/Core/Buffer.h"
+#include "Hazel/Core/FileSystem.h"
+#include "Hazel/Project/Project.h"
+
 namespace Hazel {
     //脚本字段映射
     static std::unordered_map<std::string, ScriptFieldType> s_ScriptFieldTypeMap =
@@ -36,42 +40,15 @@ namespace Hazel {
 
         { "Hazel.Entity", ScriptFieldType::Entity },
     };
-    namespace Utils {
-        static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)//返回文件内容的指针，将文件大小传递给outSize
-        {
-            std::ifstream stream(filepath, std::ios::binary | std::ios::ate);//创建流，以二进制模式和文件末尾位置打开文件
-
-            if (!stream)
-            {
-                // Failed to open the file
-                return nullptr;
-            }
-
-            std::streampos end = stream.tellg();//获取文件末尾的位置，将其存储在end变量中
-            stream.seekg(0, std::ios::beg);//将文件指针移回文件开头
-            uint32_t size = end - stream.tellg();//计算文件大小，即end - 当前文件指针位置
-
-            if (size == 0)//文件为空
-            {
-                // File is empty
-                return nullptr;
-            }
-
-            char* buffer = new char[size];//字符数组buffer，大小为文件大小
-            stream.read((char*)buffer, size);//将文件内容读取到buffer中
-            stream.close();//关闭文件流
-
-            *outSize = size;//大小赋值给outSize指针所指向的变量
-            return buffer;//返回包含文件内容的buffer
-        }
+    namespace Utils 
+    {
         static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath, bool loadPDB = false)//从路径加载程序集
         {
-            uint32_t fileSize = 0;//用于存储文件大小
-            char* fileData = ReadBytes(assemblyPath, &fileSize);//从路径读取到字符数组，并将大小传入fileData中
+            ScopedBuffer fileData = FileSystem::ReadFileBinary(assemblyPath);//从路径读取到字符数组，并将大小传入fileData中
 
             // NOTE: 除了加载程序集之外，我们无法使用该图像，因为该图像没有程序集引用
             MonoImageOpenStatus status;
-            MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);//二进制映像，传入文件数据、文件大小、标志位（这里为1）、状态指针和用户数据
+            MonoImage* image = mono_image_open_from_data_full(fileData.As<char>(), fileData.Size(), 1, &status, 0);//二进制映像，传入文件数据、文件大小、标志位（这里为1）、状态指针和用户数据
 
             if (status != MONO_IMAGE_OK)//打开二进制映像时发生错误
             {
@@ -87,20 +64,15 @@ namespace Hazel {
 
                 if (std::filesystem::exists(pdbPath))
                 {
-                    uint32_t pdbFileSize = 0;
-                    char* pdbFileData = ReadBytes(pdbPath, &pdbFileSize);//如果存在，它会读取PDB文件的内容
-                    mono_debug_open_image_from_memory(image, (const mono_byte*)pdbFileData, pdbFileSize);//将PDB文件的内容加载到内存
+                    ScopedBuffer pdbFileData = FileSystem::ReadFileBinary(pdbPath);//如果存在，它会读取PDB文件的内容
+                    mono_debug_open_image_from_memory(image, pdbFileData.As<const mono_byte>(), pdbFileData.Size());//将PDB文件的内容加载到内存
                     HZ_CORE_INFO("Loaded PDB {}", pdbPath);
-                    delete[] pdbFileData;
                 }
             }
 
             std::string pathString = assemblyPath.string();
             MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);//二进制映像，加载程序集
             mono_image_close(image);//关闭图像对象image
-
-            // Don't forget to free the file data
-            delete[] fileData;
 
             return assembly;//返回程序集
         }
@@ -163,7 +135,11 @@ namespace Hazel {
         //Runtime
         Scene* SceneContext = nullptr;//场景上下文
         //
-        bool EnableDebugging = true;//启用调试
+        #ifdef HZ_DEBUG
+            bool EnableDebugging = true;//启用调试
+        #else
+                bool EnableDebugging = false;
+        #endif
     };
 
     static ScriptEngineData* s_Data = nullptr;
@@ -191,8 +167,20 @@ namespace Hazel {
         InitMono();//创建根域RootDomain
         ScriptGlue::RegisterFunctions();
 
-        LoadAssembly("Resources/Scripts/Hazel-ScriptCore.dll");//创建应用程序AppDomain，CoreAssemblyc#程序域，二进制映像CoreAssemblyImage
-        LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll");//加载app库
+        bool status = LoadAssembly("Resources/Scripts/Hazel-ScriptCore.dll");//创建应用程序AppDomain，CoreAssemblyc#程序域，二进制映像CoreAssemblyImage
+        if (!status)
+        {
+            HZ_CORE_ERROR("[ScriptEngine] Could not load Hazel-ScriptCore assembly.");
+            return;
+        }
+        status = LoadAppAssembly("SandboxProject/Assets/Scripts/Binaries/Sandbox.dll");//加载app库
+        
+        if (!status)
+        {
+            HZ_CORE_ERROR("[ScriptEngine] Could not load app assembly.");
+            return;
+        }
+
         Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
 
         LoadAssemblyClasses();//加载assembly.dll中的所有继承Entity的子类，存储在EntityClasses
@@ -231,7 +219,7 @@ namespace Hazel {
 
         mono_thread_set_main(mono_thread_current());
     }
-    void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)//加载应用程序域
+    bool ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)//加载应用程序域
     {
         //创建应用程序域
         s_Data->AppDomain = mono_domain_create_appdomain("HazelScriptRuntime", nullptr);
@@ -240,22 +228,30 @@ namespace Hazel {
         //获取c#程序域
         s_Data->CoreAssemblyFilepath = filepath;
         s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
+
+        if (s_Data->CoreAssembly == nullptr)
+            return false;
+
         s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);//获取image二进制映像
         // Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
+        return true;
     }
 
-    void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
+    bool ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
     {
         // Move this maybe
         s_Data->AppAssemblyFilepath = filepath;
         s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
-        auto assemb = s_Data->AppAssembly;
+
+        if (s_Data->AppAssembly == nullptr)
+            return false;
+
         s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
-        auto assembi = s_Data->AppAssemblyImage;
         // Utils::PrintAssemblyTypes(s_Data->AppAssembly);
         //CreateScope是一个模板指针内存分配，参数为回调函数，当FileWatch文件监视发生更改
         s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
         s_Data->AssemblyReloadPending = false;
+        return true;
     }
 
     void ScriptEngine::Shutdown()
@@ -333,10 +329,16 @@ namespace Hazel {
     void ScriptEngine::OnUpdateEntity(Entity entity, Timestep ts)//对实体调用OnUpdate，
     {
         UUID entityUUID = entity.GetUUID();
-        HZ_CORE_ASSERT(s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end());//因为creat时已经注册到EntityInstances
 
-        Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
-        instance->InvokeOnUpdate((float)ts);
+        if (s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end())//因为creat时已经注册到EntityInstances
+        {
+            Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
+            instance->InvokeOnUpdate((float)ts);
+        }
+        else
+        {
+            HZ_CORE_ERROR("Could not find ScriptInstance for entity {}", entityUUID);
+        }
     }
 
     Scene* ScriptEngine::GetSceneContext()

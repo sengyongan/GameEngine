@@ -1,10 +1,12 @@
 #include"hzpch.h"
 #include"Scene.h"
+
 #include"Components.h"
 #include "ScriptableEntity.h"
 #include"Hazel/Renderer/Renderer2D.h"
 #include"Entity.h"
 #include "Hazel/Scripting/ScriptEngine.h"
+#include "Hazel/Physics/Physics2D.h"
 
 #include<glm/glm.hpp>
 //Physics
@@ -16,18 +18,6 @@
 
 namespace Hazel {
 
-    static b2BodyType Rigidbody2DTypeToBox2DBody(Rigidbody2DComponent::BodyType bodyType)//刚体转化为碰撞体
-    {
-        switch (bodyType)
-        {
-            case Rigidbody2DComponent::BodyType::Static:    return b2_staticBody;
-            case Rigidbody2DComponent::BodyType::Dynamic:   return b2_dynamicBody;
-            case Rigidbody2DComponent::BodyType::Kinematic: return b2_kinematicBody;
-        }
-
-        HZ_CORE_ASSERT(false, "Unknown body type");
-        return b2_staticBody;
-    }
     /////////////////////////////
     Scene::Scene()
     {
@@ -121,8 +111,8 @@ namespace Hazel {
     }
     void Scene::DestroyEntity(Entity entity)
     {
-        m_Registry.destroy(entity);
         m_EntityMap.erase(entity.GetUUID());
+        m_Registry.destroy(entity);
     }
     ///PhysicsWorld/////////////////////////////////////////////////////
     void Scene::OnRuntimeStart()//调用在点击按钮播放时
@@ -309,19 +299,14 @@ namespace Hazel {
         m_StepFrames = frames;
     }
 
-    void Scene::DuplicateEntity(Entity entity)//拷贝实体
+    Entity  Scene::DuplicateEntity(Entity entity)//拷贝实体
     {
         std::string name = entity.GetName();
         Entity newEntity = CreateEntity(name);
 
-        CopyComponentIfExists<TransformComponent>(newEntity, entity);
-        CopyComponentIfExists<SpriteRendererComponent>(newEntity, entity);
-        CopyComponentIfExists<CircleRendererComponent>(newEntity, entity);
-        CopyComponentIfExists<CameraComponent>(newEntity, entity);
-        CopyComponentIfExists<NativeScriptComponent>(newEntity, entity);
-        CopyComponentIfExists<Rigidbody2DComponent>(newEntity, entity);
-        CopyComponentIfExists<BoxCollider2DComponent>(newEntity, entity);
-        CopyComponentIfExists<CircleCollider2DComponent>(newEntity, entity);
+        CopyComponentIfExists(AllComponents{}, newEntity, entity);
+
+        return newEntity;
     }
 
     Entity Scene::GetPrimaryCameraEntity()
@@ -369,7 +354,7 @@ namespace Hazel {
             auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
 
             b2BodyDef bodyDef;//设置刚体属性为自身组件的属性
-            bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2d.Type);
+            bodyDef.type = Utils::Rigidbody2DTypeToBox2DBody(rb2d.Type);
             bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
             bodyDef.angle = transform.Rotation.z;
             //创建刚体

@@ -12,11 +12,14 @@
 #include"Hazel/Core/KeyCodes.h"
 #include"Hazel/Core/MouseButtonCodes.h"
 #include"Hazel/Renderer/OrthographicCameraController.h"
+//
+#include "Hazel/Project/Project.h"
 //---ECS----------------------------
 #include"Hazel/Scene/Scene.h"
 #include"Hazel/Scene/Entity.h"
 #include"Hazel/Scene/ScriptableEntity.h"
 #include"Hazel/Scene/Components.h"
+
 //----renderer-------------------------
 #include"Hazel/Renderer/Renderer.h"
 #include"Hazel/Renderer/Renderer2D.h"
