@@ -453,6 +453,11 @@ namespace Hazel {
         return s_Data->EntityInstances.at(uuid)->GetManagedObject();
     }
 
+    MonoString* ScriptEngine::CreateString(const char* string)
+    {
+        return mono_string_new(s_Data->AppDomain, string);//创建一个新的字符串对象
+    }
+
     ////////////////////////////////////////////////////////////////////////////
 
     ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className, bool isCore)

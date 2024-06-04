@@ -147,11 +147,11 @@ namespace Hazel {
 
     struct TextComponent//文本组件
     {
-        std::string TextString;
-        Ref<Font> FontAsset = Font::GetDefault();
-        glm::vec4 Color{ 1.0f };
-        float Kerning = 0.0f;
-        float LineSpacing = 0.0f;
+        std::string TextString;//文本
+        Ref<Font> FontAsset = Font::GetDefault();//字体风格
+        glm::vec4 Color{ 1.0f };//颜色
+        float Kerning = 0.0f;//字距
+        float LineSpacing = 0.0f;//行距
     };
     //所有组件类型别名AllComponents
     template<typename... Component>

@@ -14,6 +14,7 @@ extern "C" {//按照C语言的方式进行编译和链接
     typedef struct _MonoAssembly MonoAssembly;
     typedef struct _MonoImage MonoImage;
     typedef struct _MonoClassField MonoClassField;
+    typedef struct _MonoString MonoString;
 }
 namespace Hazel
 {    
@@ -168,6 +169,9 @@ namespace Hazel
         static MonoImage* GetCoreAssemblyImage();//二进制映像
 
         static MonoObject* GetManagedInstance(UUID uuid);//通过id获取基类
+
+        static MonoString* CreateString(const char* string);//创建一个新的字符串对象
+
     private:
         static void InitMono();
         static void ShutdownMono();
