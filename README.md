@@ -1,2 +1,1 @@
-# Hazel
-Hazel Engine
+根据Hazel教程开发的游戏引擎，从零开始一节节制作和理解
